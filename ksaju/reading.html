@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0e1020">
+<meta name="robots" content="noindex">
+<title>Your reading · K-Saju</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Serif+KR:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top"><a class="logo" href="./" style="text-decoration:none;color:inherit"><b>四柱</b><span id="brand">K-Saju</span></a></header>
+  <div class="card" id="box" style="text-align:center">
+    <div class="spin"></div>
+    <h2 style="margin:10px 0 4px">Writing your reading…</h2>
+    <p id="step" style="color:var(--mut);margin:0">Confirming your payment</p>
+    <p class="note">This takes about 30 seconds. Please keep this page open. We'll also email you a copy.</p>
+  </div>
+  <footer class="foot">For entertainment and self-reflection. Not a substitute for professional advice.<br><a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a></footer>
+</div>
+<script type="module">
+import { SITE } from './js/config.js';
+const $ = id => document.getElementById(id), q = new URLSearchParams(location.search);
+$('brand').textContent = SITE.brand;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function show(title, text) {
+  const html = text.split(/\n+/).map(l => l.trim()).filter(Boolean).map(l => /^#{1,3}\s/.test(l) ? `<h3>${esc(l.replace(/^#+\s*/, ''))}</h3>` : `<p>${esc(l).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')}</p>`).join('');
+  $('box').style.textAlign = 'left';
+  $('box').innerHTML = `<div class="reading fade"><div class="sec">Your ${esc(SITE.product.name)}</div><h2 style="margin:4px 0 8px">${esc(title)}</h2>${html}
+  <p class="note">For entertainment and self-reflection. Not a substitute for professional advice.</p>
+  <a class="btn" href="./?src=reader" style="text-align:center;text-decoration:none">Get a free chart for a friend</a></div>`;
+}
+function fail(t) { $('box').innerHTML = `<h2>Hmm, we hit a snag</h2><p style="color:var(--mut)">${esc(t)}</p><p class="note">If you were charged, your reading is saved and will be emailed to you. Reply to that email and we'll sort it out.</p><button class="btn" onclick="location.reload()">Try again</button>`; }
+const steps = ['Confirming your payment', 'Reading your four pillars', 'Looking at your 2027 luck', 'Writing your love chapter', 'Writing your month-by-month guide', 'Almost done'];
+let si = 0; const t = setInterval(() => { si = Math.min(si + 1, steps.length - 1); $('step').textContent = steps[si]; }, 5000);
+(async () => {
+  try {
+    if (q.get('demo') || !SITE.api) {
+      await new Promise(r => setTimeout(r, 2500)); clearInterval(t);
+      return show('Demo reading', '## This is a demo\nPayments and the AI writer are not connected yet, so this is a placeholder. Once the backend is live, the real reading for your exact chart appears here and is emailed to you.');
+    }
+    const body = q.get('session_id') ? { action: 'reading', session_id: q.get('session_id') } : { action: 'reading', token: q.get('r') };
+    const r = await fetch(SITE.api, { method: 'POST', body: JSON.stringify(body) });
+    const j = await r.json(); clearInterval(t);
+    if (!j.ok) return fail(j.err || 'We could not load your reading.');
+    if (j.token && q.get('session_id')) history.replaceState(null, '', '?r=' + j.token);
+    show(j.title || 'Your reading', j.reading);
+  } catch (e) { clearInterval(t); fail('Connection problem. Your reading is safe.'); }
+})();
+</script>
+</body>
+</html>

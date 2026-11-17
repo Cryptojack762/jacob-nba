@@ -117,13 +117,13 @@ export function buildChart(input) {
     const age = (now.getTime() - utc) / (365.2425 * 864e5);
     const list = r.luckPillars.pillars.map(p => ({ age: p.age, ko: p.korean || p.pillar }));
     let cur = null; list.forEach(p => { if (age >= p.age) cur = p; });
-    luck = { forward: r.luckPillars.forward, startAge: r.luckPillars.startAge, current: cur ? Object.assign({ ageEnd: cur.age + 9 }, pillarInfo(cur.ko)) : null, list };
+    luck = { forward: r.luckPillars.forward, startAge: r.luckPillars.startAge, current: cur ? Object.assign({ age: cur.age, ageEnd: cur.age + 9 }, pillarInfo(cur.ko)) : null, list };
   }
 
   return {
     version: 'ksaju-engine-1 (manseryeok 2.0.0)',
     input: { date: `${input.year}-${String(input.month).padStart(2, '0')}-${String(input.day).padStart(2, '0')}`, time: timeKnown ? `${String(h).padStart(2, '0')}:${String(mi).padStart(2, '0')}` : 'unknown', tz: input.tz, longitude: lon, gender: input.gender || '', solarTime: CONFIG.trueSolarTime },
-    pillars, dayMaster, elements: { count, pct, strongest, missing }, animal, luck,
+    pillars, dayMaster, elements: { count, pct, strongest, missing }, animal, luck, tenGods: r.tenGods || null,
     hanja: r.toHanjaString ? r.toHanjaString() : '',
   };
 }

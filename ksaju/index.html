@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0e1020">
+<title>K-Saju · Your free Korean birth chart</title>
+<meta name="description" content="Find your Korean saju Day Master and five-element balance in 30 seconds. Free.">
+<meta property="og:title" content="What's your Korean Day Master?">
+<meta property="og:description" content="Free Korean saju birth chart: your Day Master, five elements and zodiac in 30 seconds.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Serif+KR:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top"><div class="logo"><b>四柱</b><span id="brand">K-Saju</span></div></header>
+
+  <section class="hero" id="hero">
+    <div class="han">年 · 月 · 日 · 時</div>
+    <h1>What's your <em>Korean Day Master</em>?</h1>
+    <p>Korean saju (사주) reads the four pillars of your birth moment. Get your free chart in 30 seconds.</p>
+  </section>
+
+  <form class="card" id="form" autocomplete="off">
+    <label for="bd">Birth date</label>
+    <input id="bd" type="date" min="1900-01-01" required>
+    <label for="bt">Birth time</label>
+    <input id="bt" type="time">
+    <label class="chk"><input id="nt" type="checkbox"> I don't know my birth time</label>
+    <label for="city">Birth city</label>
+    <div class="city"><input id="city" placeholder="Start typing, e.g. Seoul, Los Angeles" required><div class="sug" id="sug"></div></div>
+    <label>Gender <span style="font-weight:400;color:var(--dim)">(used for your 10-year luck cycle)</span></label>
+    <div class="seg" id="gender"><button type="button" data-g="female">Female</button><button type="button" data-g="male">Male</button><button type="button" data-g="" class="on">Skip</button></div>
+    <div class="err" id="err"></div>
+    <button class="btn" id="go" type="submit">Reveal my chart</button>
+    <div class="note">Your birth details are calculated right on your phone. We don't store them unless you buy a reading or join the list.</div>
+  </form>
+
+  <section id="result" class="hide"></section>
+
+  <footer class="foot">
+    For entertainment and self-reflection. Not a substitute for professional advice.<br>
+    <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a>
+  </footer>
+</div>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
