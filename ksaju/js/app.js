@@ -1,7 +1,7 @@
-import { buildChart, ELEMENTS, EL_HANJA, EL_KO } from './saju.js?v=7';
-import { DM_READS, EL_MEANING, teaser } from './content.js?v=7';
-import { SITE } from './config.js?v=7';
-import { encode } from './match.js?v=7';
+import { buildChart, ELEMENTS, EL_HANJA, EL_KO } from './saju.js?v=8';
+import { DM_READS, EL_MEANING, teaser } from './content.js?v=8';
+import { SITE } from './config.js?v=8';
+import { encode } from './match.js?v=8';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -106,8 +106,8 @@ function render(c) {
   <div class="card fade" style="text-align:center">
     <div class="sec">Share your Day Master</div>
     <button class="btn" id="card">Get my share card</button>
-    <button class="btn ghost" id="inv">Send a friend: "How do we match?"</button>
-    <a class="btn ghost" href="compat.html?src=self" style="text-align:center;text-decoration:none">Check my match with someone 💞</a>
+    <button class="btn ghost" id="inv">Send a friend their free chart</button>
+    ${SITE.gunghap ? '<a class="btn ghost" href="compat.html?src=self" style="text-align:center;text-decoration:none">Check my match with someone 💞</a>' : ''}
     <button class="btn ghost" id="again">Try another birthday</button>
   </div>`;
   $('result').classList.remove('hide'); $('form').classList.add('hide'); $('hero').classList.add('hide');
@@ -177,8 +177,9 @@ function wrapText(g, t, x, y, max, lh) { const w = t.split(' '); let line = ''; 
 // ---- invite loop: friend gets their own free chart ----
 async function invite() {
   // Invite goes to the compatibility page with a privacy-safe chart code (no birthday in the link).
-  const u = location.href.split('?')[0].split('#')[0].replace(/index\.html$/, '') + 'compat.html?src=invite&c=' + encodeURIComponent(encode(CHART));
-  const text = `I'm ${CHART.dayMaster.title} (${CHART.dayMaster.hanja}) in Korean saju. Get your free chart and see how we match:`;
+  const base = location.href.split('?')[0].split('#')[0].replace(/index\.html$/, '');
+  const u = SITE.gunghap ? base + 'compat.html?src=invite&c=' + encodeURIComponent(encode(CHART)) : base + '?src=invite&from=' + encodeURIComponent(CHART.dayMaster.title);
+  const text = `I'm ${CHART.dayMaster.title} (${CHART.dayMaster.hanja}) in Korean saju. What's your Day Master? Free chart:`;
   if (navigator.share) { try { await navigator.share({ title: 'Korean saju', text, url: u }); track('invite'); return; } catch (e) { return; } }
   try { await navigator.clipboard.writeText(text + ' ' + u); $('inv').textContent = 'Link copied!'; track('invite'); } catch (e) { prompt('Copy this link:', u); }
 }

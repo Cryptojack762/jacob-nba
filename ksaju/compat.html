@@ -9,7 +9,7 @@
 <meta property="og:title" content="How do our Korean birth charts match?">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Serif+KR:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/site.css?v=4">
+<link rel="stylesheet" href="css/site.css?v=8">
 <style>
 .ring{width:170px;height:170px;border-radius:50%;margin:8px auto 4px;display:grid;place-items:center;background:conic-gradient(var(--gold) calc(var(--p)*1%),#2b3152 0)}
 .ring div{width:140px;height:140px;border-radius:50%;background:var(--card);display:grid;place-items:center;text-align:center}
@@ -30,16 +30,23 @@
     <h1 id="h1">How do your <em>charts match</em>?</h1>
     <p id="lead">Korean saju compares two birth charts: your Day Masters, your elements and your zodiac signs.</p>
   </section>
+  <div class="card hide" id="start" style="text-align:center">
+    <div class="sec">Compare with someone</div>
+    <button class="btn" id="sendInvite" type="button">Send them an invite link</button>
+    <div class="note">They enter their own birthday and get their own free chart. No birthdays are in the link.</div>
+    <p style="margin:16px 0 0"><a href="#" id="direct" style="font-size:14px">Enter their birthday myself</a></p>
+  </div>
   <form class="card" id="form" autocomplete="off">
-    <div class="sec" id="who">Their birth details</div>
+    <div id="kind"><label>This is my</label><div class="seg"><button type="button" data-k="couple" class="on">Partner</button><button type="button" data-k="crush">Crush</button><button type="button" data-k="friend">Friend</button></div></div>
+    <div class="sec" id="who" style="margin-top:16px">Their birth details</div>
     <div id="fields"></div>
     <div class="err" id="err"></div>
     <button class="btn" type="submit">See our match</button>
-    <div class="note">Only the derived chart (not the birthday) is ever shared in links.</div>
+    <div class="note">Their details are used only for this reading, never for marketing. Birthdays are never put in links.</div>
   </form>
   <section id="result" class="hide"></section>
   <footer class="foot">For entertainment and self-reflection. Not a substitute for professional advice.<br><a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a></footer>
 </div>
-<script type="module" src="js/compat.js?v=7"></script>
+<script type="module" src="js/compat.js?v=8"></script>
 </body>
 </html>

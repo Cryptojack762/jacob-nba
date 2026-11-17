@@ -22,7 +22,7 @@
   <footer class="foot">For entertainment and self-reflection. Not a substitute for professional advice.<br><a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a></footer>
 </div>
 <script type="module">
-import { SITE } from './js/config.js?v=3';
+import { SITE } from './js/config.js?v=8';
 const $ = id => document.getElementById(id), q = new URLSearchParams(location.search);
 $('brand').textContent = SITE.brand;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));

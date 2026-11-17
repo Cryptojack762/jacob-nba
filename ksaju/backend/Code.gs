@@ -209,31 +209,30 @@ function writeFor_(product, d) {
 
 var SYSTEM_COMPAT = [
   'You are Haneul, a warm Korean saju (사주) reader writing in natural, modern English for young adults curious about Korean culture.',
-  'You receive two charts and a compatibility analysis that have already been calculated exactly (Korean 궁합, gunghap). Never recalculate or invent pillars, elements, scores or dates. Use only the facts given.',
-  'Write a personal compatibility reading addressed to "you two" / "you" (the buyer) and "them" (the other person).',
-  'Format: plain text with these exact section headings, each starting with "## ":',
-  '## Your connection at a glance / ## How you two love / ## Where you balance each other / ## Communication tips / ## Your best months together in 2027 / ## A note for you both',
-  'Length: 850 to 1,050 words. Short paragraphs. Explain any Korean or Hanja term in plain English the first time.',
-  'Tone: warm, specific, grounded, playful. Describe dynamics as tendencies and invitations, never certainties. Treat every pairing as workable; clashes are "chemistry that rewards patience".',
-  'Hard rules (never break): no fear-based or threatening language; no guaranteed outcomes or exact predictions; never say a couple is doomed, incompatible or should break up, stay together, marry or divorce; no health, legal or financial advice; no celebrity or K-pop idol names; no mention of death, illness, accidents or curses.',
-  'In "Your best months together in 2027", pick 3 months from the month list that suit both Day Masters and say why in one or two sentences each.',
-  'End with exactly this line on its own: "For entertainment and self-reflection. Not a substitute for professional advice."'
+  'You receive the Layer 1 gunghap (궁합, compatibility) facts for two people as JSON. They were calculated exactly by code. Never recalculate or invent pillars, relations, scores or dates. Every claim must come from a fact in the JSON.',
+  'Person A is the buyer ("you"); Person B is the other person ("them"). The relationship type is given (couple, crush or friend). For a friend reading use no romance language.',
+  'Write six sections with these exact headings, each starting with "## ":',
+  '## Your two energies / ## What pulls you together / ## Where you rub / ## What you give each other / ## Your 2027 together / ## How to make it work',
+  '1 Your two energies: one paragraph per person, from the Day Masters. 2 What pulls you together: harmonies and stem combinations if any, otherwise what each admires in the other. 3 Where you rub: clashes, resentment, punishment, harm, written as different rhythms and how to handle them. 4 What you give each other: element balance. 5 Your 2027 together: easier and harder seasons for the pair in the Fire Goat year. 6 How to make it work: advice for each friction point found, using the advice base given; longest for Challenging matches; for Easy Flow, what to protect.',
+  'State the score and level plainly once (for example "7 out of 10, Balanced"). A low score is said honestly, then followed by specific advice. Never show or mention plus or minus points.',
+  'Length: 850 to 1,050 words. Short paragraphs. Keep each Korean term with a plain English gloss the first time, for example "육합 (six harmony)". If birth_time_unknown is true, say in one line that the match was read without the hour pillar.',
+  'Tone: self-discovery, never fate. Saju describes patterns and timing; it does not say whether to stay together or break up, and it never predicts the outcome.',
+  'Hard rules (never break): no fear words (doomed, cursed, danger, bad match); no guarantees ("you will marry", "they will come back"); a clash or 원진 is friction to understand, never a reason to leave; no health, legal or financial advice; no celebrity or K-pop idol names.',
+  'End with exactly this line on its own: "For entertainment and self-reflection."'
 ].join('\n');
 
 function compatBrief_(chart, p) {
-  var A = p.a, B = p.b, lines = [];
-  lines.push('Person A Day Master element: ' + A.el + ' (' + A.hanja + '); Person B Day Master element: ' + B.el + ' (' + B.hanja + ').');
-  lines.push('Element counts A: ' + JSON.stringify(A.count) + '; B: ' + JSON.stringify(B.count));
-  lines.push('Zodiac years: ' + (p.animals || []).join(' + '));
-  lines.push('The buyer ("you") is Person ' + (p.buyer || 'A') + '; the other person ("them") is Person ' + ((p.buyer || 'A') == 'A' ? 'B' : 'A') + '.');
-  lines.push('Calculated match score: ' + p.score + '/100');
-  lines.push('Calculated highlights:');
-  (p.notes || []).forEach(function (n) { lines.push('- ' + n[0] + ': ' + n[1]); });
-  lines.push('A sees B\'s element as: ' + relation_(A.el, B.el) + '. B sees A\'s element as: ' + relation_(B.el, A.el) + '.');
-  if (chart && chart.dayMaster) lines.push('The buyer\'s full chart: ' + chartBrief_(chart).split('\n').slice(0, 4).join(' | '));
+  var lines = [];
+  lines.push('Relationship type: ' + (p.kind || 'couple'));
+  lines.push('Layer 1 facts (JSON):');
+  lines.push(JSON.stringify(p.facts));
+  if (p.strengths && p.strengths.length) { lines.push('Strengths found:'); p.strengths.forEach(function (n) { lines.push('- ' + n[0] + ': ' + n[1]); }); }
+  if (p.advice && p.advice.length) { lines.push('Frictions found, with the advice base to build on:'); p.advice.forEach(function (a) { lines.push('- ' + a.title + ': ' + a.meaning + ' Advice: ' + a.tip); }); }
+  else lines.push('Frictions found: none.');
+  if (chart && chart.dayMaster) lines.push('Person A is "' + chart.dayMaster.title + '" (' + chart.dayMaster.tag + ').');
   lines.push('');
   lines.push('2027 is 丁未 (Yin Fire over Earth). 2027 months:');
-  MONTHS_2027.forEach(function (m) { lines.push('- ' + m[0] + ': ' + m[1] + ' (' + m[2] + ' over ' + m[3] + ') -> for A: ' + relation_(A.el, m[2]).split(' (')[0] + '; for B: ' + relation_(B.el, m[2]).split(' (')[0]); });
+  MONTHS_2027.forEach(function (m) { lines.push('- ' + m[0] + ': ' + m[1] + ' (' + m[2] + ' over ' + m[3] + ') -> for A: ' + relation_(p.a_el, m[2]).split(' (')[0] + '; for B: ' + relation_(p.b_el, m[2]).split(' (')[0]); });
   return lines.join('\n');
 }
 
@@ -280,7 +279,7 @@ function emailReading_(to, token, text, chart, product) {
 // ---------- tests you can run from the editor ----------
 function testPrompt() { Logger.log(chartBrief_(SAMPLE_())); }
 function testAI() { Logger.log(writeReading_(SAMPLE_())); }
-function testCompatPrompt() { Logger.log(compatBrief_(SAMPLE_(), { a: { el: 'Fire', hanja: '丙', count: { Wood: 0, Fire: 3, Earth: 1, Metal: 2, Water: 0 } }, b: { el: 'Water', hanja: '癸', count: { Wood: 2, Fire: 1, Earth: 1, Metal: 1, Water: 3 } }, score: 81, animals: ['Horse', 'Goat'], notes: [['Spark and challenge', 'Their Water shapes your Fire.'], ['Heart connection', 'Six Harmony.']] })); }
+function testCompatPrompt() { Logger.log(compatBrief_(SAMPLE_(), { kind: 'couple', a_el: 'Fire', b_el: 'Metal', facts: { a: { day_master: '丙 Yang Fire', day_branch: '午', year_branch: '卯' }, b: { day_master: '辛 Yin Metal', day_branch: '未', year_branch: '戌' }, day_master_pair: 'stem_combination 丙辛', spouse_palace: ['six_harmony 午未'], zodiac: ['six_harmony 卯戌'], score: 10, level: 'Easy Flow', pair_type: 'Magnet Pair' }, strengths: [['Stem combination', '丙 and 辛']], advice: [] })); }
 function SAMPLE_() {
   return {
     input: { gender: 'female' },
