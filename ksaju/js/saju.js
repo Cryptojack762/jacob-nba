@@ -101,7 +101,7 @@ export function buildChart(input) {
   const pct = {}; ELEMENTS.forEach(e => { pct[e] = Math.round(count[e] / n * 100); });
   const fix = 100 - ELEMENTS.reduce((a, e) => a + pct[e], 0);
   if (fix) { const top = ELEMENTS.slice().sort((a, b) => count[b] - count[a])[0]; pct[top] += fix; }
-  const strongest = ELEMENTS.slice().sort((a, b) => count[b] - count[a])[0];
+  const strongest = ELEMENTS.slice().sort((a, b) => pct[b] - pct[a])[0];
   const missing = ELEMENTS.filter(e => count[e] === 0);
 
   const dm = pillars.day.stem, dmIdx = STEMS_H.indexOf(dm.hanja);

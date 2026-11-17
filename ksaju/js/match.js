@@ -1,5 +1,5 @@
 // Compatibility math (deterministic, no AI). Uses only derived chart facts, never birth dates.
-import { ELEMENTS } from './saju.js?v=5';
+import { ELEMENTS } from './saju.js?v=7';
 
 const BR = '자축인묘진사오미신유술해';
 const ANIMALS = ['Rat', 'Ox', 'Tiger', 'Rabbit', 'Dragon', 'Snake', 'Horse', 'Goat', 'Monkey', 'Rooster', 'Dog', 'Pig'];

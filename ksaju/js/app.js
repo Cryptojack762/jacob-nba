@@ -1,7 +1,7 @@
-import { buildChart, ELEMENTS, EL_HANJA, EL_KO } from './saju.js?v=5';
-import { DM_READS, EL_MEANING, teaser } from './content.js?v=5';
-import { SITE } from './config.js?v=5';
-import { encode } from './match.js?v=5';
+import { buildChart, ELEMENTS, EL_HANJA, EL_KO } from './saju.js?v=7';
+import { DM_READS, EL_MEANING, teaser } from './content.js?v=7';
+import { SITE } from './config.js?v=7';
+import { encode } from './match.js?v=7';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));

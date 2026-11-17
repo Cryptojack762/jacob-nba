@@ -1,7 +1,7 @@
-import { buildChart, DAY_MASTERS } from './saju.js?v=5';
-import { birthForm } from './form.js?v=5';
-import { encode, decode, compare } from './match.js?v=5';
-import { SITE } from './config.js?v=5';
+import { buildChart, DAY_MASTERS } from './saju.js?v=7';
+import { birthForm } from './form.js?v=7';
+import { encode, decode, compare } from './match.js?v=7';
+import { SITE } from './config.js?v=7';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
