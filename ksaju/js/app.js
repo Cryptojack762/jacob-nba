@@ -1,6 +1,6 @@
-import { buildChart, ELEMENTS, EL_HANJA, EL_KO } from './saju.js?v=3';
-import { DM_READS, EL_MEANING, teaser } from './content.js?v=3';
-import { SITE } from './config.js?v=3';
+import { buildChart, ELEMENTS, EL_HANJA, EL_KO } from './saju.js?v=4';
+import { DM_READS, EL_MEANING, teaser } from './content.js?v=4';
+import { SITE } from './config.js?v=4';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));

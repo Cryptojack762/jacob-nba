@@ -82,7 +82,9 @@ export function buildChart(input) {
     args.trueSolarTime = { longitude: lon, applyEquationOfTime: true, applyHistoricalDst: false };
   } else {
     // Local clock mode: shift day/hour pillars to the birthplace's own clock time (its zone meridian).
-    const offH = tzOffset(input.tz || 'Asia/Seoul', utc) / 3600e3;
+    // Use the zone's STANDARD offset that year (daylight saving removed, as Korean saju does).
+    const tz = input.tz || 'Asia/Seoul', yr = +input.year;
+    const offH = Math.min(tzOffset(tz, Date.UTC(yr, 0, 15)), tzOffset(tz, Date.UTC(yr, 6, 15)), tzOffset(tz, utc)) / 3600e3;
     args.trueSolarTime = { longitude: offH * 15, applyEquationOfTime: false, applyHistoricalDst: false };
   }
   if (input.gender === 'male' || input.gender === 'female') args.gender = input.gender;
