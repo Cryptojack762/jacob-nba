@@ -1,3 +1,8 @@
-self.addEventListener('install',e=>self.skipWaiting());
-self.addEventListener('activate',e=>self.clients.claim());
-self.addEventListener('fetch',e=>{if(e.request.mode==='navigate'){e.respondWith(fetch(e.request).catch(()=>new Response('<h3 style="font-family:sans-serif;color:#fff;background:#0b0a10">Phoenix is offline - check your connection</h3>',{headers:{'Content-Type':'text/html'}})))}});
+var C='phoenix-v2', SHELL=['./','index.html','manifest.json','icon.svg','icon-192.png','icon-512.png'];
+self.addEventListener('install',function(e){e.waitUntil(caches.open(C).then(function(c){return c.addAll(SHELL)}).then(function(){return self.skipWaiting()}))});
+self.addEventListener('activate',function(e){e.waitUntil(caches.keys().then(function(k){return Promise.all(k.filter(function(x){return x!=C}).map(function(x){return caches.delete(x)}))}).then(function(){return self.clients.claim()}))});
+self.addEventListener('fetch',function(e){
+  var u=new URL(e.request.url);
+  if(e.request.method!='GET'||u.origin!=location.origin)return; // data feed always goes to the network
+  e.respondWith(fetch(e.request).then(function(r){var cp=r.clone();caches.open(C).then(function(c){c.put(e.request,cp)});return r}).catch(function(){return caches.match(e.request).then(function(m){return m||caches.match('index.html')})}));
+});

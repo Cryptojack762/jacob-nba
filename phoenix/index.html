@@ -1,13 +1,221 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8">
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b0a10"><title>Phoenix</title>
-<link rel="manifest" href="manifest.json"><link rel="icon" href="icon.svg"><link rel="apple-touch-icon" href="icon-192.png">
-<style>html,body{margin:0;height:100%;background:#0b0a10}iframe{border:0;width:100%;height:100%;display:block}
-#fb{position:fixed;bottom:16px;left:16px;right:16px;display:none;text-align:center;padding:16px;border-radius:14px;background:#ff6a00;color:#fff;font:700 17px Arial,sans-serif;text-decoration:none}</style>
-</head><body>
-<iframe id="f" onload="window.ok=1" src="https://script.google.com/macros/s/AKfycbzP-y3YrWG9iPZCmvum9jWZ0uqoo819QNa-eD2zQtgzBnXgV2hGXn0mRtBMd7ogSKDH/exec" allow="clipboard-write"></iframe>
-<a id="fb" href="https://script.google.com/macros/s/AKfycbzP-y3YrWG9iPZCmvum9jWZ0uqoo819QNa-eD2zQtgzBnXgV2hGXn0mRtBMd7ogSKDH/exec">Open Phoenix</a>
+<meta name="theme-color" content="#0b0a10">
+<meta name="description" content="Phoenix crypto screener: BTC gate, BloFin triggers and top picks.">
+<title>Phoenix</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0a10;--card:#15121b;--card2:#1b1723;--line:#2a2333;--tx:#f3eef7;--mut:#9a8fa8;--dim:#6d6378;
+--fire:#ff6a00;--fire2:#ffb347;--up:#22c55e;--upb:#0f2a1a;--dn:#ef4444;--dnb:#2c1013;--al:#f59e0b;--alb:#2b1e08;--wt:#8b93a7;--wtb:#1c1f27}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--tx);font-family:Inter,-apple-system,Segoe UI,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 62%) no-repeat,var(--bg);min-height:100vh;padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+.hd{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;padding:calc(14px + env(safe-area-inset-top)) 16px 12px;background:linear-gradient(#0b0a10ee,#0b0a10cc);backdrop-filter:blur(10px);border-bottom:1px solid #1d1824}
+.hd img{width:40px;height:40px;border-radius:11px;box-shadow:0 4px 18px #ff6a0040}
+.ttl{font-weight:800;font-size:21px;letter-spacing:-.02em;line-height:1.1}
+.sub{font-size:12px;color:var(--mut);margin-top:2px;display:flex;align-items:center;gap:6px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--up);box-shadow:0 0 0 3px #22c55e22}
+.dot.off{background:var(--al);box-shadow:0 0 0 3px #f59e0b22}
+.ib{margin-left:auto;display:flex;gap:8px}
+.icb{width:38px;height:38px;border-radius:11px;border:1px solid var(--line);background:var(--card);color:var(--tx);display:grid;place-items:center;cursor:pointer}
+.icb svg{width:18px;height:18px}
+.spin svg{animation:sp 1s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+.wrap{max-width:720px;margin:0 auto;padding:14px 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px}
+.k{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--mut);text-transform:uppercase;margin:20px 4px 10px;display:flex;justify-content:space-between;align-items:center}
+.gate{display:flex;align-items:center;gap:14px}
+.gico{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;font-weight:800;font-size:20px;flex:none}
+.gico.up{background:var(--upb);color:var(--up)}.gico.dn{background:var(--dnb);color:var(--dn)}
+.gt{font-size:17px;font-weight:700}.gs{font-size:13px;color:var(--mut);margin-top:3px;line-height:1.4}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.st{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:10px 6px;text-align:center;cursor:pointer}
+.st b{display:block;font-size:20px;font-weight:800}.st span{font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--mut)}
+.st.on{outline:2px solid var(--fire)}
+.c-ENTER b{color:var(--up)}.c-ALMOST b{color:var(--al)}.c-WAIT b{color:var(--wt)}.c-AVOID b{color:var(--dn)}
+.read{font-size:15px;line-height:1.6;color:#e7e0ee}
+.read b{color:var(--fire2)}
+.row{display:flex;align-items:center;gap:12px;padding:13px 0;border-top:1px solid #221d2a}
+.row:first-child{border-top:0;padding-top:2px}
+.sym{width:42px;height:42px;border-radius:12px;background:var(--card2);border:1px solid var(--line);display:grid;place-items:center;font-weight:800;font-size:12px;flex:none;letter-spacing:-.02em}
+.mid{flex:1;min-width:0}
+.l1{display:flex;align-items:baseline;gap:8px}.l1 b{font-size:15px}.l1 span{font-size:13px;color:var(--mut);font-variant-numeric:tabular-nums}
+.why{font-size:12px;color:var(--mut);margin-top:3px}
+.plan{font-size:12px;color:var(--fire2);margin-top:4px}
+.bar{height:4px;border-radius:4px;background:#2a2333;margin-top:7px;position:relative;overflow:hidden}
+.bar i{position:absolute;top:0;bottom:0;border-radius:4px}
+.chip{font-size:11px;font-weight:800;letter-spacing:.06em;padding:6px 10px;border-radius:999px;flex:none}
+.s-ENTER{background:var(--upb);color:var(--up)}.s-ALMOST{background:var(--alb);color:var(--al)}.s-WAIT{background:var(--wtb);color:var(--wt)}.s-AVOID{background:var(--dnb);color:var(--dn)}
+.rk{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-weight:800;font-size:13px;background:var(--card2);border:1px solid var(--line);flex:none}
+.rk.g{background:linear-gradient(135deg,#ff8a00,#ff2d00);border:0;color:#fff}
+.sc{text-align:right;flex:none;min-width:48px}.sc b{font-size:17px}.sc span{display:block;font-size:10px;color:var(--mut);letter-spacing:.06em}
+.meta{font-size:12px;color:var(--mut);margin-top:3px}
+.more{width:100%;margin-top:6px;background:none;border:1px solid var(--line);color:var(--tx);border-radius:12px;padding:11px;font:600 13px Inter,sans-serif;cursor:pointer}
+.hl{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.5;padding:10px 0;border-top:1px solid #221d2a}.hl:first-child{border-top:0}
+.hl i{font-style:normal;flex:none}
+.foot{font-size:11px;color:var(--dim);text-align:center;line-height:1.5;margin:20px 8px}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;justify-content:center;gap:4px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:#0e0c13f2;backdrop-filter:blur(12px);border-top:1px solid #1d1824}
+.tab{flex:1;max-width:160px;background:none;border:0;color:var(--dim);display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border-radius:12px;font:600 11px Inter,sans-serif;cursor:pointer}
+.tab svg{width:22px;height:22px}.tab.on{color:var(--fire2)}
+.view{display:none}.view.on{display:block;animation:fi .25s ease}@keyframes fi{from{opacity:0;transform:translateY(4px)}}
+.sk{background:linear-gradient(90deg,#1a1620,#241e2c,#1a1620);background-size:200% 100%;animation:sh 1.2s infinite;border-radius:12px;height:64px;margin-bottom:10px}@keyframes sh{to{background-position:-200% 0}}
+.err{background:var(--alb);border:1px solid #5a3d0e;color:#fcd9a0;font-size:13px;border-radius:12px;padding:10px 12px;margin-bottom:12px;display:none}
+.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#2a2333;color:#fff;font-size:13px;padding:10px 16px;border-radius:999px;opacity:0;transition:.25s;pointer-events:none;z-index:9}
+.toast.on{opacity:1}
+.inst{display:none;align-items:center;gap:12px;background:linear-gradient(135deg,#2a1206,#1b1018);border:1px solid #4a2410}
+.inst.on{display:flex}.inst p{margin:0;flex:1;font-size:13px;color:#f0d9c8}.inst button{background:var(--fire);color:#fff;border:0;border-radius:10px;padding:10px 14px;font:700 13px Inter,sans-serif;cursor:pointer}
+</style>
+</head>
+<body>
+<header class="hd">
+  <img src="icon-192.png" alt="">
+  <div><div class="ttl">Phoenix</div><div class="sub"><span class="dot" id="dot"></span><span id="upd">Loading…</span></div></div>
+  <div class="ib">
+    <button class="icb" id="share" aria-label="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></button>
+    <button class="icb" id="ref" aria-label="Refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="err" id="err"></div>
+  <div class="card inst" id="inst"><p>Install Phoenix on your home screen for one-tap access.</p><button id="instb">Install</button></div>
+
+  <section class="view on" id="v-home">
+    <div id="gate"><div class="sk"></div></div>
+    <div class="k">Today's read</div>
+    <div class="card"><div class="read" id="read"><div class="sk" style="height:80px;margin:0"></div></div></div>
+    <div class="k">Best setups right now</div>
+    <div class="card" id="best"><div class="sk" style="margin:0"></div></div>
+  </section>
+
+  <section class="view" id="v-sig">
+    <div class="k"><span>BloFin triggers</span><span id="fl"></span></div>
+    <div class="card" id="sig"></div>
+  </section>
+
+  <section class="view" id="v-picks">
+    <div class="k">Top picks · Dustin's screener</div>
+    <div class="card" id="picks"></div>
+    <div class="foot" id="scan"></div>
+  </section>
+
+  <section class="view" id="v-info">
+    <div class="k">Bot health</div>
+    <div class="card" id="health"></div>
+    <div class="k">How to read Phoenix</div>
+    <div class="card">
+      <div class="hl"><i class="chip s-ENTER">ENTER</i><span>Setup is live and the BTC gate allows it. Check the plan before any trade.</span></div>
+      <div class="hl"><i class="chip s-ALMOST">ALMOST</i><span>Close to the trigger line. Watch it.</span></div>
+      <div class="hl"><i class="chip s-WAIT">WAIT</i><span>Mid-range. Nothing to do yet.</span></div>
+      <div class="hl"><i class="chip s-AVOID">AVOID</i><span>Below its line or breaking down.</span></div>
+      <div class="hl"><i>⚡</i><span><b>BTC gate</b>: when it's DOWN, bounce longs are a coin flip. Skip them or use a quarter size.</span></div>
+      <div class="hl"><i>📏</i><span><b>ATR</b> = how far price sits from the trigger line, measured in average daily moves.</span></div>
+    </div>
+  </section>
+
+  <div class="foot">Read-only view of the Phoenix bot. Plans only, not financial advice. Refreshes every 5 minutes.</div>
+</main>
+
+<nav class="tabs">
+  <button class="tab on" data-v="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Home</button>
+  <button class="tab" data-v="sig"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>Triggers</button>
+  <button class="tab" data-v="picks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>Top picks</button>
+  <button class="tab" data-v="info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v.01M11 12h1v5h1"/></svg>Info</button>
+</nav>
+<div class="toast" id="toast"></div>
+
 <script>
-if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js')}
-setTimeout(function(){if(!window.ok)document.getElementById('fb').style.display='block'},10000);
-</script></body></html>
+var API='https://script.google.com/macros/s/AKfycbzP-y3YrWG9iPZCmvum9jWZ0uqoo819QNa-eD2zQtgzBnXgV2hGXn0mRtBMd7ogSKDH/exec?json=1';
+var ORDER={ENTER:0,ALMOST:1,WAIT:2,AVOID:3}, D=null, FIL='', SHOWALL=false;
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function cap(s){s=String(s||'').trim();return s.charAt(0).toUpperCase()+s.slice(1)}
+function toast(t){var e=$('toast');e.textContent=t;e.classList.add('on');setTimeout(function(){e.classList.remove('on')},1800)}
+function st(s){s=String(s||'').toUpperCase();return ORDER.hasOwnProperty(s)?s:'WAIT'}
+function atr(w){var m=String(w||'').match(/([\d.]+)\s*ATR\s*(above|below)/i);return m?(m[2].toLowerCase()=='below'?-1:1)*Number(m[1]):null}
+function num(s){var n=Number(String(s).replace(/[^\d.\-]/g,''));return isNaN(n)?s:(n>=1000?n.toLocaleString('en-US',{maximumFractionDigits:2}):String(s))}
+
+function meter(a){
+  if(a==null)return '';
+  var c=Math.max(-4,Math.min(4,a)), mid=50, w=Math.abs(c)/4*50;
+  var col=a<0?'var(--dn)':a<.6?'var(--up)':a<1.2?'var(--al)':'var(--wt)';
+  return '<div class="bar"><i style="left:'+(a<0?mid-w:mid)+'%;width:'+Math.max(w,2)+'%;background:'+col+'"></i><i style="left:50%;width:2px;background:#fff6"></i></div>';
+}
+function trigRow(t){
+  var s=st(t.st), a=atr(t.why);
+  return '<div class="row"><div class="sym">'+esc(String(t.c).slice(0,5))+'</div><div class="mid"><div class="l1"><b>'+esc(t.c)+'</b><span>$'+esc(num(t.now))+'</span></div>'+
+    '<div class="why">'+esc(t.why)+'</div>'+(t.plan?'<div class="plan">'+esc(t.plan)+'</div>':'')+meter(a)+'</div><span class="chip s-'+s+'">'+s+'</span></div>';
+}
+function render(){
+  if(!D)return;
+  var g=String(D.gate||''), up=!!D.gateUp, tr=(D.trig||[]).slice().sort(function(a,b){return ORDER[st(a.st)]-ORDER[st(b.st)]||Math.abs(atr(a.why)||9)-Math.abs(atr(b.why)||9)});
+  var cnt={ENTER:0,ALMOST:0,WAIT:0,AVOID:0}; tr.forEach(function(t){cnt[st(t.st)]++});
+  var gm=g.match(/BTC gate:\s*([A-Z]+)\s*\(([^)]*)\)/i), when=(g.match(/refreshed ([^|]+)/i)||[])[1]||'';
+  var note=gm?cap(gm[2]):(up?'Longs are allowed.':'');
+  $('gate').innerHTML='<div class="card"><div class="gate"><div class="gico '+(up?'up':'dn')+'">'+(up?'▲':'▼')+'</div><div><div class="gt">Bitcoin gate is '+(up?'UP':'DOWN')+'</div><div class="gs">'+esc(note)+(when?'<br>Checked '+esc(when.trim()):'')+'</div></div></div>'+
+    '<div class="stats">'+['ENTER','ALMOST','WAIT','AVOID'].map(function(k){return '<div class="st c-'+k+(FIL==k?' on':'')+'" data-f="'+k+'"><b>'+cnt[k]+'</b><span>'+k+'</span></div>'}).join('')+'</div></div>';
+  var r=String(D.read||'').replace(/^TODAY'?S?\s*READ:?\s*/i,'');
+  r=cap(r); var i=r.indexOf('.'); $('read').innerHTML=i>0&&i<80?'<b>'+esc(r.slice(0,i+1))+'</b>'+esc(r.slice(i+1)):esc(r||'No read yet today.');
+  var best=tr.slice(0,3);
+  $('best').innerHTML=best.length?best.map(trigRow).join('')+'<button class="more" data-go="sig">See all '+tr.length+' triggers</button>':'<div class="why">No triggers yet.</div>';
+  var list=FIL?tr.filter(function(t){return st(t.st)==FIL}):tr, show=SHOWALL||FIL?list:list.slice(0,10);
+  $('fl').innerHTML=FIL?'<span class="chip s-'+FIL+'" data-f="">'+FIL+' ✕</span>':cnt.ENTER+' ready';
+  $('sig').innerHTML=(show.length?show.map(trigRow).join(''):'<div class="why">Nothing in '+FIL+' right now.</div>')+(!FIL&&!SHOWALL&&list.length>10?'<button class="more" id="sa">Show all '+list.length+'</button>':'');
+  $('picks').innerHTML=(D.picks||[]).map(function(p){
+    var s=Number(p.s)||0;
+    return '<div class="row"><div class="rk'+(p.r<=3?' g':'')+'">'+esc(p.r)+'</div><div class="mid"><div class="l1"><b>'+esc(p.t)+'</b><span>'+esc(p.ty)+'</span></div><div class="meta">Mkt cap '+esc(p.mc)+' · Revenue '+esc(p.rev)+'</div>'+
+      '<div class="bar"><i style="left:0;width:'+Math.min(100,s)+'%;background:linear-gradient(90deg,#ff2d00,#ffb347)"></i></div></div><div class="sc"><b>'+esc(p.s)+'</b><span>SCORE</span></div></div>';
+  }).join('')||'<div class="why">No picks yet.</div>';
+  $('scan').textContent=D.scan||'';
+  var h=String(D.health||'').split(/\s*[|·]\s*/).filter(Boolean);
+  $('health').innerHTML=h.map(function(x){return '<div class="hl"><i>'+(/ok|✅/i.test(x)?'✅':/fail|error|❌|stale/i.test(x)?'⚠️':'•')+'</i><span>'+esc(x.replace(/^✅\s*/,''))+'</span></div>'}).join('')||'<div class="why">No health data.</div>';
+  $('upd').textContent='Updated '+(D.at||'');
+}
+function load(manual){
+  var b=$('ref'); b.classList.add('spin');
+  fetch(API,{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+    if(!j.ok)throw new Error(j.err||'bad data');
+    D=j; try{localStorage.setItem('px',JSON.stringify(j))}catch(e){}
+    $('err').style.display='none'; $('dot').className='dot'; render(); if(manual)toast('Up to date');
+  }).catch(function(e){
+    $('dot').className='dot off';
+    $('err').textContent=D?'Can\'t reach the bot right now. Showing the last data.':'Can\'t reach the bot right now. Check your connection and tap refresh.';
+    $('err').style.display='block';
+  }).then(function(){b.classList.remove('spin')});
+}
+function go(v){
+  document.querySelectorAll('.view').forEach(function(x){x.classList.toggle('on',x.id=='v-'+v)});
+  document.querySelectorAll('.tab').forEach(function(x){x.classList.toggle('on',x.dataset.v==v)});
+  window.scrollTo(0,0); try{localStorage.setItem('pxv',v)}catch(e){}
+}
+document.addEventListener('click',function(e){
+  var t=e.target.closest('[data-v],[data-go],[data-f],#sa'); if(!t)return;
+  if(t.dataset.v)go(t.dataset.v);
+  else if(t.dataset.go)go(t.dataset.go);
+  else if(t.id=='sa'){SHOWALL=true;render()}
+  else if(t.dataset.f!=null){FIL=(FIL==t.dataset.f?'':t.dataset.f);render();if(FIL)go('sig')}
+});
+$('ref').onclick=function(){load(true)};
+$('share').onclick=function(){
+  var u=location.href.split('#')[0];
+  if(navigator.share)navigator.share({title:'Phoenix',text:'Phoenix crypto screener',url:u}).catch(function(){});
+  else if(navigator.clipboard)navigator.clipboard.writeText(u).then(function(){toast('Link copied')});
+};
+var dp=null;
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();dp=e;$('inst').classList.add('on')});
+$('instb').onclick=function(){if(dp){dp.prompt();dp.userChoice.then(function(){$('inst').classList.remove('on');dp=null})}};
+window.addEventListener('appinstalled',function(){$('inst').classList.remove('on');toast('Phoenix installed')});
+try{var c=localStorage.getItem('px');if(c){D=JSON.parse(c);render()}var lv=localStorage.getItem('pxv');if(lv&&$('v-'+lv))go(lv)}catch(e){}
+load(false);
+setInterval(load,300000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden)load(false)});
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+</script>
+</body>
+</html>
