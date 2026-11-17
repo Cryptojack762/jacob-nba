@@ -148,13 +148,20 @@ function meter(a){
   return '<div class="bar"><i style="left:'+(a<0?mid-w:mid)+'%;width:'+Math.max(w,2)+'%;background:'+col+'"></i><i style="left:50%;width:2px;background:#fff6"></i></div>';
 }
 function trigRow(t){
-  var s=st(t.st), a=atr(t.why);
+  var s=st(t.st), a=atr(t.why), r=(t.score===''||t.score==null)?NaN:Math.max(0,Math.min(100,Number(t.score)));
+  var C={ENTER:'var(--up)',ALMOST:'var(--al)',WAIT:'var(--wt)',AVOID:'var(--dn)'}[s];
+  var bar, right;
+  if(!isNaN(r)){
+    // readiness 0-100: 0 = at 4H support, 100 = at/above the bullish flip (turns green)
+    bar='<div class="bar"><i style="left:0;width:'+Math.max(r,2)+'%;background:'+(r>=100?'#22c55e':'linear-gradient(90deg,#ff2d00,#ff8a00 40%,#ffd84d 75%,#22c55e);background-size:'+(10000/Math.max(r,2))+'% 100%')+'"></i></div>';
+    right='<div class="sc"><b style="color:'+(r>=100?'#22c55e':'inherit')+'">'+Math.round(r)+'</b><span style="color:'+C+'">'+s+'</span></div>';
+  } else { bar=meter(a); right='<span class="chip s-'+s+'">'+s+'</span>'; }
   return '<div class="row"><div class="sym">'+esc(String(t.c).slice(0,5))+'</div><div class="mid"><div class="l1"><b>'+esc(t.c)+'</b><span>$'+esc(num(t.now))+'</span></div>'+
-    '<div class="why">'+esc(t.why)+'</div>'+(t.plan?'<div class="plan">'+esc(t.plan)+'</div>':'')+meter(a)+'</div><span class="chip s-'+s+'">'+s+'</span></div>';
+    '<div class="why">'+esc(t.why)+'</div>'+(t.plan?'<div class="plan">'+esc(t.plan)+'</div>':'')+bar+'</div>'+right+'</div>';
 }
 function render(){
   if(!D)return;
-  var g=String(D.gate||''), up=!!D.gateUp, tr=(D.trig||[]).slice().sort(function(a,b){return ORDER[st(a.st)]-ORDER[st(b.st)]||Math.abs(atr(a.why)||9)-Math.abs(atr(b.why)||9)});
+  var g=String(D.gate||''), up=!!D.gateUp, tr=(D.trig||[]).slice().sort(function(a,b){return ORDER[st(a.st)]-ORDER[st(b.st)]||(Number(b.score)||0)-(Number(a.score)||0)||Math.abs(atr(a.why)||9)-Math.abs(atr(b.why)||9)});
   var cnt={ENTER:0,ALMOST:0,WAIT:0,AVOID:0}; tr.forEach(function(t){cnt[st(t.st)]++});
   var gm=g.match(/BTC gate:\s*([A-Z]+)\s*\(([^)]*)\)/i), when=(g.match(/refreshed ([^|]+)/i)||[])[1]||'';
   var note=gm?cap(gm[2]):(up?'Longs are allowed.':'');
