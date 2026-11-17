@@ -21,7 +21,7 @@ input,select{width:100%;background:var(--ink2);border:1px solid var(--line);colo
 input:focus,select:focus{border-color:var(--gold)}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .chk{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--mut);margin-top:8px}
-.chk input{width:18px;height:18px;padding:0}
+.chk input{width:18px;height:18px;padding:0;-webkit-appearance:checkbox;appearance:auto;accent-color:var(--gold)}
 .seg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .seg button{background:var(--ink2);border:1px solid var(--line);color:var(--tx);border-radius:12px;padding:12px;font:600 14px Inter,sans-serif;cursor:pointer}
 .seg button.on{border-color:var(--gold);color:var(--gold2);background:#2a2440}

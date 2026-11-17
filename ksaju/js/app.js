@@ -1,6 +1,6 @@
-import { buildChart, ELEMENTS, EL_HANJA, EL_KO } from './saju.js';
-import { DM_READS, EL_MEANING, teaser } from './content.js';
-import { SITE } from './config.js';
+import { buildChart, ELEMENTS, EL_HANJA, EL_KO } from './saju.js?v=2';
+import { DM_READS, EL_MEANING, teaser } from './content.js?v=2';
+import { SITE } from './config.js?v=2';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -95,7 +95,7 @@ function render(c) {
     <div class="blur">${tz.map((t, i) => i % 2 ? `<p>${esc(t)}</p>` : `<h4>${esc(t)}</h4>`).join('')}</div>
     <div class="lock">
       <h3>${esc(SITE.product.name)}</h3>
-      <p>Your personal ${esc(dm.title)} reading for 2027: love, career, money and your best months, written for your exact chart.</p>
+      <p>Your personal 2027 reading as ${esc(dm.title)} (${dm.hanja}): love, career, money and your best months, written for your exact chart.</p>
       ${live ? `<div class="price"><b>${esc(SITE.product.price)}</b></div><button class="btn" id="buy">Unlock my reading</button>`
       : `<p style="margin-top:8px;color:var(--gold2)">Launching December 15. Join the list for the launch price.</p>
          <input id="em" type="email" placeholder="your@email.com" style="margin-top:10px"><button class="btn" id="wl">Join the waitlist</button>`}
