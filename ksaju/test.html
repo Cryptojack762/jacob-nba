@@ -1,0 +1,47 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>K-Saju engine test</title>
+<style>body{font:14px system-ui;background:#111;color:#eee;padding:16px}table{border-collapse:collapse;font-size:12px}td,th{border:1px solid #333;padding:4px 6px}.bad{background:#5a1d1d}.ok{color:#7ddc8b}</style></head>
+<body><h2>K-Saju chart engine: self-test</h2><div id="sum">running…</div><div id="out"></div>
+<script type="module">
+import { buildChart, CONFIG, ipchun } from './js/saju.js';
+import { Solar } from 'https://cdn.jsdelivr.net/npm/lunar-javascript@1.7.3/+esm';
+const out = [], R = { pass: 0, fail: 0, notes: [] };
+function check(name, got, want) { const ok = got === want; ok ? R.pass++ : R.fail++; out.push(`<tr class="${ok ? '' : 'bad'}"><td>${name}</td><td>${got}</td><td>${want}</td><td>${ok ? '✔' : '✘'}</td></tr>`); }
+const H = c => [c.pillars.year.hanja, c.pillars.month.hanja, c.pillars.day.hanja, c.pillars.hour ? c.pillars.hour.hanja : '—'].join(' ');
+
+// 1) Library README example (Seoul clock time, no solar correction)
+CONFIG.trueSolarTime = false;
+check('README 1992-10-24 05:30 KST', H(buildChart({ year: 1992, month: 10, day: 24, hour: 5, minute: 30, tz: 'Asia/Seoul' })), '壬申 庚戌 癸酉 乙卯');
+
+// 2) Cross-check against a second, independent engine (6tail lunar-javascript), Beijing clock time, 40 random births
+let seed = 7; const rnd = n => { seed = (seed * 9301 + 49297) % 233280; return Math.floor(seed / 233280 * n); };
+for (let i = 0; i < 40; i++) {
+  const y = 1940 + rnd(80), m = 1 + rnd(12), d = 1 + rnd(28), h = rnd(23), mi = rnd(60);
+  const c = buildChart({ year: y, month: m, day: d, hour: h, minute: mi, tz: 'Asia/Shanghai' });
+  const e = Solar.fromYmdHms(y, m, d, h, mi, 0).getLunar().getEightChar();
+  check(`${y}-${m}-${d} ${h}:${String(mi).padStart(2, '0')} Beijing`, H(c), [e.getYear(), e.getMonth(), e.getDay(), e.getTime()].join(' '));
+}
+
+// 3) New-year boundary: year must turn at Ipchun, not Jan 1
+CONFIG.trueSolarTime = true;
+const ip = ipchun(2027);
+R.notes.push('Ipchun 2027 (KST): ' + ip.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }) + ' | Chicago: ' + ip.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+const jan = buildChart({ year: 2027, month: 1, day: 20, hour: 12, minute: 0, tz: 'Asia/Seoul', longitude: 126.98 });
+check('2027-01-20 still Horse year (丙午)', jan.pillars.year.hanja, '丙午');
+const feb = buildChart({ year: 2027, month: 2, day: 10, hour: 12, minute: 0, tz: 'Asia/Seoul', longitude: 126.98 });
+check('2027-02-10 Goat year (丁未)', feb.pillars.year.hanja, '丁未');
+
+// 4) Same instant, different city: year/month/day must agree when it's the same calendar moment
+const a = buildChart({ year: 1995, month: 6, day: 15, hour: 21, minute: 0, tz: 'America/Los_Angeles', longitude: -118.24 });
+const b = buildChart({ year: 1995, month: 6, day: 16, hour: 13, minute: 0, tz: 'Asia/Seoul', longitude: 135 });
+check('LA 21:00 = Seoul 13:00 next day (year+month)', a.pillars.year.hanja + a.pillars.month.hanja, b.pillars.year.hanja + b.pillars.month.hanja);
+
+// 5) Sample full chart for inspection
+const s = buildChart({ year: 1990, month: 5, day: 15, hour: 14, minute: 30, tz: 'America/Chicago', longitude: -98.49, gender: 'male' });
+R.notes.push('Sample (San Antonio 1990-05-15 14:30 male): ' + H(s) + ' | DM ' + s.dayMaster.label + ' ' + s.dayMaster.hanja + ' ' + s.dayMaster.title + ' | ' + JSON.stringify(s.elements.pct) + ' | ' + s.animal.color + ' ' + s.animal.name + ' | luck ' + (s.luck && s.luck.current ? s.luck.current.hanja + ' age ' + s.luck.current.age + '-' + s.luck.current.ageEnd : 'none'));
+const u = buildChart({ year: 2001, month: 3, day: 3, hour: null, tz: 'Europe/London', longitude: -0.13 });
+R.notes.push('Unknown time (London 2001-03-03): ' + H(u) + ' | ' + JSON.stringify(u.elements.pct));
+
+document.getElementById('sum').innerHTML = `<b class="${R.fail ? 'bad' : 'ok'}">${R.pass} passed, ${R.fail} failed</b><br>` + R.notes.map(x => '<div>' + x + '</div>').join('');
+document.getElementById('out').innerHTML = '<table><tr><th>case</th><th>K-Saju engine</th><th>expected / 2nd engine</th><th></th></tr>' + out.join('') + '</table>';
+window.__R = R;
+</script></body></html>
