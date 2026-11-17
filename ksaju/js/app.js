@@ -1,6 +1,6 @@
-import { buildChart, ELEMENTS, EL_HANJA, EL_KO } from './saju.js?v=2';
-import { DM_READS, EL_MEANING, teaser } from './content.js?v=2';
-import { SITE } from './config.js?v=2';
+import { buildChart, ELEMENTS, EL_HANJA, EL_KO } from './saju.js?v=3';
+import { DM_READS, EL_MEANING, teaser } from './content.js?v=3';
+import { SITE } from './config.js?v=3';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -160,7 +160,10 @@ async function shareCard() {
     g.fillStyle = col; g.font = '700 70px "Noto Serif KR", serif'; g.fillText(EL_HANJA[e], x + 60, 1530);
     g.fillStyle = '#a7a9c2'; g.font = '600 34px Inter'; g.fillText(c.elements.pct[e] + '%', x + 60, 1590); x += 160;
   });
-  g.fillStyle = '#f4f1ea'; g.font = '700 42px Inter'; g.fillText('Find yours free → ' + location.host + location.pathname.replace(/index\.html$/, ''), W / 2, 1760);
+  const url = (location.host + location.pathname.replace(/index\.html$/, '')).replace(/\/$/, '');
+  g.fillStyle = '#e8c27a'; g.font = '700 46px Inter'; g.fillText('Find yours free', W / 2, 1720);
+  g.fillStyle = '#f4f1ea'; let fs = 40; do { g.font = '600 ' + fs + 'px Inter'; fs -= 2; } while (g.measureText(url).width > 960 && fs > 20);
+  g.fillText(url, W / 2, 1785);
   cv.toBlob(async blob => {
     const file = new File([blob], 'my-day-master.png', { type: 'image/png' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], title: 'My Korean Day Master' }); track('share_card'); return; } catch (e) { } }

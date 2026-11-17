@@ -90,7 +90,7 @@ function stripe_(method, path, params) {
 function checkout_(b) {
   var prod = PRODUCTS[b.product]; if (!prod) return { ok: false, err: 'unknown product' };
   if (!b.chart || !b.chart.dayMaster) return { ok: false, err: 'missing chart' };
-  var site = P_('SITE_URL'); if (!site) throw new Error('SITE_URL not set');
+  var site = P_('SITE_URL', 'https://cryptojack762.github.io/jacob-nba/ksaju/'); if (!site) throw new Error('SITE_URL not set');
   var orderId = Utilities.getUuid(), token = Utilities.getUuid().replace(/-/g, '');
   var chart = JSON.stringify(b.chart).slice(0, 40000);
   var s = stripe_('post', '/checkout/sessions', {
@@ -218,7 +218,7 @@ function writeReading_(chart) {
 
 function emailReading_(to, token, text, chart) {
   if (!to) return;
-  var brand = P_('BRAND', 'K-Saju'), link = P_('SITE_URL') + 'reading.html?r=' + token;
+  var brand = P_('BRAND', 'K-Saju'), link = P_('SITE_URL', 'https://cryptojack762.github.io/jacob-nba/ksaju/') + 'reading.html?r=' + token;
   var esc = function (s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
   var html = text.split(/\n+/).map(function (l) {
     l = l.trim(); if (!l) return '';
