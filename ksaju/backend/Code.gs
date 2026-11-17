@@ -15,7 +15,9 @@
  */
 
 var PRODUCTS = {
-  year2027: { name: '2027 Year Ahead + Love Reading', cents: 1499 }
+  year2027: { name: '2027 Year Ahead + Love Reading', cents: 1499 },
+  compat: { name: 'Compatibility Reading', cents: 1999 },
+  bundle: { name: 'Compatibility + 2027 Year Ahead Bundle', cents: 2999 }
 };
 
 function P_(k, d) { return PropertiesService.getScriptProperties().getProperty(k) || d || ''; }
@@ -70,7 +72,7 @@ function waitlist_(b) {
   return { ok: true };
 }
 function event_(b) {
-  var ok = ['landing', 'free_chart', 'waitlist', 'checkout', 'paid', 'share_card', 'invite'];
+  var ok = ['landing', 'free_chart', 'waitlist', 'checkout', 'paid', 'share_card', 'invite', 'compat'];
   if (ok.indexOf(b.step) < 0) return { ok: false };
   ss_().getSheetByName('Events').appendRow([new Date(), b.step, clean_(b.src, 40)]);
   return { ok: true };
@@ -92,7 +94,8 @@ function checkout_(b) {
   if (!b.chart || !b.chart.dayMaster) return { ok: false, err: 'missing chart' };
   var site = P_('SITE_URL', 'https://cryptojack762.github.io/jacob-nba/ksaju/'); if (!site) throw new Error('SITE_URL not set');
   var orderId = Utilities.getUuid(), token = Utilities.getUuid().replace(/-/g, '');
-  var chart = JSON.stringify(b.chart).slice(0, 40000);
+  if ((b.product == 'compat' || b.product == 'bundle') && !b.partner) return { ok: false, err: 'missing partner' };
+  var chart = JSON.stringify(b.partner ? { chart: b.chart, partner: b.partner } : b.chart).slice(0, 45000);
   var s = stripe_('post', '/checkout/sessions', {
     'mode': 'payment',
     'line_items[0][price_data][currency]': 'usd',
@@ -138,18 +141,18 @@ function reading_(b) {
     o.sh.getRange(o.row, 3, 1, 3).setValues([['paid', o.v[3], email]]);
     event_({ step: 'paid', src: '' });
     var text;
-    try { text = writeReading_(JSON.parse(o.v[7])); }
+    try { text = writeFor_(o.v[3], JSON.parse(o.v[7])); }
     catch (x) { o.sh.getRange(o.row, 11).setValue(String(x)); throw x; }
     o.sh.getRange(o.row, 3).setValue('delivered');
     o.sh.getRange(o.row, 9).setValue(text);
-    try { emailReading_(email, o.v[6], text, JSON.parse(o.v[7])); o.sh.getRange(o.row, 10).setValue(new Date()); }
+    try { var d0 = JSON.parse(o.v[7]); emailReading_(email, o.v[6], text, d0.chart || d0, o.v[3]); o.sh.getRange(o.row, 10).setValue(new Date()); }
     catch (x) { o.sh.getRange(o.row, 11).setValue('email: ' + x); }
     return { ok: true, reading: text, title: titleFor_(o.v[7]), token: o.v[6] };
   } finally { lock.releaseLock(); }
 }
 
 function titleFor_(chartJson) {
-  try { var c = JSON.parse(chartJson); return 'Your 2027, ' + c.dayMaster.title + ' (' + c.dayMaster.hanja + ')'; } catch (x) { return 'Your 2027 reading'; }
+  try { var d = JSON.parse(chartJson); if (d.partner) return 'Your compatibility reading'; return 'Your 2027, ' + d.dayMaster.title + ' (' + d.dayMaster.hanja + ')'; } catch (x) { return 'Your reading'; }
 }
 
 // ---------- Layer 2: AI writes from the chart (the math is already done) ----------
@@ -198,11 +201,51 @@ function chartBrief_(c) {
   return lines.join('\n');
 }
 
-function writeReading_(chart) {
+function writeFor_(product, d) {
+  if (product == 'compat') return writeCompat_(d.chart, d.partner);
+  if (product == 'bundle') return writeCompat_(d.chart, d.partner) + '\n\n' + writeReading_(d.chart);
+  return writeReading_(d.chart || d);
+}
+
+var SYSTEM_COMPAT = [
+  'You are Haneul, a warm Korean saju (사주) reader writing in natural, modern English for young adults curious about Korean culture.',
+  'You receive two charts and a compatibility analysis that have already been calculated exactly (Korean 궁합, gunghap). Never recalculate or invent pillars, elements, scores or dates. Use only the facts given.',
+  'Write a personal compatibility reading addressed to "you two" / "you" (the buyer) and "them" (the other person).',
+  'Format: plain text with these exact section headings, each starting with "## ":',
+  '## Your connection at a glance / ## How you two love / ## Where you balance each other / ## Communication tips / ## Your best months together in 2027 / ## A note for you both',
+  'Length: 850 to 1,050 words. Short paragraphs. Explain any Korean or Hanja term in plain English the first time.',
+  'Tone: warm, specific, grounded, playful. Describe dynamics as tendencies and invitations, never certainties. Treat every pairing as workable; clashes are "chemistry that rewards patience".',
+  'Hard rules (never break): no fear-based or threatening language; no guaranteed outcomes or exact predictions; never say a couple is doomed, incompatible or should break up, stay together, marry or divorce; no health, legal or financial advice; no celebrity or K-pop idol names; no mention of death, illness, accidents or curses.',
+  'In "Your best months together in 2027", pick 3 months from the month list that suit both Day Masters and say why in one or two sentences each.',
+  'End with exactly this line on its own: "For entertainment and self-reflection. Not a substitute for professional advice."'
+].join('\n');
+
+function compatBrief_(chart, p) {
+  var A = p.a, B = p.b, lines = [];
+  lines.push('Person A Day Master element: ' + A.el + ' (' + A.hanja + '); Person B Day Master element: ' + B.el + ' (' + B.hanja + ').');
+  lines.push('Element counts A: ' + JSON.stringify(A.count) + '; B: ' + JSON.stringify(B.count));
+  lines.push('Zodiac years: ' + (p.animals || []).join(' + '));
+  lines.push('The buyer ("you") is Person ' + (p.buyer || 'A') + '; the other person ("them") is Person ' + ((p.buyer || 'A') == 'A' ? 'B' : 'A') + '.');
+  lines.push('Calculated match score: ' + p.score + '/100');
+  lines.push('Calculated highlights:');
+  (p.notes || []).forEach(function (n) { lines.push('- ' + n[0] + ': ' + n[1]); });
+  lines.push('A sees B\'s element as: ' + relation_(A.el, B.el) + '. B sees A\'s element as: ' + relation_(B.el, A.el) + '.');
+  if (chart && chart.dayMaster) lines.push('The buyer\'s full chart: ' + chartBrief_(chart).split('\n').slice(0, 4).join(' | '));
+  lines.push('');
+  lines.push('2027 is 丁未 (Yin Fire over Earth). 2027 months:');
+  MONTHS_2027.forEach(function (m) { lines.push('- ' + m[0] + ': ' + m[1] + ' (' + m[2] + ' over ' + m[3] + ') -> for A: ' + relation_(A.el, m[2]).split(' (')[0] + '; for B: ' + relation_(B.el, m[2]).split(' (')[0]); });
+  return lines.join('\n');
+}
+
+function writeCompat_(chart, partner) { return callAI_(SYSTEM_COMPAT, 'Here are the calculated charts and compatibility facts. Write the reading.\n\n' + compatBrief_(chart, partner)); }
+
+function writeReading_(chart) { return callAI_(SYSTEM_PROMPT, 'Here is the calculated chart. Write the reading.\n\n' + chartBrief_(chart)); }
+
+function callAI_(system, user) {
   var key = P_('ANTHROPIC_KEY'); if (!key) throw new Error('ANTHROPIC_KEY not set');
   var body = {
-    model: P_('MODEL', 'claude-sonnet-5-5'), max_tokens: 2200, system: SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: 'Here is the calculated chart. Write the reading.\n\n' + chartBrief_(chart) }]
+    model: P_('MODEL', 'claude-sonnet-5-5'), max_tokens: 2200, system: system,
+    messages: [{ role: 'user', content: user }]
   };
   var r = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
     method: 'post', contentType: 'application/json', muteHttpExceptions: true,
@@ -216,7 +259,7 @@ function writeReading_(chart) {
   return text;
 }
 
-function emailReading_(to, token, text, chart) {
+function emailReading_(to, token, text, chart, product) {
   if (!to) return;
   var brand = P_('BRAND', 'K-Saju'), link = P_('SITE_URL', 'https://cryptojack762.github.io/jacob-nba/ksaju/') + 'reading.html?r=' + token;
   var esc = function (s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
@@ -225,7 +268,7 @@ function emailReading_(to, token, text, chart) {
     return /^#+\s/.test(l) ? '<h3 style="color:#a8792b;margin:22px 0 6px">' + esc(l.replace(/^#+\s*/, '')) + '</h3>' : '<p style="line-height:1.6;margin:0 0 12px">' + esc(l) + '</p>';
   }).join('');
   var opt = {
-    to: to, name: brand, subject: 'Your 2027 reading: ' + chart.dayMaster.title + ' (' + chart.dayMaster.hanja + ')',
+    to: to, name: brand, subject: product == 'compat' ? 'Your compatibility reading' : product == 'bundle' ? 'Your compatibility + 2027 readings' : 'Your 2027 reading: ' + chart.dayMaster.title + ' (' + chart.dayMaster.hanja + ')',
     htmlBody: '<div style="font-family:Arial,sans-serif;max-width:600px;color:#222">' + html +
       '<p><a href="' + link + '">Open your reading online</a></p>' +
       '<p style="color:#888;font-size:12px">You received this because you bought a reading from ' + brand + '. Reply to this email for help or to delete your data.</p></div>'
@@ -237,6 +280,7 @@ function emailReading_(to, token, text, chart) {
 // ---------- tests you can run from the editor ----------
 function testPrompt() { Logger.log(chartBrief_(SAMPLE_())); }
 function testAI() { Logger.log(writeReading_(SAMPLE_())); }
+function testCompatPrompt() { Logger.log(compatBrief_(SAMPLE_(), { a: { el: 'Fire', hanja: '丙', count: { Wood: 0, Fire: 3, Earth: 1, Metal: 2, Water: 0 } }, b: { el: 'Water', hanja: '癸', count: { Wood: 2, Fire: 1, Earth: 1, Metal: 1, Water: 3 } }, score: 81, animals: ['Horse', 'Goat'], notes: [['Spark and challenge', 'Their Water shapes your Fire.'], ['Heart connection', 'Six Harmony.']] })); }
 function SAMPLE_() {
   return {
     input: { gender: 'female' },
