@@ -147,6 +147,12 @@ function meter(a){
   var col=a<0?'var(--dn)':a<.6?'var(--up)':a<1.2?'var(--al)':'var(--wt)';
   return '<div class="bar"><i style="left:'+(a<0?mid-w:mid)+'%;width:'+Math.max(w,2)+'%;background:'+col+'"></i><i style="left:50%;width:2px;background:#fff6"></i></div>';
 }
+function pickTrig(p){
+  if(!p.st)return '';
+  var s=String(p.st).toUpperCase(), r=Number(p.rd), has=p.rd!==''&&p.rd!=null&&!isNaN(r), C={ENTER:'var(--up)',ALMOST:'var(--al)',WAIT:'var(--wt)',AVOID:'var(--dn)'}[s]||'var(--mut)';
+  var bar=has?'<div class="bar"><i style="left:0;width:'+Math.max(r,2)+'%;background:'+(r>=100?'#22c55e':'linear-gradient(90deg,#ff2d00,#ff8a00 40%,#ffd84d 75%,#22c55e);background-size:'+(10000/Math.max(r,2))+'% 100%')+'"></i></div>':'';
+  return '<div class="plan" style="margin-top:8px"><b style="color:'+C+'">'+esc(s)+(has?' · '+Math.round(r)+'/100':'')+'</b>'+(/spot/i.test(p.src||'')?' · spot':'')+(p.plan?' — '+esc(p.plan):'')+'</div>'+bar;
+}
 function trigRow(t){
   var s=st(t.st), a=atr(t.why), r=(t.score===''||t.score==null)?NaN:Math.max(0,Math.min(100,Number(t.score)));
   var C={ENTER:'var(--up)',ALMOST:'var(--al)',WAIT:'var(--wt)',AVOID:'var(--dn)'}[s];
@@ -177,7 +183,7 @@ function render(){
   $('picks').innerHTML=(D.picks||[]).map(function(p){
     var s=Number(p.s)||0;
     return '<div class="row"><div class="rk'+(p.r<=3?' g':'')+'">'+esc(p.r)+'</div><div class="mid"><div class="l1"><b>'+esc(p.t)+'</b><span>'+esc(p.ty)+'</span></div><div class="meta">Mkt cap '+esc(p.mc)+' · Revenue '+esc(p.rev)+'</div>'+
-      '<div class="bar"><i style="left:0;width:'+Math.min(100,s)+'%;background:linear-gradient(90deg,#ff2d00,#ffb347)"></i></div></div><div class="sc"><b>'+esc(p.s)+'</b><span>SCORE</span></div></div>';
+      '<div class="bar"><i style="left:0;width:'+Math.min(100,s)+'%;background:linear-gradient(90deg,#ff2d00,#ffb347)"></i></div>'+pickTrig(p)+'</div><div class="sc"><b>'+esc(p.s)+'</b><span>SCORE</span></div></div>';
   }).join('')||'<div class="why">No picks yet.</div>';
   $('scan').textContent=D.scan||'';
   var h=String(D.health||'').split(/\s*[|·]\s*/).filter(Boolean);
