@@ -70,6 +70,7 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
 .toast.on{opacity:1}
 .inst{display:none;align-items:center;gap:12px;background:linear-gradient(135deg,#2a1206,#1b1018);border:1px solid #4a2410}
 .inst.on{display:flex}.inst p{margin:0;flex:1;font-size:13px;color:#f0d9c8}.inst button{background:var(--fire);color:#fff;border:0;border-radius:10px;padding:10px 14px;font:700 13px Inter,sans-serif;cursor:pointer}
+.s-MISSED{background:#1d2840;color:#8ab4f8}
 </style>
 </head>
 <body>
@@ -87,6 +88,8 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
   <div class="card inst" id="inst"><p>Install Phoenix on your home screen for one-tap access.</p><button id="instb">Install</button></div>
 
   <section class="view on" id="v-home">
+    <div class="k">Ask Claude</div>
+    <div class="card"><button class="more" id="askc">Ask Claude for a read</button><div class="why" id="askout" style="white-space:pre-wrap;margin-top:8px"></div></div>
     <div id="gate"><div class="sk"></div></div>
     <div class="k">Today's read</div>
     <div class="card"><div class="read" id="read"><div class="sk" style="height:80px;margin:0"></div></div></div>
@@ -99,6 +102,12 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
     <div class="card" id="sig"></div>
   </section>
 
+  <section class="view" id="v-day">
+    <div class="k"><span>Day trades · 1H</span><span id="dfl"></span></div>
+    <div class="card" id="day"></div>
+    <div class="foot" id="dayat"></div>
+  </section>
+
   <section class="view" id="v-picks">
     <div class="k">Top picks · Dustin's screener</div>
     <div class="card" id="picks"></div>
@@ -106,6 +115,8 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
   </section>
 
   <section class="view" id="v-info">
+    <div class="k">Track record</div>
+    <div class="card" id="rec"></div>
     <div class="k">Bot health</div>
     <div class="card" id="health"></div>
     <div class="k">How to read Phoenix</div>
@@ -125,6 +136,7 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
 <nav class="tabs">
   <button class="tab on" data-v="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Home</button>
   <button class="tab" data-v="sig"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>Triggers</button>
+  <button class="tab" data-v="day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Day</button>
   <button class="tab" data-v="picks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>Top picks</button>
   <button class="tab" data-v="info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v.01M11 12h1v5h1"/></svg>Info</button>
 </nav>
@@ -132,7 +144,7 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
 
 <script>
 var API='https://script.google.com/macros/s/AKfycbzP-y3YrWG9iPZCmvum9jWZ0uqoo819QNa-eD2zQtgzBnXgV2hGXn0mRtBMd7ogSKDH/exec?json=1';
-var ORDER={ENTER:0,ALMOST:1,WAIT:2,AVOID:3}, D=null, FIL='', SHOWALL=false;
+var ORDER={ENTER:0,ALMOST:1,MISSED:2,WAIT:3,AVOID:4}, D=null, FIL='', SHOWALL=false;
 function $(i){return document.getElementById(i)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function cap(s){s=String(s||'').trim();return s.charAt(0).toUpperCase()+s.slice(1)}
@@ -152,6 +164,14 @@ function pickTrig(p){
   var s=String(p.st).toUpperCase(), r=Number(p.rd), has=p.rd!==''&&p.rd!=null&&!isNaN(r), C={ENTER:'var(--up)',ALMOST:'var(--al)',WAIT:'var(--wt)',AVOID:'var(--dn)'}[s]||'var(--mut)';
   var bar=has?'<div class="bar"><i style="left:0;width:'+Math.max(r,2)+'%;background:'+(r>=100?'#22c55e':'linear-gradient(90deg,#ff2d00,#ff8a00 40%,#ffd84d 75%,#22c55e);background-size:'+(10000/Math.max(r,2))+'% 100%')+'"></i></div>':'';
   return '<div class="plan" style="margin-top:8px"><b style="color:'+C+'">'+esc(s)+(has?' · '+Math.round(r)+'/100':'')+'</b>'+(/spot/i.test(p.src||'')?' · spot':'')+(p.plan?' — '+esc(p.plan):'')+'</div>'+bar;
+}
+function renderExtra(){
+  var dy=(D.day||[]).slice().sort(function(a,b){return ORDER[st(a.st)]-ORDER[st(b.st)]||(Number(b.score)||0)-(Number(a.score)||0)});
+  $('dfl').textContent=dy.filter(function(x){return st(x.st)=='ENTER'}).length+' ready';
+  $('day').innerHTML=dy.length?dy.map(trigRow).join(''):'<div class="why">No day data yet.</div>';
+  $('dayat').textContent=D.dayAt||'';
+  var rc=D.rec||[];
+  $('rec').innerHTML='<div class="why">'+esc(D.recSum||'No trades logged yet.')+'</div>'+rc.map(function(x){var n=Number(x.r),col=n>0?'var(--up)':(n<0?'var(--dn)':'var(--mut)'),c=x.st=='STOP'?'AVOID':(x.st=='OPEN'?'WAIT':(x.st=='TP1'?'ALMOST':'ENTER'));return '<div class="hl"><i class="chip s-'+c+'">'+esc(x.st)+'</i><span>'+esc(x.c)+' · '+esc(x.m)+' · entry '+esc(x.e)+' · stop '+esc(x.s)+' · TP1 '+esc(x.tp1)+(x.r!==''&&x.r!=null?' · <b style="color:'+col+'">'+esc(x.r)+'R</b>':'')+' · '+esc(x.t)+'</span></div>'}).join('');
 }
 function trigRow(t){
   var s=st(t.st), a=atr(t.why), r=(t.score===''||t.score==null)?NaN:Math.max(0,Math.min(100,Number(t.score)));
@@ -182,13 +202,17 @@ function render(){
   $('sig').innerHTML=(show.length?show.map(trigRow).join(''):'<div class="why">Nothing in '+FIL+' right now.</div>')+(!FIL&&!SHOWALL&&list.length>10?'<button class="more" id="sa">Show all '+list.length+'</button>':'');
   $('picks').innerHTML=(D.picks||[]).map(function(p){
     var s=Number(p.s)||0;
-    return '<div class="row"><div class="rk'+(p.r<=3?' g':'')+'">'+esc(p.r)+'</div><div class="mid"><div class="l1"><b>'+esc(p.t)+'</b><span>'+esc(p.ty)+'</span></div><div class="meta">Mkt cap '+esc(p.mc)+' · Revenue '+esc(p.rev)+'</div>'+
-      '<div class="bar"><i style="left:0;width:'+Math.min(100,s)+'%;background:linear-gradient(90deg,#ff2d00,#ffb347)"></i></div>'+pickTrig(p)+'</div><div class="sc"><b>'+esc(p.s)+'</b><span>SCORE</span></div></div>';
+    var hasR=p.st&&p.rd!==''&&p.rd!=null&&!isNaN(Number(p.rd)), rr=Number(p.rd), S=String(p.st||'').toUpperCase(), C={ENTER:'var(--up)',ALMOST:'var(--al)',MISSED:'#8ab4f8',WAIT:'var(--wt)',AVOID:'var(--dn)'}[S]||'var(--mut)';
+    return '<div class="row"><div class="rk'+(p.r<=3?' g':'')+'">'+esc(p.r)+'</div><div class="mid"><div class="l1"><b>'+esc(p.t)+'</b><span>'+esc(p.ty)+'</span></div><div class="meta">Dustin score '+esc(p.s)+' · Mkt cap '+esc(p.mc)+' · Revenue '+esc(p.rev)+(/spot/i.test(p.src||'')?' · spot':'')+'</div>'+
+      (p.plan?'<div class="plan">'+esc(p.plan)+'</div>':'')+
+      (hasR?'<div class="bar"><i style="left:0;width:'+Math.max(rr,2)+'%;background:'+(rr>=100?'#22c55e':'linear-gradient(90deg,#ff2d00,#ff8a00 40%,#ffd84d 75%,#22c55e);background-size:'+(10000/Math.max(rr,2))+'% 100%')+'"></i></div>':'')+
+      '</div><div class="sc">'+(hasR?'<b style="color:'+(rr>=100?'#22c55e':'inherit')+'">'+Math.round(rr)+'</b><span style="color:'+C+'">'+esc(S)+'</span>':'<b>'+esc(p.s)+'</b><span>'+(S?esc(S):'SCORE')+'</span>')+'</div></div>';
   }).join('')||'<div class="why">No picks yet.</div>';
   $('scan').textContent=D.scan||'';
   var h=String(D.health||'').split(/\s*[|·]\s*/).filter(Boolean);
   $('health').innerHTML=h.map(function(x){return '<div class="hl"><i>'+(/ok|✅/i.test(x)?'✅':/fail|error|❌|stale/i.test(x)?'⚠️':'•')+'</i><span>'+esc(x.replace(/^✅\s*/,''))+'</span></div>'}).join('')||'<div class="why">No health data.</div>';
   $('upd').textContent='Updated '+(D.at||'');
+  try{renderExtra()}catch(e){}
 }
 function load(manual){
   var b=$('ref'); b.classList.add('spin');
@@ -215,6 +239,7 @@ document.addEventListener('click',function(e){
   else if(t.dataset.f!=null){FIL=(FIL==t.dataset.f?'':t.dataset.f);render();if(FIL)go('sig')}
 });
 $('ref').onclick=function(){load(true)};
+$('askc').onclick=function(){var b=$('askc');b.textContent='Claude is reading the board…';b.disabled=true;fetch(API.replace('json=1','ask=1'),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){$('askout').textContent=j.ok?(j.text||'')+(j.cached?'\n(saved read - refreshes every 15 min)':''):'Error: '+(j.err||'unknown')}).catch(function(e){$('askout').textContent='Could not reach Claude: '+e.message}).then(function(){b.textContent='Ask Claude again';b.disabled=false})};
 $('share').onclick=function(){
   var u=location.href.split('#')[0];
   if(navigator.share)navigator.share({title:'Phoenix',text:'Phoenix crypto screener',url:u}).catch(function(){});
