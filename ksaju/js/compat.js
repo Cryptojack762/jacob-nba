@@ -36,7 +36,7 @@ $('form').addEventListener('submit', e => {
   try { other = buildChart(input); other.input.city = input.city; } catch (x) { $('err').textContent = 'Please check that date and try again.'; $('err').style.display = 'block'; return; }
   const otherCode = decode(encode(other));
   let A, B, labelA, labelB;
-  if (mode === 'invite') { A = side(inviter); B = side(otherCode); labelA = 'Your friend'; labelB = 'You'; try { sessionStorage.setItem('ksaju_chart', JSON.stringify(other)); } catch (x) { } }
+  if (mode === 'invite') { A = side(otherCode); B = side(inviter); labelA = 'You'; labelB = 'Your friend'; try { sessionStorage.setItem('ksaju_chart', JSON.stringify(other)); } catch (x) { } }
   else { A = side(decode(encode(me))); B = side(otherCode); labelA = 'You'; labelB = 'Them'; }
   const m = compare(A, B);
   render(A, B, labelA, labelB, m, mode === 'invite' ? other : me, mode === 'invite' ? null : other);
@@ -88,7 +88,7 @@ function render(A, B, la, lb, m, mine, partnerFull) {
     const buy = async (product, btn) => {
       perr(''); btn.disabled = true; btn.textContent = 'Opening secure checkout…';
       try {
-        const r = await fetch(SITE.api, { method: 'POST', body: JSON.stringify({ action: 'checkout', product, chart: mine, partner: { buyer: mode === 'invite' ? 'B' : 'A', a: A, b: B, score: m.score, notes: m.notes, animals: m.animals, partnerChart: partnerFull } }) });
+        const r = await fetch(SITE.api, { method: 'POST', body: JSON.stringify({ action: 'checkout', product, chart: mine, partner: { buyer: 'A', a: A, b: B, score: m.score, notes: m.notes, animals: m.animals, partnerChart: partnerFull } }) });
         const j = await r.json(); if (!j.ok || !j.url) throw new Error(j.err); track('checkout'); location.href = j.url;
       } catch (e) { perr('Checkout didn\'t open. Please try again.'); btn.disabled = false; btn.textContent = 'Try again'; }
     };
