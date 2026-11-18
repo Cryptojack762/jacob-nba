@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0a0d12">
 <title>Claude's Bot</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -106,6 +109,7 @@ $('save').onclick=()=>{API=$('api').value.trim();PIN=$('pin').value.trim();try{l
 $('refresh').onclick=()=>load();
 document.querySelectorAll('#mode button').forEach(b=>b.onclick=()=>{if(b.dataset.m==='AUTO'&&!confirm('Auto mode sends real orders to WEEX without asking you. Turn it on?'))return;load('&set=mode&v='+b.dataset.m);});
 $('killbtn').onclick=()=>load('&set=kill&v='+$('killbtn').dataset.v);
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}
 load();setInterval(()=>{if(document.visibilityState==='visible')load();},60000);
 </script>
 </body>
