@@ -225,6 +225,10 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
     <div class="card" id="wtags"></div>
     <div class="k">Waiting for your approval</div>
     <div class="card" id="word"></div>
+    <div class="k"><span>⭐ Favorites · checked every 15 min</span></div>
+    <div class="card" id="wfav"><div class="why">No favorites yet. Tap ☆ Favorite under any Ask Claude answer.</div></div>
+    <div class="k"><span>👁 Watch list</span><span id="wwatchN"></span></div>
+    <div class="card" id="wwatch"><div class="why">Nothing on the watch list. Tap + Watch list under an Ask Claude trade.</div></div>
     <div class="k"><span>Open real trades · WEEX</span><span id="wopenN"></span></div>
     <div class="card" id="wopen"></div>
     <div class="k">Closed real trades</div>
@@ -386,6 +390,12 @@ function wnm(s){for(var k in WN){if(k===s||WN[k]===s)return WN[k]}return s}
 function wm(n){n=Number(n)||0;return (n<0?'-':'')+'$'+Math.abs(n).toFixed(2)}
 function wsm(n){n=Number(n)||0;return (n>=0?'+':'-')+'$'+Math.abs(n).toFixed(2)}
 function wshow(c){$('wsetup').style.display=c?'none':'block';$('wapp').style.display=c?'block':'none';$('tconn').style.display=c?'none':'block'}
+function wapi(qs,ok){if(!WAPI||!WPIN){toast('Connect the bot first');return}fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+qs,{cache:'no-store'}).then(function(r){return r.json()}).then(function(k){toast(k.ok?k.msg:(k.err||'Failed'));if(k.ok&&ok)ok(k);wload('',false)}).catch(function(){toast('Bot not reachable')})}
+function wwatchR(W){var F=W.favs||[],L=W.list||[];
+  $('wfav').innerHTML=F.length?F.map(function(f){var st=String(f.state||'…');return '<div class="row"><div class="sym">'+esc(String(f.coin).slice(0,5))+'</div><div class="mid"><div class="l1"><b>'+esc(f.coin)+'</b><span>$'+esc(f.price)+'</span></div><div class="why">'+esc(f.note||'')+'</div><div class="plan">'+esc(f.at||'')+' · <a href="#" data-fq="'+esc(f.coin)+'">Ask Claude</a> · <a href="#" data-frm="'+esc(f.coin)+'">Remove</a></div></div><span class="chip s-'+esc(st)+'">'+esc(st)+'</span></div>'}).join(''):'<div class="why">No favorites yet. Tap ☆ Favorite under any Ask Claude answer.</div>';
+  var act=L.filter(function(w){return /WATCHING|QUEUED/.test(w.status)}).length;$('wwatchN').textContent=act?act+' active':'';
+  $('wwatch').innerHTML=(L.length?L.map(function(w){var lg=w.side==='LONG',st=String(w.status),on=/WATCHING|QUEUED/.test(st);return '<div class="row"><div class="sym '+(lg?'symL':'symS')+'">'+esc(String(w.coin).slice(0,5))+'</div><div class="mid"><div class="l1"><b>'+esc(w.side)+' '+esc(w.coin)+'</b><span>'+(w.entry?'entry $'+esc(w.entry):'condition')+'</span></div><div class="why">'+esc(w.note||'')+'</div><div class="plan">stop $'+esc(w.stop||'-')+' · TP1 $'+esc(w.tp1||'-')+' · '+esc(w.at||'')+(on?' · <a href="#" data-wrm="'+esc(w.id)+'">Remove</a>':'')+'</div></div><span class="chip s-'+(st==='QUEUED'?'APPROVE':st==='WATCHING'?'WAIT':st==='PLACED'||st==='TAKEN'?'OPEN':'EXPIRED')+'">'+esc(st)+'</span></div>'}).join(''):'<div class="why">Nothing on the watch list. Tap + Watch list under an Ask Claude trade.</div>')+
+    '<div class="why" style="margin-top:8px">When price hits the entry: Claude rebuilds the trade, your phone buzzes, and it waits above for your ✔. No tap in 15 min: the bot puts $5 from your main WEEX account'+(W.main?'':' (paper until the main-account key is added)')+'. More than halfway to the target = skipped. Max 5 open, 2 ATR trailing stop.</div>'}
 function wload(extra,manual){
   if(!WAPI||!WPIN){wshow(false);return}
   fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+(extra||''),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
@@ -414,6 +424,7 @@ function wrender(){
     if((j.orders||[]).some(function(o){return o[2]===s[1]&&o[10]==='PENDING'}))return 'APPROVE';
     var st=Date.parse(String(s[0]).replace(/^(\d+\/\d+) /,'$1/'+new Date().getFullYear()+' '))||0;var p=(j.positions||[]).filter(function(r){var t=Date.parse(r[4])||0;return r[1]===s[1]&&t>=st-6e4&&t-st<864e5})[0];if(p)return p[11]==='OPEN'?'OPEN: trade is live':'DONE: '+(p[14]!==''?'$'+(+p[14]).toFixed(2):'closed');
     return 'EXPIRED: not taken'};
+  wwatchR(j.watch||{});
   $('wsig').innerHTML=_sig.slice(-10).reverse().map(function(s){s=s.slice();s[6]=_lbl(s);var sh=s[3]==='SHORT';return '<div class="row"><div class="sym '+(sh?'symS':'symL')+'">'+esc(String(s[1]).slice(0,5))+'</div><div class="mid"><div class="l1"><b>'+esc(s[3])+' '+esc(s[1])+'</b><span>$'+esc(s[4])+'</span></div><div class="why">'+esc(s[5])+'</div><div class="plan">'+esc(wnm(s[2]))+' · '+esc(s[0])+'</div></div><span class="chip s-'+esc(String(s[6]).split(':')[0].toUpperCase())+'">'+esc(String(s[6]).split(':')[0])+'</span></div>'}).join('')||'<div class="why">No signals yet.</div>';
   var w=closed.filter(function(p){return Number(p[14])>0}).length,tot=closed.reduce(function(s,p){return s+(Number(p[14])||0)},0);
   $('wrec').innerHTML='<div class="why">'+closed.length+' closed · '+(closed.length?Math.round(100*w/closed.length)+'% won':'no wins yet')+' · total <b class="'+(tot>=0?'pos':'neg')+'">'+wsm(tot)+'</b></div>'+closed.slice(0,20).map(function(p){var v=Number(p[14])||0;return '<div class="hl"><i class="chip s-'+(v>=0?'ENTER':'AVOID')+'">'+wsm(v)+'</i><span>'+esc(p[3])+' '+esc(p[1])+' · $'+esc(p[5])+' → $'+esc(p[13])+' · '+esc(p[16])+' · '+esc(p[12])+'</span></div>'}).join('');
@@ -550,7 +561,8 @@ var CHS=[],CH=null;try{CHS=JSON.parse(localStorage.getItem('atlas_chats')||'[]')
 function csave(){try{if(CH&&CH.m.length){CHS=CHS.filter(function(c){return c.id!==CH.id});CHS.unshift(CH);CHS=CHS.slice(0,20)}localStorage.setItem('atlas_chats',JSON.stringify(CHS))}catch(e){}}
 function cnew(){CH={id:Date.now(),t:'',m:[]};crender()}
 function cplan(p){if(!p)return '';var go=p.verdict==='ENTER'&&(p.side==='LONG'||p.side==='SHORT')&&p.stop>0,f=function(v){return v?'$'+Number(v):'-'};
-  return '<div class="hl" style="margin-top:10px"><i class="chip s-'+(go?'ENTER':p.verdict==='AVOID'?'AVOID':'WAIT')+'">'+(go?'✔ ':'')+esc(p.verdict)+'</i><span><b>'+esc(p.side)+' '+esc(p.coin)+'</b> · entry '+f(p.entry)+' · stop '+f(p.stop)+' · TP1 '+f(p.tp1)+' · TP2 '+f(p.tp2)+'<br>Rule: '+esc(p.rule||'')+'</span></div>'+(go?'<button class="buy" data-cq="'+esc(JSON.stringify(p))+'" style="width:100%;margin-top:8px">Queue this trade ('+esc(p.side)+' '+esc(p.coin)+')</button>':'')}
+  return '<div class="hl" style="margin-top:10px"><i class="chip s-'+(go?'ENTER':p.verdict==='AVOID'?'AVOID':'WAIT')+'">'+(go?'✔ ':'')+esc(p.verdict)+'</i><span><b>'+esc(p.side)+' '+esc(p.coin)+'</b> · entry '+f(p.entry)+' · stop '+f(p.stop)+' · TP1 '+f(p.tp1)+' · TP2 '+f(p.tp2)+'<br>Rule: '+esc(p.rule||'')+'</span></div>'+(go?'<button class="buy" data-cq="'+esc(JSON.stringify(p))+'" style="width:100%;margin-top:8px">Queue this trade ('+esc(p.side)+' '+esc(p.coin)+')</button>':'')+
+  '<div style="display:grid;grid-template-columns:'+(p.side==='LONG'||p.side==='SHORT'?'1fr 1fr':'1fr')+';gap:8px;margin-top:8px">'+(p.side==='LONG'||p.side==='SHORT'?'<button class="more" style="margin:0" data-cw="'+esc(JSON.stringify(p))+'">+ Watch list</button>':'')+(p.coin?'<button class="more" style="margin:0" data-cf="'+esc(p.coin)+'">☆ Favorite '+esc(p.coin)+'</button>':'')+'</div>'}
 function crender(){if(!CH)cnew();var h=CH.m.map(function(x){return x.r==='u'?'<div class="bu">'+esc(x.t)+'</div>':'<div class="ba">'+mdl(x.t)+cplan(x.p)+'</div>'}).join('');
   $('cmsgs').innerHTML=h||'<div class="why">Ask about any coin. Atlas reads live charts, checks our tested rules, and remembers this chat for follow-ups.</div>';
   var lastc=(CH.m.filter(function(x){return x.c}).pop()||{}).c||'';
@@ -567,6 +579,12 @@ $('cnew').onclick=function(){csave();cnew();$('chlist').style.display='none'};
 $('chist').onclick=function(){var l=$('chlist');if(l.style.display==='block'){l.style.display='none';return}l.style.display='block';l.innerHTML=CHS.length?CHS.map(function(c,i){return '<div class="hl" data-ch="'+i+'" style="cursor:pointer"><i>💬</i><span>'+esc(c.t||'Chat')+' · '+c.m.length+' msgs · '+new Date(c.id).toLocaleString([], {month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'})+'</span></div>'}).join(''):'<div class="why">No saved chats yet.</div>'};
 document.addEventListener('click',function(e){var c=e.target.closest('[data-chip]');if(c){var x=$('cchips')._c[+c.dataset.chip];if(/ $/.test(x[1])||/ , /.test(x[1])){$('cin').value=x[1];$('cin').focus()}else csend(x[1]);return}
   var h=e.target.closest('[data-ch]');if(h){CH=CHS[+h.dataset.ch];$('chlist').style.display='none';crender();return}
+  var cw=e.target.closest('[data-cw]');if(cw){var w=JSON.parse(cw.dataset.cw);if(!confirm('Watch '+w.side+' '+w.coin+(w.entry?' at $'+w.entry:' (no entry yet: Claude rechecks hourly)')+', stop $'+w.stop+'?\nWhen it hits: push + Approve. No tap in 15 min: $5 from your main WEEX account.'))return;
+    wapi('&watch=add&coin='+encodeURIComponent(w.coin)+'&side='+w.side+'&entry='+encodeURIComponent(w.entry||0)+'&stop='+encodeURIComponent(w.stop||0)+'&tp1='+encodeURIComponent(w.tp1||0)+'&rule='+encodeURIComponent((w.rule||'')+' | '+(CH&&CH.m.length>1?String(CH.m[CH.m.length-2].t||'').slice(0,200):'')));return}
+  var cf=e.target.closest('[data-cf]');if(cf){wapi('&fav=add&coin='+encodeURIComponent(cf.dataset.cf));return}
+  var fr=e.target.closest('[data-frm]');if(fr){e.preventDefault();if(confirm('Remove '+fr.dataset.frm+' from favorites?'))wapi('&fav=rm&coin='+encodeURIComponent(fr.dataset.frm));return}
+  var wr=e.target.closest('[data-wrm]');if(wr){e.preventDefault();if(confirm('Remove from the watch list?'))wapi('&watch=rm&id='+encodeURIComponent(wr.dataset.wrm));return}
+  var fq=e.target.closest('[data-fq]');if(fq){e.preventDefault();go('chat');csend('Trade plan for '+fq.dataset.fq+' right now');return}
   var q=e.target.closest('[data-cq]');if(q){var p=JSON.parse(q.dataset.cq);if(!confirm('Queue '+p.side+' '+p.coin+' with stop $'+p.stop+'? (Approve mode: waits for your tap in Trades)'))return;
     fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+'&set=plan&coin='+encodeURIComponent(p.coin)+'&side='+p.side+'&stop='+encodeURIComponent(p.stop)+'&rule='+encodeURIComponent(p.rule||''),{cache:'no-store'}).then(function(r){return r.json()}).then(function(k){toast(k.ok?k.msg:(k.err||'Failed'));wload('',false)}).catch(function(){toast('Bot not reachable')})}});
 crender();

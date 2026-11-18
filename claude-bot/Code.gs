@@ -51,9 +51,14 @@ var DEFAULTS = [
   ['Missed max open', 6, 'Max missed-trade fills open at once'],
   ['Missed cap $', 15, 'Max total margin in missed-trade fills'],
   ['Auto leverage', 10, 'Leverage for bot-slice + missed trades (small $ needs leverage to clear WEEX minimum size)'],
+  ['Watch $ per missed trade', 5, 'Watch list: if you do not tap a triggered watch trade, the bot places it with this margin from your MAIN WEEX account (WEEX2 keys; paper until they exist). 0 = off'],
+  ['Watch max open', 5, 'Max watch-list fallback trades open at once'],
+  ['Watch wait (min)', 15, 'Minutes to wait for your tap before the watch fallback places it'],
+  ['Watch trail (ATR x)', 2, 'Trailing stop on watch fallback trades: highest close minus this many 4H ATRs (never moves down)'],
+  ['Watch expiry (days)', 7, 'Watch-list items that never trigger expire after this many days'],
   ['Event pause (min)', 60, 'Bot opens no new trades this many minutes before/after a HIGH-impact US report (FOMC, CPI, jobs). 0 = off'],
 ];
-var STRAT_NAMES = { L_TPI: 'TPI breakout long', L_ST: 'SuperTrend long', S_FUND: 'Funding-extreme short', S_BBRSI: 'BB + RSI short', L_FUND: 'Funding-extreme long', S_BTCFLIP: 'BTC-breakdown short', M_BOTTOM: 'Market-bottom long', L_RSI20: 'Washout bounce long', CHAT: 'Atlas chat plan', CARD: 'Jacob trade card' };
+var STRAT_NAMES = { WATCH: 'Watch list', L_TPI: 'TPI breakout long', L_ST: 'SuperTrend long', S_FUND: 'Funding-extreme short', S_BBRSI: 'BB + RSI short', L_FUND: 'Funding-extreme long', S_BTCFLIP: 'BTC-breakdown short', M_BOTTOM: 'Market-bottom long', L_RSI20: 'Washout bounce long', CHAT: 'Atlas chat plan', CARD: 'Jacob trade card' };
 var TABS = {
   Signals: ['Time (CT)', 'Coin', 'Strategy', 'Side', 'Price', 'Why', 'Action', 'Claude notes'],
   Orders: ['ID', 'Time (CT)', 'Coin', 'Strategy', 'Side', 'Qty', 'Ref price', 'Protective stop', 'Margin $', 'Leverage', 'Status', 'Token', 'Result', 'Claude notes'],
@@ -164,6 +169,8 @@ function scan() {
     expireApprovals_();
     try { reconcile_(); } catch (e) { log_('ERROR', 'reconcile: ' + e.message); }
     try { manageTP_(); } catch (e) { log_('ERROR', 'take-profit check: ' + e.message); }
+    try { watchCheck_(); } catch (e) { log_('ERROR', 'watch list: ' + e.message); }
+    try { favCheck_(); } catch (e) { log_('ERROR', 'favorites: ' + e.message); }
     var eq = equity_(); killCheck_(eq);
     if (!newBar) { status_('Waiting for the next 4H candle. BTC ' + (btcUp ? 'UP' : 'DOWN') + '. Equity $' + eq.toFixed(2) + '. Mode ' + set_('Mode') + (on_('Kill switch') ? ' | KILL SWITCH ON' : '')); return; }
     var open = rows_('Positions').filter(function (r) { return r[11] == 'OPEN'; });
@@ -343,15 +350,16 @@ function killCheck_(eq) {
 }
 
 // ---------------- WEEX private API ----------------
-function keys_() { var p = PropertiesService.getScriptProperties(); return p.getProperty('WEEX_KEY') && p.getProperty('WEEX_SECRET') && p.getProperty('WEEX_PASSPHRASE') ? p : null; }
+var ACCT = '';   // '' = bot account (WEEX_*), '2' = Jacob's main account (WEEX2_*) for watch-list fallback trades
+function keys_() { var p = PropertiesService.getScriptProperties(), k = 'WEEX' + ACCT + '_'; return p.getProperty(k + 'KEY') && p.getProperty(k + 'SECRET') && p.getProperty(k + 'PASSPHRASE') ? p : null; }
 function weex_(method, path, query, body) {
   var p = keys_(); if (!p) throw new Error('No WEEX keys in Script Properties');
   var ts = String(Date.now()), msg = ts + method + path + (query ? '?' + query : '') + (body || '');
-  var sig = Utilities.base64Encode(Utilities.computeHmacSha256Signature(msg, p.getProperty('WEEX_SECRET')));
+  var sig = Utilities.base64Encode(Utilities.computeHmacSha256Signature(msg, p.getProperty('WEEX' + ACCT + '_SECRET')));
   var relay = String(set_('Relay URL') || '').trim().replace(/\/$/, '');
   var r = UrlFetchApp.fetch((relay || BOT.base) + path + (query ? '?' + query : ''), {
     method: method.toLowerCase(), contentType: 'application/json', payload: body || undefined, muteHttpExceptions: true,
-    headers: { 'ACCESS-KEY': p.getProperty('WEEX_KEY'), 'ACCESS-SIGN': sig, 'ACCESS-PASSPHRASE': p.getProperty('WEEX_PASSPHRASE'), 'ACCESS-TIMESTAMP': ts }
+    headers: { 'ACCESS-KEY': p.getProperty('WEEX' + ACCT + '_KEY'), 'ACCESS-SIGN': sig, 'ACCESS-PASSPHRASE': p.getProperty('WEEX' + ACCT + '_PASSPHRASE'), 'ACCESS-TIMESTAMP': ts }
   });
   var txt = r.getContentText();
   if (r.getResponseCode() != 200) throw new Error('HTTP ' + r.getResponseCode() + ' ' + txt.slice(0, 200));
@@ -375,11 +383,12 @@ function sendLive_(o, how) {
   } catch (e) { log_('ERROR', 'Send ' + o.coin + ': ' + e.message); notify_('ORDER FAILED ' + o.coin, e.message); return { ok: false, msg: e.message }; }
 }
 function weexClose_(r) {
+  var prevA = ACCT; if (r[19] == 'MISSED-WATCH') ACCT = '2';
   try {
     var body = { symbol: r[1] + 'USDT', side: r[3] == 'LONG' ? 'SELL' : 'BUY', positionSide: r[3], type: 'MARKET', quantity: String(r[6]), newClientOrderId: 'X' + (r._tag || '') + r[0].slice(0, 26), reduceOnly: true };
     var res = weex_('POST', '/capi/v3/order', '', JSON.stringify(body));
     return res.success ? { ok: true } : { ok: false, msg: res.errorCode + ' ' + res.errorMessage };
-  } catch (e) { return { ok: false, msg: e.message }; }
+  } catch (e) { return { ok: false, msg: e.message }; } finally { ACCT = prevA; }
 }
 
 // ---------------- approvals ----------------
@@ -433,7 +442,7 @@ function autoOrder_(o, margin, tag) {   // re-size a signal to the small auto ma
   return a;
 }
 function missedFill_(r) {   // Orders row -> small auto trade if the missed-trade fallback has room
-  if (r[3] == STRAT_NAMES.CHAT || !slice_('MISSED-AUTO', r[2])) return '';
+  if (r[3] == STRAT_NAMES.CHAT || r[3] == STRAT_NAMES.WATCH || !slice_('MISSED-AUTO', r[2])) return '';
   if (eventPause_()) return 'missed-trade fill skipped (event pause)';
   var strat = Object.keys(STRAT_NAMES).filter(function (k) { return STRAT_NAMES[k] == r[3]; })[0];
   var px = priceNow_(r[2]); if (Math.abs(px / Number(r[6]) - 1) > 0.03) return 'missed-trade fill skipped (price moved 3%+)';
@@ -485,6 +494,8 @@ function doGet(e) {
     if (q.chat) { var hist = []; try { hist = JSON.parse(q.h || '[]').slice(-4); } catch (e) { } return json_(chat_(String(q.chat).slice(0, 600), hist)); }
     if (q.set == 'buynow' && q.coin) return json_(buyNow_(q));
     if (q.set == 'plan' && q.coin && /^(LONG|SHORT)$/.test(q.side)) return json_(queuePlan_(q));
+    if (q.watch) return json_(watchApi_(q));
+    if (q.fav) return json_(favApi_(q));
     if (q.set == 'kill') setVal_('Kill switch', q.v == 'ON' ? 'ON' : 'OFF');
     if (q.set == 'mode' && /^(PAPER|APPROVE|AUTO)$/.test(q.v)) setVal_('Mode', q.v);
     if (q.set == 'close' && q.id) {   // Jacob's "close now" button in the app (market close; live trades close on WEEX)
@@ -493,7 +504,7 @@ function doGet(e) {
       CacheService.getScriptCache().remove('LIVE');
     }
     return json_({ ok: true, status: ss_().getSheetByName('Home').getRange(2, 2).getValue(), mode: set_('Mode'), kill: set_('Kill switch'), equity: equity_(), dayStart: Number(PropertiesService.getScriptProperties().getProperty('DAY_START')) || 0, killPct: num_('Daily loss % (kill)', 1, 90), peak: Number(PropertiesService.getScriptProperties().getProperty('PEAK')) || 0, ddPct: num_('Max drawdown % (kill)', 1, 90),
-      positions: rows_('Positions').slice(-60), orders: rows_('Orders').filter(function (r) { return r[10] == 'PENDING'; }).map(function (r) { return r.slice(0, 11).concat([r[11]]); }), signals: rows_('Signals').slice(-30), log: rows_('Log').slice(-25), phoenix: phoenix_(), keys: !!keys_(), live: livePnl_() });
+      watch: watchJson_(), positions: rows_('Positions').slice(-60), orders: rows_('Orders').filter(function (r) { return r[10] == 'PENDING'; }).map(function (r) { return r.slice(0, 11).concat([r[11]]); }), signals: rows_('Signals').slice(-30), log: rows_('Log').slice(-25), phoenix: phoenix_(), keys: !!keys_(), live: livePnl_() });
   }
   return json_({ ok: true, service: "Claude's Auto Trading Bot", version: BOT.version });
 }
@@ -752,7 +763,7 @@ function buyNow_(q) {
 // ---------------- reconcile: trades WEEX closed on its own (stop hit, liquidation, or Jacob closed by hand) ----------------
 function reconcile_() {
   if (!keys_()) return 0;
-  var live = rows_('Positions').filter(function (r) { return r[10] == 'LIVE' && r[11] == 'OPEN'; }); if (!live.length) return 0;
+  var live = rows_('Positions').filter(function (r) { return r[10] == 'LIVE' && r[11] == 'OPEN' && (ACCT == '2' ? r[19] == 'MISSED-WATCH' : r[19] != 'MISSED-WATCH'); }); if (!live.length) return 0;
   var pos = weex_('GET', '/capi/v3/account/position/allPosition', '', ''), list = Array.isArray(pos) ? pos : (pos && (pos.data || pos.positions)) || [];
   var have = {}; list.forEach(function (x) { if (Number(x.size) > 0) have[x.symbol + '|' + String(x.side).toUpperCase()] = 1; });
   var sh = ss_().getSheetByName('Positions'), ids = sh.getRange(2, 1, sh.getLastRow() - 1, 1).getValues(), n = 0;
@@ -913,3 +924,214 @@ function nbaBlend_(b) {
   od.getRange(3, 1, T.length, 8).setValues(T.map(function (t) { return [false, '\u2714 CLAUDE PICK (server ' + now + ') ' + t.name, t.stake, t.pays, 'AWAITING', '', t.legs, now + ' Claude server pick']; }));
   return { ok: true, loaded: T.length };
 }
+
+// ---------------- Watch list + Favorites (Atlas, 11/18) ----------------
+// Watch: a trade from Ask Claude is saved. Every 15-min scan checks it. When price hits the entry, Claude rebuilds it with live
+// prices, the phone gets a push and an Approve order is queued. No tap in 'Watch wait (min)' -> the bot places it with
+// 'Watch $ per missed trade' from Jacob's MAIN WEEX account (WEEX2_* keys; paper until they exist). Price more than halfway
+// to the target before that = stale, skipped. Price 25%+ of the way there = placed early. Fallback trades trail a 2 ATR(4H) stop.
+var WATCH_TABS = {
+  Watch: ['ID', 'Added (CT)', 'Coin', 'Side', 'Entry', 'Stop', 'TP1', 'Trigger', 'Rule / condition', 'Status', 'Updated (CT)', 'Note', 'Order ID'],
+  Favorites: ['Coin', 'Added (CT)', 'State', 'Price', 'Note', 'Updated (CT)']
+};
+function wsh_(name) {
+  var ss = ss_(), sh = ss.getSheetByName(name);
+  if (!sh) {
+    sh = ss.insertSheet(name); sh.appendRow(WATCH_TABS[name]); sh.setFrozenRows(1); sh.getRange(1, 1, 1, WATCH_TABS[name].length).setFontWeight('bold');
+    try {   // add any new settings rows to the Home tab so Jacob can edit them
+      var home = ss.getSheetByName('Home'), v = home.getRange(5, 1, DEFAULTS.length + 5, 1).getValues(), have = {}, last = 4;
+      v.forEach(function (r, i) { if (r[0]) { have[r[0]] = 1; last = 5 + i; } });
+      DEFAULTS.forEach(function (d) { if (!have[d[0]]) { last++; home.getRange(last, 1, 1, 3).setValues([d]); } });
+    } catch (e) { }
+  }
+  return sh;
+}
+function wrows_(name) { var sh = wsh_(name), n = sh.getLastRow(); return n < 2 ? [] : sh.getRange(2, 1, n - 1, WATCH_TABS[name].length).getValues(); }
+function wset_(row, col, vals) { wsh_('Watch').getRange(row, col, 1, vals.length).setValues([vals]); }
+function anyPx_(coin) {   // WEEX price, else BloFin
+  try { var p = priceNow_(coin); if (p > 0) return p; } catch (e) { }
+  var j = JSON.parse(UrlFetchApp.fetch('https://openapi.blofin.com/api/v1/market/tickers?instId=' + coin + '-USDT', { muteHttpExceptions: true }).getContentText());
+  return Number(j.data && j.data[0] && j.data[0].last) || 0;
+}
+function onWeex_(coin) { try { return !!symbolInfo_(coin); } catch (e) { return false; } }
+function cleanCoin_(c) { return String(c || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
+
+function watchApi_(q) {
+  var lk = LockService.getScriptLock(); lk.waitLock(20000);
+  try {
+    if (q.watch == 'rm') {
+      var v = wrows_('Watch');
+      for (var i = 0; i < v.length; i++) if (v[i][0] == q.id) { wset_(i + 2, 10, ['REMOVED', ct_(), 'Removed from Atlas']); return { ok: true, msg: 'Removed' }; }
+      return { ok: false, err: 'Not found' };
+    }
+    var coin = cleanCoin_(q.coin), side = String(q.side || '').toUpperCase(), entry = Number(q.entry) || 0, stop = Number(q.stop) || 0, tp1 = Number(q.tp1) || 0;
+    if (!coin) return { ok: false, err: 'No coin' };
+    if (!/^(LONG|SHORT)$/.test(side)) return { ok: false, err: 'Claude gave no LONG/SHORT side for this one' };
+    var px = anyPx_(coin); if (!(px > 0)) return { ok: false, err: 'No price for ' + coin };
+    var L = side == 'LONG';
+    if (entry > 0 && stop > 0 && (L ? stop >= entry : stop <= entry)) return { ok: false, err: 'Stop is on the wrong side of the entry' };
+    if (entry > 0 && tp1 > 0 && (L ? tp1 <= entry : tp1 >= entry)) tp1 = 0;
+    var trig = entry > 0 ? (px < entry ? 'UP' : 'DOWN') : 'ASK';
+    var id = 'W' + Date.now().toString(36).toUpperCase() + coin, sh = wsh_('Watch'), v2 = wrows_('Watch');
+    for (var k = 0; k < v2.length; k++) if (v2[k][2] == coin && v2[k][3] == side && v2[k][9] == 'WATCHING') wset_(k + 2, 10, ['REPLACED', ct_(), 'Replaced by a newer plan']);
+    sh.appendRow([id, ct_(), coin, side, entry || '', stop || '', tp1 || '', trig, String(q.rule || q.cond || '').slice(0, 300), 'WATCHING', ct_(), entry ? 'Waiting for price to ' + (trig == 'UP' ? 'rise to' : 'pull back to') + ' $' + entry + ' (now $' + px + ')' : 'No entry yet: Claude rechecks the condition every hour', '']);
+    log_('WATCH', 'Added ' + side + ' ' + coin + ' entry ' + (entry || 'condition') + ' stop ' + stop + ' tp1 ' + tp1);
+    return { ok: true, msg: 'On the watch list: ' + side + ' ' + coin + (entry ? ' at $' + entry : ' (condition)'), id: id };
+  } catch (e) { return { ok: false, err: e.message }; } finally { lk.releaseLock(); }
+}
+function favApi_(q) {
+  var coin = cleanCoin_(q.coin); if (!coin) return { ok: false, err: 'No coin' };
+  var sh = wsh_('Favorites'), v = wrows_('Favorites');
+  for (var i = 0; i < v.length; i++) if (v[i][0] == coin) {
+    if (q.fav == 'rm') { sh.deleteRow(i + 2); return { ok: true, msg: coin + ' removed from favorites' }; }   // Jacob's own remove tap
+    return { ok: true, msg: coin + ' is already a favorite' };
+  }
+  if (q.fav == 'rm') return { ok: true, msg: 'Not a favorite' };
+  var px = anyPx_(coin); if (!(px > 0)) return { ok: false, err: 'No price for ' + coin };
+  sh.appendRow([coin, ct_(), '', px, 'Checked on the next 15-min scan', '']);
+  try { favCheck_(coin); } catch (e) { }
+  return { ok: true, msg: coin + ' added to favorites' };
+}
+function watchJson_() {
+  try {
+    var all = wrows_('Watch').filter(function (r) { return !/REMOVED|REPLACED/.test(r[9]); }), live = all.filter(function (r) { return /WATCHING|QUEUED/.test(r[9]); }), w = all.filter(function (r) { return !/WATCHING|QUEUED/.test(r[9]); }).slice(-8).concat(live)
+      .slice(-20).map(function (r) { return { id: r[0], coin: r[2], side: r[3], entry: r[4], stop: r[5], tp1: r[6], status: r[9], note: r[11], at: r[10] instanceof Date ? ct_(r[10]) : r[10] }; });
+    var f = wrows_('Favorites').map(function (r) { return { coin: r[0], state: r[2], price: r[3], note: r[4], at: r[5] instanceof Date ? ct_(r[5]) : r[5] }; });
+    return { list: w.reverse(), favs: f, main: (function () { var a = ACCT; ACCT = '2'; var k = !!keys_(); ACCT = a; return k; })() };
+  } catch (e) { return { list: [], favs: [], err: e.message }; }
+}
+
+// Called by every 15-min scan (and by the 5-min watchTick while a trade waits for Jacob's tap).
+function watchCheck_() {
+  var v = wrows_('Watch'), now = Date.now(), P = PropertiesService.getScriptProperties(), waiting = 0;
+  v.forEach(function (r, i) {
+    var row = i + 2, st = r[9]; if (st != 'WATCHING' && st != 'QUEUED') return;
+    try {
+      var coin = r[2], L = r[3] == 'LONG', entry = Number(r[4]) || 0, stop = Number(r[5]) || 0, tp1 = Number(r[6]) || 0, px = anyPx_(coin);
+      if (!(px > 0)) return;
+      if (st == 'WATCHING') {
+        var added = parseInt(String(r[0]).slice(1, -coin.length), 36);
+        if (isFinite(added) && now - added > num_('Watch expiry (days)', 1, 60) * 86400e3) return wset_(row, 10, ['EXPIRED', ct_(), 'Never triggered in ' + num_('Watch expiry (days)', 1, 60) + ' days']);
+        if (stop && (L ? px <= stop : px >= stop)) return wset_(row, 10, ['EXPIRED', ct_(), 'Price hit the stop $' + stop + ' before the entry']);
+        var hit = r[7] == 'UP' ? px >= entry : r[7] == 'DOWN' ? px <= entry : false, plan = null;
+        if (r[7] == 'ASK') {   // condition only: ask Claude once an hour
+          if (now - Number(P.getProperty('WASK_' + r[0]) || 0) < 55 * 60e3) return;
+          P.setProperty('WASK_' + r[0], String(now));
+          var a = chat_('WATCH CHECK ' + coin + ': my saved ' + r[3] + ' idea: ' + r[8] + '. Is it ENTER right now? Give entry, stop under the swing low, target.', []);
+          plan = a.plan; hit = plan && plan.verdict == 'ENTER' && plan.side == r[3];
+          if (!hit) return wset_(row, 11, [ct_(), 'Checked: ' + (plan ? plan.verdict : 'no answer') + ' (now $' + px + ')']);
+        }
+        if (!hit) return wset_(row, 11, [ct_(), 'Waiting for $' + entry + ' (now $' + px + ')']);
+        watchTrigger_(row, r, px, plan); waiting++;
+      } else {   // QUEUED: Approve order out, waiting for Jacob
+        var f = findOrder_(String(r[12])), qAt = Number(P.getProperty('WQ_' + r[0]) || 0);
+        if (!f) return wset_(row, 10, ['EXPIRED', ct_(), 'Order row missing']);
+        if (f.r[10] != 'PENDING') return wset_(row, 10, [/SENT|APPROVED/.test(f.r[10]) ? 'TAKEN' : f.r[10] == 'SKIPPED' ? 'SKIPPED' : 'DONE', ct_(), 'Order ' + f.r[10] + (f.r[12] ? ': ' + f.r[12] : '')]);
+        var e2 = Number(f.r[6]), frac = tp1 && tp1 != e2 ? (px - e2) / (tp1 - e2) : 0;
+        if (stop && (L ? px <= stop : px >= stop)) { setOrder_(f.row, 'EXPIRED', 'Watch: price hit the stop before a tap'); return wset_(row, 10, ['EXPIRED', ct_(), 'Price hit the stop $' + stop + ' before a tap']); }
+        if (frac > 0.5) { setOrder_(f.row, 'EXPIRED', 'Watch: stale, price ran more than halfway to the target'); notify_('Watch skipped: ' + coin, r[3] + ' ' + coin + ' ran more than halfway to the target ($' + px + '), too late. Nothing placed.'); return wset_(row, 10, ['STALE', ct_(), 'Ran ' + Math.round(frac * 100) + '% of the way to the target before a tap. Skipped.']); }
+        var mins = (now - qAt) / 60e3;
+        if (mins >= num_('Watch wait (min)', 1, 240) - 1 || frac >= 0.25) {
+          setOrder_(f.row, 'EXPIRED', 'Not tapped' + (frac >= 0.25 ? ' (price ran ' + Math.round(frac * 100) + '%)' : ' in ' + Math.round(mins) + ' min') + ' - watch fallback');
+          var res = watchPlace_(r, px);
+          return wset_(row, 10, [res.ok ? 'PLACED' : 'MISSED', ct_(), res.msg]);
+        }
+        waiting++;
+      }
+    } catch (e) { log_('ERROR', 'watch ' + r[2] + ': ' + e.message); }
+  });
+  try { watchTrail_(); } catch (e) { log_('ERROR', 'watch trail: ' + e.message); }
+  try { var a = ACCT; ACCT = '2'; try { reconcile_(); } finally { ACCT = a; } } catch (e) { log_('ERROR', 'watch reconcile: ' + e.message); }
+  watchTickSchedule_(waiting > 0);
+}
+function watchTrigger_(row, r, px, plan) {
+  var coin = r[2], side = r[3], L = side == 'LONG', stop = Number(r[5]) || 0, tp1 = Number(r[6]) || 0;
+  if (!plan) { try { plan = chat_('WATCH TRIGGER ' + coin + ': my watch-list ' + side + ' just hit the entry $' + r[4] + ' (saved stop $' + stop + ', target $' + tp1 + '). Price now $' + px + '. Rebuild this trade with live prices: entry, stop under the swing low, target. Say ENTER or AVOID.', []).plan; } catch (e) { } }
+  if (plan && plan.verdict == 'AVOID') { notify_('Watch hit, Claude says AVOID: ' + coin, side + ' ' + coin + ' hit $' + px + ' but the live rebuild says AVOID. Nothing queued.'); return wset_(row, 10, ['AVOIDED', ct_(), 'Hit at $' + px + ', rebuild said AVOID']); }
+  if (plan && plan.side == side) {
+    if (Number(plan.stop) > 0 && (L ? plan.stop < px : plan.stop > px)) stop = Number(plan.stop);
+    if (Number(plan.tp1) > 0 && (L ? plan.tp1 > px : plan.tp1 < px)) tp1 = Number(plan.tp1);
+  }
+  if (!stop || (L ? stop >= px : stop <= px)) return wset_(row, 10, ['EXPIRED', ct_(), 'No valid stop at $' + px]);
+  var lev = num_('Auto leverage', 1, 50), liq = L ? px * (1 - 1 / lev + 0.005) : px * (1 + 1 / lev - 0.005), wm = num_('Watch $ per missed trade', 0, 50);
+  var head = side + ' ' + coin + '\nEntry $' + px + ' | Stop $' + round_(stop) + (tp1 ? ' | Target $' + round_(tp1) : '');
+  wsh_('Watch').getRange(row, 5, 1, 3).setValues([[px, round_(stop), tp1 ? round_(tp1) : '']]);
+  if (!onWeex_(coin)) { notify_('WATCH HIT: ' + side + ' ' + coin, head + '\n' + coin + ' is not on WEEX, so this is an alert only.'); return wset_(row, 10, ['TRIGGERED', ct_(), 'Hit at $' + px + ' (alert only, not on WEEX)']); }
+  var o = { id: 'CB' + Date.now().toString(36).toUpperCase() + coin, coin: coin, strategy: 'WATCH', side: side, ref: px, stop: stop, lev: num_('Leverage', 1, 5) };
+  o.margin = equity_() * num_('Margin per trade %', 1, 50) / 100; o.qty = qty_(coin, o.margin * o.lev / px); o.token = Utilities.getUuid().replace(/-/g, '');
+  if (!(o.qty > 0)) { o.lev = lev; o.margin = Math.max(wm, 1); o.qty = qty_(coin, o.margin * lev / px); }
+  ss_().getSheetByName('Orders').appendRow([o.id, ct_(), coin, STRAT_NAMES.WATCH, side, o.qty, px, round_(stop), round_(o.margin), o.lev, 'PENDING', o.token, '', 'tp1 ' + (tp1 ? round_(tp1) : '-')]);
+  PropertiesService.getScriptProperties().setProperty('WQ_' + r[0], String(Date.now()));
+  wsh_('Watch').getRange(row, 10, 1, 4).setValues([['QUEUED', ct_(), 'Hit at $' + px + '. Waiting for your tap', o.id]]);
+  var url = String(set_('Web app URL')), link = url ? url + '?approve=' + o.id + '&k=' + o.token : '';
+  var main = (function () { var a = ACCT; ACCT = '2'; var k = !!keys_(); ACCT = a; return k; })();
+  notify_('WATCH HIT: ' + side + ' ' + coin, head + '\nYour tap sends $' + round_(o.margin) + ' at ' + o.lev + 'x.\n' +
+    (wm > 0 ? 'No tap in ' + num_('Watch wait (min)', 1, 240) + ' min: bot puts $' + wm + ' at ' + lev + 'x from your main WEEX account' + (main ? '' : ' (paper until that key is added)') + ', liquidation about $' + round_(liq) + '.' : 'No tap = nothing placed.') +
+    (link ? '\n\nApprove: ' + link + '\nSkip: ' + url + '?reject=' + o.id + '&k=' + o.token : ''), link);
+  log_('WATCH', 'Triggered ' + side + ' ' + coin + ' at ' + px + ', order ' + o.id + ' queued');
+}
+function watchPlace_(r, px) {
+  var wm = num_('Watch $ per missed trade', 0, 50); if (!(wm > 0)) return { ok: false, msg: 'Not tapped. Fallback is off ($0)' };
+  if (on_('Kill switch')) return { ok: false, msg: 'Not tapped. Kill switch ON, nothing placed' };
+  var open = rows_('Positions').filter(function (p) { return p[11] == 'OPEN' && p[19] == 'MISSED-WATCH'; });
+  if (open.length >= num_('Watch max open', 0, 20)) return { ok: false, msg: 'Not tapped. Already ' + open.length + ' watch trades open (max)' };
+  if (eventPause_()) return { ok: false, msg: 'Not tapped. Event pause, nothing placed' };
+  var a = autoOrder_({ coin: r[2], strategy: 'WATCH', side: r[3], stop: Number(r[5]), why: 'Watch list, not tapped in time' }, wm, 'MISSED-WATCH');
+  if (!a) return { ok: false, msg: 'Not tapped. Size or stop did not fit (see Log)' };
+  a.id = 'MW' + a.id.slice(2);
+  var prev = ACCT; ACCT = '2';
+  try {
+    if (!keys_()) { openPos_(a, px, 'PAPER', 'Watch fallback, PAPER (no main-account key yet)'); return { ok: true, msg: 'Paper: $' + wm + ' at ' + a.lev + 'x (add the main WEEX key to make this real)' }; }
+    var res = sendLive_(a, 'WATCH FALLBACK (main account)');
+    return { ok: res.ok, msg: res.ok ? 'Placed $' + wm + ' at ' + a.lev + 'x on your main WEEX account. ' + res.msg : 'Failed: ' + res.msg };
+  } finally { ACCT = prev; }
+}
+// Trailing stop on fallback trades: highest close since entry minus N x ATR(4H). Never loosens. Exchange stop stays as the backstop.
+function watchTrail_() {
+  var sh = ss_().getSheetByName('Positions'), all = rows_('Positions'), k = num_('Watch trail (ATR x)', 0.5, 10);
+  all.forEach(function (r, i) {
+    if (r[11] != 'OPEN' || r[19] != 'MISSED-WATCH') return;
+    var L = r[3] == 'LONG', opened = parseTime_(r[4]), stop = Number(r[9]), px = anyPx_(r[1]); if (!(px > 0)) return;
+    var d = []; try { d = bfCandles_(r[1], '4H'); } catch (e) { } if (d.length < 20) d = candles_(r[1]); if (d.length < 20) return;
+    var atr = atr_(d, 14)[d.length - 1], since = d.filter(function (c) { return c.t + 4 * 3600e3 > opened; }).map(function (c) { return c.c; }).concat([px, Number(r[5])]);
+    var ext = L ? Math.max.apply(null, since) : Math.min.apply(null, since), trail = L ? ext - k * atr : ext + k * atr;
+    var ns = L ? Math.max(stop, trail) : Math.min(stop, trail);
+    if (ns != stop) { sh.getRange(i + 2, 10).setValue(round_(ns)); r[9] = round_(ns); }
+    if (L ? px <= ns : px >= ns) closePos_(r, r[10] == 'PAPER' ? px : null, ns != Number(r[5]) && ns != stop ? 'Trailing stop' : 'Trailing / protective stop', '');
+  });
+}
+function watchTickSchedule_(need) {
+  var ts = ScriptApp.getProjectTriggers().filter(function (t) { return t.getHandlerFunction() == 'watchTick'; });
+  if (need && !ts.length) ScriptApp.newTrigger('watchTick').timeBased().after(5 * 60e3).create();
+  if (!need) ts.forEach(function (t) { ScriptApp.deleteTrigger(t); });
+}
+function watchTick() {   // one-off 5-min check while a watch trade waits for Jacob's tap (early placement / stale skip)
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() == 'watchTick') ScriptApp.deleteTrigger(t); });
+  var lk = LockService.getScriptLock(); if (!lk.tryLock(20000)) { watchTickSchedule_(true); return; }
+  try { watchCheck_(); } catch (e) { log_('ERROR', 'watchTick: ' + e.message); } finally { lk.releaseLock(); }
+}
+
+// Favorites: state from the tested 4H rules, every scan. Push when a coin turns ENTER.
+function favState_(coin) {
+  var d = []; try { d = bfCandles_(coin, '4H'); } catch (e) { } if (d.length < 220) d = candles_(coin); if (d.length < 220) return { state: '?', note: 'Not enough 4H candles' };
+  var x = ind_(d), up = x.c > x.e200, f = function (n) { return '$' + round_(n); };
+  if (up && x.c > x.hh40 && x.rsi > 55) return { state: 'ENTER', note: 'TPI breakout: closed above the 40-candle high ' + f(x.hh40) + ', RSI ' + x.rsi.toFixed(0) + '. Stop: close under ' + f(x.ll20), px: x.c };
+  if (!up && x.rsiPrev < 20 && x.rsi >= 20) return { state: 'ENTER', note: 'Washout bounce: 4H RSI back above 20 (needs 3+ coins doing it). Stop ' + f(x.c - 2 * x.atr) + ', target ' + f(x.c + 2 * x.atr), px: x.c };
+  if (up && x.c >= x.hh40 * 0.98 && x.rsi > 50) return { state: 'ALMOST', note: 'Within 2% of the breakout. Trigger: 4H close above ' + f(x.hh40) + ' with RSI over 55', px: x.c };
+  if (!up && x.rsi < 25) return { state: 'ALMOST', note: 'Washout zone: 4H RSI ' + x.rsi.toFixed(0) + '. Trigger: RSI back above 20', px: x.c };
+  if (!up && x.st === -1) return { state: 'AVOID', note: 'Below the 4H EMA200 ' + f(x.e200) + ' and SuperTrend down', px: x.c };
+  return { state: 'WAIT', note: up ? 'Uptrend. Trigger: 4H close above ' + f(x.hh40) + ' with RSI over 55' : 'Below the 4H EMA200 ' + f(x.e200) + '. Wait for a washout (RSI under 20) or a reclaim', px: x.c };
+}
+function favCheck_(only) {
+  var v = wrows_('Favorites'); if (!v.length) return;
+  var sh = wsh_('Favorites');
+  v.forEach(function (r, i) {
+    if (only && r[0] != only) return;
+    try {
+      var s = favState_(r[0]), was = String(r[2]);
+      sh.getRange(i + 2, 3, 1, 4).setValues([[s.state, s.px || r[3], s.note, ct_()]]);
+      if (s.state == 'ENTER' && was != 'ENTER' && !only) notify_('FAVORITE ENTER: ' + r[0], r[0] + ' at $' + round_(s.px) + '\n' + s.note + '\nOpen Atlas > Ask Claude to build the trade.');
+    } catch (e) { log_('ERROR', 'favorite ' + r[0] + ': ' + e.message); }
+  });
+}
+function testWatch() { Logger.log(JSON.stringify(watchJson_())); Logger.log(JSON.stringify(favState_('SOL'))); }
