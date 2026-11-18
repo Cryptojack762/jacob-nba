@@ -328,7 +328,7 @@ function weex_(method, path, query, body) {
   var sig = Utilities.base64Encode(Utilities.computeHmacSha256Signature(msg, p.getProperty('WEEX_SECRET')));
   var relay = String(set_('Relay URL') || '').trim().replace(/\/$/, '');
   var r = UrlFetchApp.fetch((relay || BOT.base) + path + (query ? '?' + query : ''), {
-    method: method.toLowerCase(), contentType: 'application/json', payload: body || undefined, muteHttpExceptions: true, validateHttpsCertificates: !relay,
+    method: method.toLowerCase(), contentType: 'application/json', payload: body || undefined, muteHttpExceptions: true,
     headers: { 'ACCESS-KEY': p.getProperty('WEEX_KEY'), 'ACCESS-SIGN': sig, 'ACCESS-PASSPHRASE': p.getProperty('WEEX_PASSPHRASE'), 'ACCESS-TIMESTAMP': ts }
   });
   var txt = r.getContentText();
@@ -449,7 +449,7 @@ function testRelay() {
   var relay = String(set_('Relay URL') || '').trim().replace(/\/$/, '');
   if (!relay) { Logger.log('Relay URL is blank on the Home tab'); return; }
   var host = relay.split('/r/')[0];
-  var h = UrlFetchApp.fetch(host + '/health', { muteHttpExceptions: true, validateHttpsCertificates: false });
+  var h = UrlFetchApp.fetch(host + '/health', { muteHttpExceptions: true });
   Logger.log('Relay health: HTTP ' + h.getResponseCode() + ' ' + h.getContentText());
   if (keys_()) { try { Logger.log('WEEX balance via relay: ' + JSON.stringify(weex_('GET', '/capi/v3/account/balance', '', '')).slice(0, 300)); } catch (e) { Logger.log('WEEX via relay: ' + e.message); } }
 }
