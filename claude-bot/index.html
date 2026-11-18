@@ -104,7 +104,12 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
 
   <section class="view on" id="v-home">
     <div class="k">Ask Claude</div>
-    <div class="card"><button class="more" id="askc">Ask Claude for a read</button><div class="why" id="askout" style="white-space:pre-wrap;margin-top:8px"></div></div>
+    <div class="card">
+      <div style="display:flex;gap:8px"><input class="inp" id="qtk" style="margin:0" placeholder="Ticker, e.g. SOL" autocomplete="off" autocapitalize="characters"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px"><button class="mb" data-q="day">Day trade</button><button class="mb" data-q="swing">Swing</button><button class="mb" data-q="full">Full read</button></div>
+      <div style="display:flex;gap:8px;margin-top:8px"><input class="inp" id="qfree" style="margin:0" placeholder="Or ask anything…" autocomplete="off"><button class="mb" id="qgo" style="min-width:70px">Ask</button></div>
+      <button class="more" id="askc" style="margin-top:8px">Market read (BTC + best setups)</button>
+      <div class="why" id="askout" style="white-space:pre-wrap;margin-top:8px"></div></div>
     <div id="gate"><div class="sk"></div></div>
     <div class="k">Today's read</div>
     <div class="card"><div class="read" id="read"><div class="sk" style="height:80px;margin:0"></div></div></div>
@@ -374,6 +379,14 @@ if(W)wrender();else wshow(!!(WAPI&&WPIN));
 wload('',false);setInterval(function(){if(!document.hidden)wload('',false)},60000);
 document.addEventListener('visibilitychange',function(){if(!document.hidden)wload('',false)});
 
+// ---------- Home quick prompts ----------
+var QP={day:'DAY TRADE check for {T}: 1H trend vs EMA200 and VWAP, last 1H candle % and volume vs average, is the 1H volume-spike rule met, nearest 15m support/resistance, verdict with entry, stop 1.5 ATR, TP1/TP2, or exact trigger price if WAIT.',
+ swing:'SWING check for {T}: 4H and daily trend vs EMA50/EMA200, 4H RSI, 40-candle 4H high and 20-candle low, is the TPI breakout or washout bounce met, BTC gate, verdict with entry, stop 2 ATR, TP1 2 ATR, TP2 3 ATR, or exact trigger if WAIT.',
+ full:'FULL READ for {T}: price, trend on 15m/1H/4H/daily, RSI, ATR, funding, key support and resistance, which of our tested rules are met or closest, BTC gate, and one verdict for a day trade and one for a swing.'};
+function qask(text){if(!WAPI||!WPIN){$('askout').textContent='Connect the bot first: Trade tab → WEEX · day trades → bot link + PIN.';return}
+  $('askout').textContent='Thinking… (about 20 seconds)';fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+'&chat='+encodeURIComponent(text.slice(0,590)),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){$('askout').textContent=j.ok?(j.reply||'No answer'):'Error: '+(j.err||'unknown')}).catch(function(e){$('askout').textContent='Could not reach Claude: '+e.message})}
+document.addEventListener('click',function(e){var b=e.target.closest('[data-q]');if(!b)return;var t=$('qtk').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');if(!t){toast('Type a ticker first');return}qask(QP[b.dataset.q].replace('{T}',t))});
+$('qgo').onclick=function(){var t=$('qfree').value.trim();if(t)qask(t)};$('qfree').addEventListener('keydown',function(e){if(e.key==='Enter')$('qgo').click()});
 // ---------- Ask Atlas chat ----------
 function achat(){
   var q=$('aq').value.trim();if(!q)return;if(!WAPI||!WPIN){$('aout').textContent='Connect the bot first: scroll down to Connect the trading bot, paste the bot link and PIN.';$('wsetup').scrollIntoView({behavior:'smooth'});return}
