@@ -97,6 +97,7 @@ function get_(path) {
   if (r.getResponseCode() != 200) throw new Error('WEEX ' + path.split('?')[0] + ' HTTP ' + r.getResponseCode() + ': ' + r.getContentText().slice(0, 150));
   return JSON.parse(r.getContentText());
 }
+function rowsRaw_(name) { return rows_(name); }
 function rows_(name) { var sh = ss_().getSheetByName(name), n = sh.getLastRow(); return n < 2 ? [] : sh.getRange(2, 1, n - 1, TABS[name].length).getValues(); }
 
 // ---------------- indicators (closed candles only) ----------------
@@ -374,6 +375,7 @@ function doGet(e) {
     return HtmlService.createHtmlOutput('<meta name="viewport" content="width=device-width,initial-scale=1"><div style="font:18px system-ui;padding:28px;max-width:520px;margin:auto"><b>Claude\'s Bot</b><p>' + msg.replace(/</g, '&lt;') + '</p></div>');
   }
   if (q.json) {
+    var rows_ = function (n) { return rowsRaw_(n).map(function (r) { return r.map(function (v) { return v instanceof Date ? ct_(v) : v; }); }); };
     var pin = PropertiesService.getScriptProperties().getProperty('APP_PIN');
     if (String(q.pin || '') != String(pin)) return json_({ ok: false, err: 'PIN' });
     if (q.set == 'kill') setVal_('Kill switch', q.v == 'ON' ? 'ON' : 'OFF');
