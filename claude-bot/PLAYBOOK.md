@@ -181,3 +181,12 @@ App: BloFin tab now has a live L_RSI20 scanner for 20 coins; failing rules are l
 7. WEEX leverage call needs both isolatedLongLeverage and isolatedShortLeverage; allPosition returns an array (empty when flat).
 8. ForexFactory XML times are GMT. Don't add 5 hours (FOMC minutes = Wed 1:00 PM CT).
 9. NBA 11/17 +$103.45: favorite that dropped 23c during the day (SAS) lost; hedge on its game paid. Lean shape beat NBA Math by $109.
+
+## FOMC MINUTES WED 11/18 1:00 PM CT (researched 6:30 AM, sources: FinanceFeeds 11/18, Bitcoin.com 11/14)
+- Minutes of the Oct 28 meeting: Fed HELD 3.75-4.00%, vote 10-2, Cook and Hammack wanted a hike.
+- Priced in: December 8-9 HIKE of 25 bp ~92-96% (CME FedWatch 95.7%, Polymarket 92%, Kalshi ~89% on 11/14). Cuts are off the table.
+- Why: Oct CPI +0.4% vs 0.3% forecast, payrolls +165k, Brent over $100.
+- BTC ~$64.7k (down 12% week, 21% month). Support $62-66k buyer block, then $58.5k June low. Resistance $74.1k (short-term holder cost).
+- BEFORE line: a hike is already priced. More hawkish talk (2+ hikes, more dissents) = likely another leg down toward $62k; any "pause after December" hint = relief bounce.
+- Past reactions (inferred from headlines, not measured): Nov 2025 minutes -> BTC extended losses; hawkish minutes usually = small dip in the hour after.
+- Bot: event pause blocks new entries 12:00-2:00 PM CT (60 min each side).
