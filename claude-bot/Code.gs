@@ -400,6 +400,7 @@ function doGet(e) {
     var pin = PropertiesService.getScriptProperties().getProperty('APP_PIN');
     if (String(q.pin || '') != String(pin)) return json_({ ok: false, err: 'PIN' });
     if (q.news) return json_(news_());
+    if (q.coins) return json_(buildCoins());
     if (q.chat) { var hist = []; try { hist = JSON.parse(q.h || '[]').slice(-4); } catch (e) { } return json_(chat_(String(q.chat).slice(0, 600), hist)); }
     if (q.set == 'plan' && q.coin && /^(LONG|SHORT)$/.test(q.side)) return json_(queuePlan_(q));
     if (q.set == 'kill') setVal_('Kill switch', q.v == 'ON' ? 'ON' : 'OFF');
@@ -561,3 +562,33 @@ function news_() {
   return out;
 }
 function testNews() { Logger.log(JSON.stringify(news_()).slice(0, 2000)); }
+
+// ---------------- Coins tab: every USDT perp on BloFin + WEEX, with BOT / JACOB / SKIP category ----------------
+// BOT   = WEEX 24h volume >= $50M  (deep enough for the bot's fast trades)
+// JACOB = >= $5M on either exchange (fine for slower 4H/daily setups he taps)
+// SKIP  = thinner than that, or not a crypto coin (stocks, forex, metals)
+function buildCoins() {
+  var M = {}, get = function (u) { return JSON.parse(UrlFetchApp.fetch(u, { muteHttpExceptions: true }).getContentText()); };
+  var bt = get('https://openapi.blofin.com/api/v1/market/tickers').data || [], bi = get('https://openapi.blofin.com/api/v1/market/instruments').data || [];
+  var lev = {}; bi.forEach(function (x) { lev[x.instId] = { ml: Number(x.maxLeverage), cls: x.assetClass }; });
+  bt.forEach(function (t) { var m = String(t.instId).match(/^(.+)-USDT$/); if (!m) return; var c = m[1], r = M[c] = M[c] || { c: c };
+    r.bf = true; r.bfv = Number(t.volCurrency24h) * Number(t.last) / 1e6; r.bfl = (lev[t.instId] || {}).ml || ''; r.cls = (lev[t.instId] || {}).cls || r.cls; r.chg = (Number(t.last) / Number(t.open24h) - 1) * 100; });
+  var wt = get(BOT.base + '/capi/v3/market/ticker/24hr'), wi = get(BOT.base + '/capi/v3/market/exchangeInfo').symbols || [], wmeta = {};
+  wi.forEach(function (s) { wmeta[s.symbol] = s; });
+  (wt || []).forEach(function (t) { var s = wmeta[t.symbol]; if (!s || s.quoteAsset != 'USDT') return; var c = s.baseAsset, r = M[c] = M[c] || { c: c };
+    r.wx = true; r.wxv = Number(t.quoteVolume) / 1e6; r.wxl = s.maxLeverage; r.typ = s.underlyingType; if (r.chg == null) r.chg = Number(t.priceChangePercent) * 100; });
+  var rows = Object.keys(M).map(function (k) { var r = M[k], tot = (r.bfv || 0) + (r.wxv || 0), crypto = (r.typ || 'COIN') == 'COIN' && (!r.cls || /crypto/i.test(r.cls));
+    var cat = !crypto ? 'SKIP' : (r.wx && r.wxv >= 50) ? 'BOT' : (Math.max(r.bfv || 0, r.wxv || 0) >= 5) ? 'JACOB' : 'SKIP';
+    var why = !crypto ? 'not crypto (' + (r.typ || r.cls) + ')' : cat == 'BOT' ? 'deep WEEX volume: fast setups OK' : cat == 'JACOB' ? 'enough volume for 4H/daily setups' : 'too thin (< $5M/day)';
+    return [r.c, r.bf ? 'Y' : '', r.wx ? 'Y' : '', r.bfv != null ? Math.round(r.bfv * 10) / 10 : '', r.wxv != null ? Math.round(r.wxv * 10) / 10 : '', r.bfl || '', r.wxl || '', r.chg != null ? Math.round(r.chg * 10) / 10 : '', crypto ? 'crypto' : (r.typ || r.cls), cat, why, tot]; });
+  rows.sort(function (a, b) { return b[11] - a[11]; }); rows = rows.map(function (r) { return r.slice(0, 11); });
+  var ss = ss_(), sh = ss.getSheetByName('Coins') || ss.insertSheet('Coins'); sh.clear();
+  var head = ['Coin', 'On BloFin', 'On WEEX', 'BloFin 24h vol $M', 'WEEX 24h vol $M', 'BloFin max lev', 'WEEX max lev', '24h %', 'Type', 'Category', 'Why'];
+  sh.getRange(1, 1, 1, head.length).setValues([head]).setFontWeight('bold'); sh.setFrozenRows(1);
+  if (rows.length) sh.getRange(2, 1, rows.length, head.length).setValues(rows);
+  var col = { BOT: '#b7e1cd', JACOB: '#fce8b2', SKIP: '#f4c7c3' };
+  if (rows.length) sh.getRange(2, 10, rows.length, 1).setBackgrounds(rows.map(function (r) { return [col[r[9]]]; }));
+  var n = { BOT: 0, JACOB: 0, SKIP: 0 }; rows.forEach(function (r) { n[r[9]]++; });
+  log_('COINS', rows.length + ' coins: BOT ' + n.BOT + ', JACOB ' + n.JACOB + ', SKIP ' + n.SKIP);
+  return { ok: true, total: rows.length, counts: n, both: rows.filter(function (r) { return r[1] && r[2]; }).length, top: rows.slice(0, 15).map(function (r) { return r[0] + ' ' + r[9]; }) };
+}
