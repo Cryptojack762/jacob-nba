@@ -92,6 +92,7 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
   <img src="atlas-192.png" alt="">
   <div><div class="ttl">Atlas</div><div class="sub"><span class="dot" id="dot"></span><span id="upd">Loading…</span></div></div>
   <div class="ib">
+    <button class="icb" data-v="info" aria-label="Info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v.01M11 12h1v5h1"/></svg></button>
     <button class="icb" id="share" aria-label="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></button>
     <button class="icb" id="ref" aria-label="Refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button>
   </div>
@@ -138,18 +139,11 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
         <button class="kill" id="wkill">Kill switch</button>
         <div class="why" style="margin-top:10px">Paper = practice money. Approve = every trade waits for your tap below. Auto = the bot trades on WEEX by itself. Kill switch ON = no new trades.</div>
       </div>
-      <div class="k">Waiting for your approval</div>
-      <div class="card" id="word"></div>
-      <div class="k"><span>Real trades on WEEX</span><span id="wopenN"></span></div>
-      <div class="card" id="wopen"></div>
+      <button class="more" data-v="trades" style="margin:14px 0 0">📋 Open trades and approvals → Trades tab</button>
       <div class="k">Day-trade scanner · 1H volume spikes</div>
       <div class="card" id="wdt"><div class="why">Scanning…</div></div>
       <div class="k">Bot signals · 4H</div>
       <div class="card" id="wsig"></div>
-      <div class="k">Real track record</div>
-      <div class="card" id="wrec"></div>
-      <div class="k">Practice trades · paper, no money</div>
-      <div class="card" id="wpaper"></div>
       <button class="more" id="wreset" style="margin-bottom:12px">Change bot link / PIN</button>
     </div>
   </section>
@@ -182,6 +176,18 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
     <div class="foot" id="scan"></div>
   </section>
 
+  <section class="view" id="v-trades">
+    <div class="card" id="tconn" style="display:none"><div class="why">Connect the bot first: Trade tab → WEEX · day trades → enter the bot link and PIN.</div><button class="more" data-go="weex" style="margin-top:10px">Go connect</button></div>
+    <div class="k" style="margin-top:0">Waiting for your approval</div>
+    <div class="card" id="word"></div>
+    <div class="k"><span>Open real trades · WEEX</span><span id="wopenN"></span></div>
+    <div class="card" id="wopen"></div>
+    <div class="k">Closed real trades</div>
+    <div class="card" id="wrec"></div>
+    <div class="k">Practice trades · paper, no money</div>
+    <div class="card" id="wpaper"></div>
+    <div class="why" style="margin:4px 4px 14px">BloFin trades you place by hand don't show here (BloFin has no API key connected). WEEX trades update every minute.</div>
+  </section>
   <section class="view" id="v-info">
     <div class="k">Track record</div>
     <div class="card" id="rec"></div>
@@ -203,11 +209,11 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
 
 <nav class="tabs">
   <button class="tab on" data-v="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Home</button>
-  <button class="tab" data-v="bf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>Trade<span id="wbdg" style="position:absolute;top:2px;margin-left:30px;background:var(--dn);color:#fff;font-size:10px;font-weight:800;border-radius:999px;padding:1px 5px;display:none"></span></button>
+  <button class="tab" data-v="bf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>Trade</button>
   <button class="tab" data-v="sig"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>Triggers</button>
   <button class="tab" data-v="day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Day</button>
   <button class="tab" data-v="picks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>Top picks</button>
-  <button class="tab" data-v="info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v.01M11 12h1v5h1"/></svg>Info</button>
+  <button class="tab" data-v="trades"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h10M7 17h6"/></svg>Trades<span id="wbdg" style="position:absolute;top:2px;margin-left:30px;background:var(--dn);color:#fff;font-size:10px;font-weight:800;border-radius:999px;padding:1px 5px;display:none"></span></button>
 </nav>
 <div class="toast" id="toast"></div>
 
@@ -308,7 +314,7 @@ document.addEventListener('click',function(e){
   else if(t.dataset.f!=null){FIL=(FIL==t.dataset.f?'':t.dataset.f);render();if(FIL)go('sig')}
 });
 $('ref').onclick=function(){load(true)};
-$('askc').onclick=function(){var b=$('askc');b.textContent='Claude is reading the board…';b.disabled=true;fetch(API.replace('json=1','ask=1'),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){$('askout').textContent=j.ok?(j.text||'')+(j.cached?'\n(saved read - refreshes every 15 min)':''):'Error: '+(j.err||'unknown')}).catch(function(e){$('askout').textContent='Could not reach Claude: '+e.message}).then(function(){b.textContent='Ask Claude again';b.disabled=false})};
+$('askc').onclick=function(){if(!WAPI||!WPIN){$('askout').textContent='Connect the bot first: Trade tab → WEEX · day trades → bot link + PIN.';return}var b=$('askc');b.textContent='Claude is reading the market… (about 20 sec)';b.disabled=true;fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+'&chat='+encodeURIComponent('Market read: is BTC risk-on or risk-off right now, and is there any coin with a tested setup firing or close? Short answer.'),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){$('askout').textContent=j.ok?(j.reply||'No answer'):'Error: '+(j.err||'unknown')}).catch(function(e){$('askout').textContent='Could not reach Claude: '+e.message}).then(function(){b.textContent='Ask Claude again';b.disabled=false})};
 $('share').onclick=function(){
   var u=location.href.split('#')[0];
   if(navigator.share)navigator.share({title:'Phoenix',text:'Phoenix crypto screener',url:u}).catch(function(){});
@@ -329,7 +335,7 @@ var WN={L_TPI:'TPI breakout',L_ST:'SuperTrend',S_FUND:'Funding-extreme',S_BBRSI:
 function wnm(s){for(var k in WN){if(k===s||WN[k]===s)return WN[k]}return s}
 function wm(n){n=Number(n)||0;return (n<0?'-':'')+'$'+Math.abs(n).toFixed(2)}
 function wsm(n){n=Number(n)||0;return (n>=0?'+':'-')+'$'+Math.abs(n).toFixed(2)}
-function wshow(c){$('wsetup').style.display=c?'none':'block';$('wapp').style.display=c?'block':'none'}
+function wshow(c){$('wsetup').style.display=c?'none':'block';$('wapp').style.display=c?'block':'none';$('tconn').style.display=c?'none':'block'}
 function wload(extra,manual){
   if(!WAPI||!WPIN){wshow(false);return}
   fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+(extra||''),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
@@ -370,8 +376,8 @@ document.addEventListener('visibilitychange',function(){if(!document.hidden)wloa
 
 // ---------- Ask Atlas chat ----------
 function achat(){
-  var q=$('aq').value.trim();if(!q)return;if(!WAPI||!WPIN){toast('Connect the bot first');return}
-  $('aout').textContent='Thinking…';$('aplan').innerHTML='';$('asend').disabled=true;
+  var q=$('aq').value.trim();if(!q)return;if(!WAPI||!WPIN){$('aout').textContent='Connect the bot first: scroll down to Connect the trading bot, paste the bot link and PIN.';$('wsetup').scrollIntoView({behavior:'smooth'});return}
+  $('aout').textContent='Thinking… (about 20 seconds)';$('aplan').innerHTML='';$('asend').disabled=true;
   fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+'&chat='+encodeURIComponent(q),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
     $('asend').disabled=false;if(!j.ok){$('aout').textContent=j.err==='PIN'?'Wrong PIN':'Error';return}
     $('aout').textContent=j.reply||'';var p=j.plan;if(!p)return;
