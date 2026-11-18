@@ -443,3 +443,13 @@ function json_(o) { return ContentService.createTextOutput(JSON.stringify(o)).se
 // ---------------- tests ----------------
 function testScanDry() { var d = candles_('SOL'), x = ind_(d); Logger.log(JSON.stringify(x)); Logger.log(JSON.stringify(signal_('SOL', x, true)) + ' / ' + JSON.stringify(signal_('SOL', x, false))); }
 function testKeys() { Logger.log(JSON.stringify(weex_('GET', '/capi/v3/account/balance', '', ''))); }
+
+// Run from the editor: checks the VPS relay is up and (if keys are set) that WEEX answers through it.
+function testRelay() {
+  var relay = String(set_('Relay URL') || '').trim().replace(/\/$/, '');
+  if (!relay) { Logger.log('Relay URL is blank on the Home tab'); return; }
+  var host = relay.split('/r/')[0];
+  var h = UrlFetchApp.fetch(host + '/health', { muteHttpExceptions: true, validateHttpsCertificates: false });
+  Logger.log('Relay health: HTTP ' + h.getResponseCode() + ' ' + h.getContentText());
+  if (keys_()) { try { Logger.log('WEEX balance via relay: ' + JSON.stringify(weex_('GET', '/capi/v3/account/balance', '', '')).slice(0, 300)); } catch (e) { Logger.log('WEEX via relay: ' + e.message); } }
+}
