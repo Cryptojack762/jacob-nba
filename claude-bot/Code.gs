@@ -160,6 +160,7 @@ function scan() {
     var btcFlipDown = !btcUp && btcD[nB - 2].c > be[nB - 2];
     try { health_(); } catch (e) { }
     try { reportLog_(); } catch (e) { log_('ERROR', 'report log: ' + e.message); }
+    try { backup_(); } catch (e) { log_('ERROR', 'backup: ' + e.message); }
     expireApprovals_();
     try { reconcile_(); } catch (e) { log_('ERROR', 'reconcile: ' + e.message); }
     try { manageTP_(); } catch (e) { log_('ERROR', 'take-profit check: ' + e.message); }
@@ -641,6 +642,15 @@ function news_() {
   out.head.sort(function (a, b) { return new Date(b.when) - new Date(a.when); }); out.head = out.head.slice(0, 12);
   try { if (out.cal.length) c.put('NEWS3', JSON.stringify(out), 1800); } catch (e) { }
   return out;
+}
+// Weekly backup (Mondays, first scan after 9 AM CT): full copy of this sheet named 'BACKUP bot yyyy-MM-dd (don't use)'.
+// Same method as the NBA sheet's weeklyBackup (spreadsheet copy only - no extra permission). Code backup = GitHub.
+function backup_() {
+  var p = PropertiesService.getScriptProperties(), now = new Date(), tz = 'America/Chicago';
+  if (Utilities.formatDate(now, tz, 'u') != '1' || Number(Utilities.formatDate(now, tz, 'H')) < 9) return;
+  var wk = Utilities.formatDate(now, tz, 'yyyy-MM-dd'); if (p.getProperty('BACKUP_DAY') == wk) return;
+  p.setProperty('BACKUP_DAY', wk);
+  ss_().copy('BACKUP bot ' + wk + " (don't use)"); log_('INFO', 'Weekly backup copy made');
 }
 // Report log (Reports tab): every USD High-impact release this week - forecast vs actual + BTC move 1h/4h/24h after.
 // Builds our own reaction history (#81). Runs hourly from scan; reads ForexFactory weekly feed + BloFin 1H candles.
