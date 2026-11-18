@@ -151,7 +151,7 @@ function ind_(d) {
 
 // ---------------- the hourly scan ----------------
 function scan() {
-  var lock = LockService.getScriptLock(); if (!lock.tryLock(20000)) return;
+  var lock = LockService.getScriptLock(); if (!lock.tryLock(20000)) { try { log_('INFO', 'scan skipped: another job held the lock'); } catch (e) { } return; }
   try {
     var p = PropertiesService.getScriptProperties();
     var btcD = candles_('BTC'), lastBar = btcD[btcD.length - 1].t;
