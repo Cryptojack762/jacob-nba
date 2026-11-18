@@ -563,6 +563,14 @@ function tfSummary_(coin, bar) {
     atr: +x.atr.toPrecision(5), high40: x.hh40, low20: x.ll20, supertrend: x.st === 1 ? 'up' : 'down', volVsAvg: +(d[n].v / (va || 1)).toFixed(2),
     last5: d.slice(-5).map(function (k) { return [k.o, k.h, k.l, k.c]; }) };
 }
+function bfTicker_(text) {   // first ALL-CAPS word in the message that is a BloFin USDT perp
+  var c = CacheService.getScriptCache(), list = c.get('BF_IDS');
+  if (!list) { try { list = JSON.parse(UrlFetchApp.fetch('https://openapi.blofin.com/api/v1/market/instruments?instType=SWAP', { muteHttpExceptions: true }).getContentText()).data
+      .map(function (x) { return x.instId; }).filter(function (x) { return /-USDT$/.test(x); }).map(function (x) { return x.replace('-USDT', ''); }).join(','); c.put('BF_IDS', list, 21600); } catch (e) { return null; } }
+  var have = ',' + list + ',', w = String(text).match(/\b[A-Z0-9]{2,15}\b/g) || [];
+  for (var k = 0; k < w.length; k++) if (/[A-Z]/.test(w[k]) && have.indexOf(',' + w[k] + ',') > -1) return w[k];
+  return null;
+}
 function chat_(text, hist) {
   hist = hist || [];
   var ck = 'CH_' + Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, text + JSON.stringify(hist))), cache = CacheService.getScriptCache(), hit = cache.get(ck); if (hit) return JSON.parse(hit);
@@ -572,6 +580,7 @@ function chat_(text, hist) {
   var mine = rowsRaw_('Positions').filter(function (r) { return r[11] == 'OPEN' && r[10] == 'LIVE'; }).map(function (r) { return { coin: r[1], side: r[3], entry: r[5], qty: r[6], stop: r[9] }; });
   if (!coin && mine.length && /\bMY\b|OPEN TRADE|POSITION/.test(up)) coin = mine[mine.length - 1].coin;
   if (!coin && hist.length) { var hu = hist.map(function (h) { return String(h.u || ''); }).join(' ').toUpperCase(); coin = (CHAT_COINS.filter(function (c) { return new RegExp('\\b' + c + '\\b').test(hu); }).pop()) || null; }
+  if (!coin) coin = bfTicker_(text);   // any BloFin coin Jacob types in capitals (e.g. PIEVERSE, XPIN from the Phoenix board)
   if (!coin && /SOLANA/.test(up)) coin = 'SOL'; if (!coin && /BITCOIN/.test(up)) coin = 'BTC'; if (!coin && /ETHEREUM/.test(up)) coin = 'ETH'; if (!coin && /DOGECOIN/.test(up)) coin = 'DOGE'; if (!coin && /ARBITRUM/.test(up)) coin = 'ARB';
   var swing = /SWING|4 ?H|DAILY|1 ?D\b|DAYS|WEEK/.test(up), tfs = /15 ?M/.test(up) ? ['15m', '1H', '4H'] : swing ? ['1H', '4H', '1D'] : ['15m', '1H', '4H'];
   var data = null;
