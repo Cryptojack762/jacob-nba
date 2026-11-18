@@ -284,7 +284,8 @@ function symbolInfo_(coin) {
 function priceStr_(coin, p) { var info = symbolInfo_(coin), dp = info ? info.pricePrecision : 4; return Number(p).toFixed(dp); }
 
 function openPos_(o, fill, mode, note) {
-  ss_().getSheetByName('Positions').appendRow([o.id, o.coin, o.strategy, o.side, new Date().toISOString(), fill, o.qty, round_(o.margin), o.lev, round_(o.stop), mode, 'OPEN', '', '', '', '', '', '', '']);
+  var tag = o.tag || (mode == 'PAPER' ? 'PAPER' : /APPROVED/.test(note) ? 'JACOB-APPROVED' : 'BOT-AUTO');
+  ss_().getSheetByName('Positions').appendRow([o.id, o.coin, o.strategy, o.side, new Date().toISOString(), fill, o.qty, round_(o.margin), o.lev, round_(o.stop), mode, 'OPEN', '', '', '', '', '', '', '', tag]);
   log_(mode, note + ': ' + o.side + ' ' + o.qty + ' ' + o.coin + ' @ ' + fill + ' (' + STRAT_NAMES[o.strategy] + ')');
   notify_(mode + ': ' + o.side + ' ' + o.coin + ' opened', o.side + ' ' + o.qty + ' ' + o.coin + ' at $' + fill + ', margin $' + round_(o.margin) + ' at ' + o.lev + 'x, stop $' + round_(o.stop) + '.\nWhy: ' + o.why);
 }
