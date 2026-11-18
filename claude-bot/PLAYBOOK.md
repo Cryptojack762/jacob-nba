@@ -206,3 +206,7 @@ Rule: LONG 4H close above 48-candle high while BTC > 20-day avg, stop 2 ATR, exi
   - #15 S60 wait for pullback to the breakout level (within 6 candles): IS 2.00 -> OOS 1.07. REJECTED (no better than base, fewer trades).
   - #11 S56 daily close crosses above 50-day avg with ADX>25: IS 0.26 / OOS 0.88. REJECTED.
   - #12 S59 28-day momentum (top 3 coins weekly, BTC up): IS PF 1.46 -> OOS 0.84. REJECTED (worked early, failed lately).
+- #77 FOMC days (BTC 4H, Apr 2024 - Nov 2026; minutes dates estimated as decision + 3 weeks, 2 PM ET):
+  - Decision days: average 24h move 2.24% vs 1.75% on a normal day (+28% bigger). Up 10 of 21.
+  - Minutes releases: average 24h move 2.20%, up only 8 of 20, first 4 hours average +0.14% (no real direction). Biggest: Aug 2026 +6.7%, Jul 2024 -4.4%.
+  - Verdict: bigger swings, no reliable direction -> keep the event pause (no new entries 1h before/after), don't bet on a direction.
