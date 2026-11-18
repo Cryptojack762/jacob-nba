@@ -39,11 +39,12 @@ var DEFAULTS = [
   ['L_FUND', 'OFF', 'Long: funding bottom 5% + BTC up, 72h hold (weak extra edge)'],
   ['S_BTCFLIP', 'OFF', 'Watch list: short coins below EMA200 when BTC just lost its EMA200; cover when BTC regains it'],
   ['Bottom alert', 'ON', 'Alert when BTC funding is -0.01% or lower (shorts crowded = market bottom zone). Alert only, no trade'],
+  ['L_RSI20', 'ON', 'Long: market washout bounce - coin under 4H EMA200, RSI back above 20, while 3+ coins do it within 24h. Stop 2 ATR, target 2 ATR, max 2 days (OOS PF 2.87, 66% win)'],
   ['M_BOTTOM', 'OFF', 'Watch list: on a bottom alert, go long the coin for 72h (2024-26 only: 17 of 27 episodes green)'],
   ['ntfy topic', '', 'Optional: private ntfy.sh topic for phone pushes'],
   ['Web app URL', '', 'Paste after Deploy > Web app (needed for Approve links and the phone app)'],
 ];
-var STRAT_NAMES = { L_TPI: 'TPI breakout long', L_ST: 'SuperTrend long', S_FUND: 'Funding-extreme short', S_BBRSI: 'BB + RSI short', L_FUND: 'Funding-extreme long', S_BTCFLIP: 'BTC-breakdown short', M_BOTTOM: 'Market-bottom long' };
+var STRAT_NAMES = { L_TPI: 'TPI breakout long', L_ST: 'SuperTrend long', S_FUND: 'Funding-extreme short', S_BBRSI: 'BB + RSI short', L_FUND: 'Funding-extreme long', S_BTCFLIP: 'BTC-breakdown short', M_BOTTOM: 'Market-bottom long', L_RSI20: 'Washout bounce long' };
 var TABS = {
   Signals: ['Time (CT)', 'Coin', 'Strategy', 'Side', 'Price', 'Why', 'Action', 'Claude notes'],
   Orders: ['ID', 'Time (CT)', 'Coin', 'Strategy', 'Side', 'Qty', 'Ref price', 'Protective stop', 'Margin $', 'Leverage', 'Status', 'Token', 'Result', 'Claude notes'],
@@ -131,7 +132,7 @@ function ind_(d) {
   var win = function (k, f) { var m = f == 'h' ? -Infinity : Infinity; for (var j = i - k; j < i; j++) m = f == 'h' ? Math.max(m, d[j].h) : Math.min(m, d[j].l); return m; };
   var bb = (function () { var s = 0, q = 0; for (var j = i - 19; j <= i; j++) { s += c[j]; q += c[j] * c[j]; } var m = s / 20, sd = Math.sqrt(Math.max(q / 20 - m * m, 0)); return { u: m + 2 * sd, l: m - 2 * sd }; })();
   var r = rsi_(c), st = supertrend_(d);
-  return { c: c[i], e200: ema_(c, 200)[i], rsi: r[i], atr: atr_(d, 14)[i], hh40: win(40, 'h'), ll20: win(20, 'l'), bbu: bb.u, bbl: bb.l, st: st[i], stPrev: st[i - 1], t: d[i].t };
+  return { c: c[i], e200: ema_(c, 200)[i], rsi: r[i], rsiPrev: r[i - 1], atr: atr_(d, 14)[i], hh40: win(40, 'h'), ll20: win(20, 'l'), bbu: bb.u, bbl: bb.l, st: st[i], stPrev: st[i - 1], t: d[i].t };
 }
 
 // ---------------- the hourly scan ----------------
@@ -150,11 +151,20 @@ function scan() {
     var pending = rows_('Orders').filter(function (r) { return r[10] == 'PENDING'; });
     var busy = {}; open.concat(pending).forEach(function (r) { busy[r[1 + (r.length == TABS.Orders.length ? 1 : 0)]] = 1; });
     var found = 0, bottom = bottomCheck_(lastBar);
+    var DX = {}, wash = JSON.parse(p.getProperty('WASH') || '[]').filter(function (w) { return w.t > lastBar - 24 * 3600e3; });
+    BOT.coins.forEach(function (coin) {
+      try { var d = coin == 'BTC' ? btcD : candles_(coin); if (d.length < 260) return; var x = ind_(d); DX[coin] = { d: d, x: x };
+        if (x.c < x.e200 && x.rsiPrev < 20 && x.rsi >= 20 && !wash.some(function (w) { return w.c == coin && w.t == x.t; })) wash.push({ c: coin, t: x.t });
+      } catch (e) { log_('ERROR', coin + ': ' + e.message); }
+    });
+    p.setProperty('WASH', JSON.stringify(wash));
+    var breadth = wash.length;
+    if (breadth >= 3) log_('WASHOUT', breadth + ' coins bounced off RSI 20 in 24h: ' + wash.map(function (w) { return w.c; }).join(', '));
     BOT.coins.forEach(function (coin) {
       try {
-        var d = coin == 'BTC' ? btcD : candles_(coin); if (d.length < 260) return;
-        var x = ind_(d);
-        x.btcUp = btcUp;
+        if (!DX[coin]) return;
+        var d = DX[coin].d, x = DX[coin].x;
+        x.btcUp = btcUp; x.breadth = breadth;
         manage_(coin, d, x, open);
         if (busy[coin]) return;
         var sig = signal_(coin, x, btcUp, btcFlipDown, bottom);
@@ -170,6 +180,7 @@ function scan() {
 // Entry rules (PLAYBOOK.md). Returns {strategy, side, why} or null.
 function signal_(coin, x, btcUp, btcFlipDown, bottom) {
   var S = [];
+  if (on_('L_RSI20') && x.c < x.e200 && x.rsiPrev < 20 && x.rsi >= 20 && x.breadth >= 3) S.push({ strategy: 'L_RSI20', side: 'LONG', stopAtr: 2, why: 'Washout bounce: RSI ' + x.rsiPrev.toFixed(0) + ' -> ' + x.rsi.toFixed(0) + ' under EMA200, ' + x.breadth + ' coins washing out in 24h' });
   if (bottom && on_('M_BOTTOM') && coin != 'BTC') S.push({ strategy: 'M_BOTTOM', side: 'LONG', why: 'BTC funding ' + (bottom * 100).toFixed(4) + '% (shorts crowded, market bottom zone)' });
   if (btcFlipDown && on_('S_BTCFLIP') && coin != 'BTC' && x.c < x.e200) S.push({ strategy: 'S_BTCFLIP', side: 'SHORT', why: 'BTC just closed under its EMA200; coin is under its EMA200 too' });
   if (on_('L_TPI') && btcUp && x.c > x.hh40 && x.c > x.e200 && x.rsi > 55 && x.atr / x.c < 0.05) S.push({ strategy: 'L_TPI', side: 'LONG', why: 'Close ' + x.c + ' broke the 40-candle high ' + x.hh40 + ', RSI ' + x.rsi.toFixed(0) + ', above EMA200, BTC up' });
@@ -207,6 +218,9 @@ function manage_(coin, d, x, open) {
     if (strat == 'S_BBRSI' && !reason && x.st === 1 && x.stPrev === -1) reason = 'Long trigger: SuperTrend flipped up';
     if (strat == 'S_BTCFLIP' && x.btcUp) reason = 'BTC back above EMA200';
     if (strat == 'M_BOTTOM' && bars >= 18) reason = '72h hold done';
+    if (strat == 'L_RSI20') { var tgt = 2 * Number(r[5]) - stop;   // target = entry + 2 ATR (same distance as the 2 ATR stop)
+      if (d.filter(function (c) { return c.t >= opened; }).some(function (c) { return c.h >= tgt; })) return closePos_(r, r[10] == 'PAPER' ? tgt : null, 'Target 2 ATR', bars);
+      if (bars >= 12) reason = '2-day hold done'; }
     if (!reason && bars >= 120) reason = 'Max hold 20 days';
     if (reason) closePos_(r, null, reason, bars);
   });
@@ -237,7 +251,7 @@ function act_(coin, sig, x) {
   ss_().getSheetByName('Signals').appendRow([ct_(), coin, STRAT_NAMES[sig.strategy], sig.side, x.c, sig.why, action, '']);
   if (action.indexOf('Skipped') === 0) return;
   var lev = num_('Leverage', 1, 5), margin = equity_() * num_('Margin per trade %', 1, 50) / 100;
-  var stop = sig.side == 'LONG' ? x.c - num_('Protective stop (ATR x)', 1, 10) * x.atr : x.c + num_('Protective stop (ATR x)', 1, 10) * x.atr;
+  var sa = sig.stopAtr || num_('Protective stop (ATR x)', 1, 10), stop = sig.side == 'LONG' ? x.c - sa * x.atr : x.c + sa * x.atr;
   var o = { id: 'CB' + Date.now().toString(36).toUpperCase() + coin, coin: coin, strategy: sig.strategy, side: sig.side, ref: x.c, stop: stop, margin: margin, lev: lev, why: sig.why };
   o.qty = qty_(coin, margin * lev / x.c);
   if (!(o.qty > 0)) { log_('SKIP', coin + ' size below the exchange minimum'); return; }
