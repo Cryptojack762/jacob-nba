@@ -154,6 +154,7 @@ function scan() {
     var be = ema_(btcD.map(function (x) { return x.c; }), 200), nB = btcD.length, btcUp = btcD[nB - 1].c > be[nB - 1];
     var btcFlipDown = !btcUp && btcD[nB - 2].c > be[nB - 2];
     expireApprovals_();
+    try { reconcile_(); } catch (e) { log_('ERROR', 'reconcile: ' + e.message); }
     var eq = equity_(); killCheck_(eq);
     if (!newBar) { status_('Waiting for the next 4H candle. BTC ' + (btcUp ? 'UP' : 'DOWN') + '. Equity $' + eq.toFixed(2) + '. Mode ' + set_('Mode') + (on_('Kill switch') ? ' | KILL SWITCH ON' : '')); return; }
     var open = rows_('Positions').filter(function (r) { return r[11] == 'OPEN'; });
@@ -670,3 +671,30 @@ function buyNow_(q) {
     return res.ok ? { ok: true, msg: 'Bought ' + o.qty + ' ' + coin + ' @ ~$' + px + ' (' + lev + 'x, stop $' + round_(stop) + '). ' + res.msg } : { ok: false, err: res.msg };
   } catch (e) { return { ok: false, err: e.message }; } finally { lk.releaseLock(); }
 }
+
+// ---------------- reconcile: trades WEEX closed on its own (stop hit, liquidation, or Jacob closed by hand) ----------------
+function reconcile_() {
+  if (!keys_()) return 0;
+  var live = rows_('Positions').filter(function (r) { return r[10] == 'LIVE' && r[11] == 'OPEN'; }); if (!live.length) return 0;
+  var pos = weex_('GET', '/capi/v3/account/position/allPosition', '', ''), list = Array.isArray(pos) ? pos : (pos && (pos.data || pos.positions)) || [];
+  var have = {}; list.forEach(function (x) { if (Number(x.size) > 0) have[x.symbol + '|' + String(x.side).toUpperCase()] = 1; });
+  var sh = ss_().getSheetByName('Positions'), ids = sh.getRange(2, 1, sh.getLastRow() - 1, 1).getValues(), n = 0;
+  live.forEach(function (r) {
+    if (have[r[1] + 'USDT|' + r[3]]) return;
+    var row = -1; for (var i = 0; i < ids.length; i++) if (ids[i][0] == r[0]) row = i + 2; if (row < 0) return;
+    var px = priceNow_(r[1]), side = r[3] == 'LONG' ? 1 : -1, stop = Number(r[9]);
+    var hitStop = side > 0 ? px <= stop * 1.01 : px >= stop * 0.99, exit = hitStop ? stop : px;  // best guess of the fill; WEEX history has the exact one
+    var pct = side * (exit / Number(r[5]) - 1) - BOT.fee, pnl = Number(r[7]) * Number(r[8]) * pct;
+    sh.getRange(row, 12, 1, 7).setValues([['CLOSED', ct_(), exit, Math.round(pnl * 100) / 100, Math.round(pct * 10000) / 100 + '%', 'Closed on WEEX (' + (hitStop ? 'stop hit' : 'by hand or other') + ') - P&L estimated', '']]);
+    log_('LIVE', 'Reconcile: ' + r[3] + ' ' + r[1] + ' no longer open on WEEX, marked closed (~$' + pnl.toFixed(2) + ')'); n++;
+    notify_('LIVE: ' + r[1] + ' closed on WEEX', r[3] + ' ' + r[1] + ' is no longer open on WEEX (' + (hitStop ? 'stop hit' : 'closed by hand or other') + '). Est. P&L $' + pnl.toFixed(2) + '.');
+  });
+  return n;
+}
+// Run once from the editor: hourly scan -> every 15 minutes (exits, stops, approvals and reconcile checked 4x faster; heavy scans still only on new 4H candles)
+function setTrigger15() {
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() == 'scan') ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('scan').timeBased().everyMinutes(15).create();
+  log_('SETUP', 'scan trigger now every 15 minutes');
+}
+function testReconcile() { Logger.log('closed ' + reconcile_()); }
