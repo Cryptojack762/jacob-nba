@@ -541,8 +541,12 @@ function news_() {
   var c = CacheService.getScriptCache(), hit = c.get('NEWS'); if (hit) return JSON.parse(hit);
   var out = { ok: true, at: ct_(), cal: [], head: [], err: [] };
   try {
-    var r = UrlFetchApp.fetch('https://nfs.faireconomy.media/ff_calendar_thisweek.json', { muteHttpExceptions: true });
-    var ev = JSON.parse(r.getContentText());
+    var H = { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36', 'Accept': 'application/json,text/xml,*/*' }, muteHttpExceptions: true }, ev = null, txt = UrlFetchApp.fetch('https://nfs.faireconomy.media/ff_calendar_thisweek.json', H).getContentText();
+    if (/^\s*\[/.test(txt)) ev = JSON.parse(txt);
+    else { txt = UrlFetchApp.fetch('https://nfs.faireconomy.media/ff_calendar_thisweek.xml', H).getContentText();
+      ev = XmlService.parse(txt).getRootElement().getChildren('event').map(function (e) { var d = e.getChildText('date'), t = e.getChildText('time'), m = String(d).match(/(\d+)-(\d+)-(\d+)/), tm = String(t).match(/(\d+):(\d+)(am|pm)/i), dt = null;
+        if (m) { var hh = tm ? (Number(tm[1]) % 12) + (/pm/i.test(tm[3]) ? 12 : 0) : 0; dt = new Date(Date.UTC(Number(m[3]), Number(m[1]) - 1, Number(m[2]), hh + 5, tm ? Number(tm[2]) : 0)); }  // XML times are US Eastern (EST = UTC-5)
+        return { title: e.getChildText('title'), country: e.getChildText('country'), impact: e.getChildText('impact'), date: dt ? dt.toISOString() : d, forecast: e.getChildText('forecast'), previous: e.getChildText('previous'), actual: e.getChildText('actual') }; }); }
     out.cal = ev.filter(function (e) { return e.country == 'USD' && (e.impact == 'High' || e.impact == 'Medium'); }).map(function (e) {
       return { t: e.title, when: e.date, imp: e.impact, fc: e.forecast || '', prev: e.previous || '', act: e.actual || '' }; });
   } catch (e) { out.err.push('calendar: ' + e.message); }
