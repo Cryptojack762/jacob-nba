@@ -381,8 +381,8 @@ function bfload(){
         else if(l.t==='h4up'){on=last4>l.p;txt=on?'YES · 4H closed '+f(last4):'not yet · last 4H '+f(last4)}
         else if(l.t==='zone'){on=px>=l.lo&&px<=l.hi;txt=on?'price is in the zone now':'price '+f(px)}
         else {on=h1<l.p;txt=on?'HIT · stay out':'safe · last 1H '+f(h1)}
-        var cls=l.t==='h1dn'?(on?'AVOID':'WAIT'):(on?'ENTER':'WAIT');
-        return '<div class="hl"><i class="chip s-'+cls+'">'+(on&&l.t!=='h1dn'?'✔ GO':on?'STOP':'WAIT')+'</i><span><b>'+l.n+' '+(l.p?f(l.p):f(l.lo)+'–'+f(l.hi))+'</b><br>'+txt+(l.stop?' · stop '+(typeof l.stop==='number'?f(l.stop):l.stop+' '+f(e20)):'')+'</span></div>'}).join('');
+        var bad=/FAILS/.test(l.n),cls=l.t==='h1dn'?(on?'AVOID':'WAIT'):(on&&!bad?'ENTER':'WAIT');
+        return '<div class="hl"><i class="chip s-'+cls+'">'+(on&&l.t!=='h1dn'?(bad?'MET · skip':'✔ GO'):on?'STOP':'WAIT')+'</i><span><b>'+l.n+' '+(l.p?f(l.p):f(l.lo)+'–'+f(l.hi))+'</b><br>'+txt+(l.stop?' · stop '+(typeof l.stop==='number'?f(l.stop):l.stop+' '+f(e20)):'')+'</span></div>'}).join('');
       var trend=last4>e50?'<b class="pos">4H trend up</b>':'<b class="neg">4H trend down</b>';
       return '<div class="k">'+k.c+'</div><div class="card"><div class="two"><div class="big">'+f(px)+'</div><div class="why" style="text-align:right">'+trend+'<br>EMA20 '+f(e20)+' · EMA50 '+f(e50)+'</div></div>'+rows+'</div>'}).join('');
     $('bfstamp').textContent='Updated '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})+' · ✔ GO = that entry rule is met. Plans only, you place the trade on BloFin.';
