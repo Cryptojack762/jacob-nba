@@ -190,3 +190,13 @@ App: BloFin tab now has a live L_RSI20 scanner for 20 coins; failing rules are l
 - BEFORE line: a hike is already priced. More hawkish talk (2+ hikes, more dissents) = likely another leg down toward $62k; any "pause after December" hint = relief bounce.
 - Past reactions (inferred from headlines, not measured): Nov 2025 minutes -> BTC extended losses; hawkish minutes usually = small dip in the hour after.
 - Bot: event pause blocks new entries 12:00-2:00 PM CT (60 min each side).
+
+## ROUND 5 (11/18 9:50 AM) - checks on the 4H BTC-side breakout (12 coins, BloFin 4H, Apr 2024 - Nov 2026, 0.16% round-trip fees)
+Rule: LONG 4H close above 48-candle high while BTC > 20-day avg, stop 2 ATR, exit close under 24-candle low. SHORT close under 48-candle low while BTC < 20-day avg, stop 2 ATR, target 3R.
+- Baseline: 932 trades, +0.29R avg, PF 1.40 (long 428t PF 1.69, short 504t PF 1.16).
+- #22 Latest 3 months still works: 89t, PF 1.43 (long 1.63, short 1.33). Holding up.
+- #21 Breakeven after +1 ATR: PF 1.66 (vs 1.40), total +290R vs +266R, but win rate drops to 14% (many scratches). Weak pass - optional.
+- #18 Choppiness filter (CHOP<61.8): no change (929t, PF 1.40). Breakouts already avoid chop. REJECTED (adds nothing).
+- #28 Fees: limit entries (0.04% total) +0.32R/trade vs market (0.12%) +0.30R. Limit orders add ~+12% total R. Use limit when the setup isn't racing.
+- #26 Washout bounce on BTC/ETH alone (no 3-coin breadth): 36t, PF 1.08. FAILS - keep the 3+ coins rule.
+- #25 Risk per trade for $50 with 20% max drawdown (trades in sequence, bootstrap 2,000 runs): 0.5% risk -> $50 to $171, median worst drop 16%, 22% chance of a drop over 20%. 1% risk -> median drop 30% (96% chance over 20%). Answer: 0.5% risk or less per trade (about $0.25 of a $50 account) to stay near 20%.
