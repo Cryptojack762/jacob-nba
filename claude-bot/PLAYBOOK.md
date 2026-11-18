@@ -100,6 +100,19 @@ Tested on every TPI and SuperTrend long, both periods:
 - What works as a hedge instead: (1) the 3×ATR stop on every trade, (2) running the short book next to the long book — shorts are uncorrelated with longs (monthly correlation 0.04 IS, -0.07 OOS) and were green in 14 of 26 losing long months OOS, adding 10-18% to total profit.
 - Jacob's betting rule "everything has a hedge" → for the bot the hedge = stop + short book, not a BTC short.
 
+## ROUND 3 (Nov 17, 8 PM) - scavenged from Jacob's other sheets
+Sheets read: Phoenix (BloFin Rules, BloFin Triggers, Pick Triggers, Trigger Record), Crypto Playbook Library (Backtest Map), bullrun 2027 (Bottom Watch), Perp Forward Test Log. Dustin's sheets only read, never changed.
+Same engine, IS 2024-26 / OOS 2021-24, 0.16% fees.
+- Playbook #15 breakout (48-candle high, BTC up, exit 24-candle low): IS PF 1.54, OOS 1.81. Real - but it is the same trade as TPI. Taking its extra trades when TPI is not firing: IS PF 1.02 (nothing). Not added; it independently confirms TPI.
+- Playbook #16 breakdown short (48-candle low, 3R target): IS 0.96, OOS 0.98. Rejected (same as our earlier Donchian short).
+- BloFin AI "chandelier 3 ATR" exit: worse than current exits (TPI OOS PF 1.85 -> 1.74, SuperTrend 2.36 -> 1.87). Not added.
+- BloFin AI rule "48h cooldown on a coin after a loss": TPI IS 1.46 -> 1.36, SuperTrend IS 1.46 -> 1.34, OOS unchanged. Not added (the 3 ATR stop already caps the damage it was meant to stop).
+- BTC gate = 20-day average (Phoenix) vs BTC EMA200 (bot): EMA200 better on TPI (IS 1.46 vs 1.27). Bot keeps EMA200.
+- Phoenix EMA21/50 swing rule (Playbook #13): -0.07R/trade over 1,203 trades. Shown in the app as information only, never traded.
+- Phoenix Trigger Record day plans use 17-50x leverage; BloFin AI's own review of Jacob's 55 trades says cap at 10x (28 of 31 liquidations were above 10x). The bot stays at 2x.
+- What was carried over: Phoenix Pick Triggers (top 8 by readiness, Dustin score kept) and Bottom Watch (forming/confirmed only) now show in the phone app, read-only.
+- BloFin AI hard rules already in the bot: stop on every order, max hold, kill switch, leverage cap. Its "max 2 new entries a day" is covered by max 5 open.
+
 ## Portfolio rules (from NotebookLM sources + our tests)
 - Equal margin per trade: 20% of equity, max 5 open, leverage 2x default (3x max) → each trade risks a small slice.
 - Every order carries an exchange-side protective stop (3 × ATR14 from entry) so a server outage can't liquidate the account.

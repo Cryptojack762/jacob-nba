@@ -60,6 +60,7 @@ input{width:100%;background:var(--card2);border:1px solid var(--line);color:var(
     <div class="card"><div class="sec">Open trades</div><div id="open"></div></div>
     <div class="card"><div class="sec">Recent signals</div><div id="sig"></div></div>
     <div class="card"><div class="sec">Closed trades</div><div id="closed"></div></div>
+    <div class="card"><div class="sec">Phoenix board (view only, not traded)</div><div class="note" id="phxh" style="margin-top:0"></div><div id="phx"></div><div class="sec" style="margin-top:12px">Bottom Watch</div><div id="bw"></div></div>
     <div class="note" id="foot"></div>
   </div>
 </div>
@@ -93,6 +94,10 @@ function render(j){
   closed.forEach(p=>{if(String(p[12]).startsWith(new Date().toLocaleDateString('en-US',{month:'numeric',day:'numeric',timeZone:'America/Chicago'})+' '))pl+=Number(p[14])||0;});
   $('pl').textContent=money(pl);$('pl').className='big '+(pl>=0?'pos':'neg');
   $('sig').innerHTML=(j.signals||[]).slice(-10).reverse().map(s=>`<div class="item"><div class="t">${esc(s[3])} ${esc(s[1])} <span class="pill">${esc(s[2])}</span></div><div class="s">${esc(s[0])} · $${esc(s[4])} · ${esc(s[6])}<br>${esc(s[5])}${s[7]?'<br>Claude: '+esc(s[7]):''}</div></div>`).join('')||'<div class="item s">No signals yet. The bot checks every 4-hour candle.</div>';
+  const X=j.phoenix||{};
+  $('phxh').textContent=X.err?('Phoenix not readable: '+X.err):'Dustin picks ranked by readiness. Heads-up: this EMA21/50 rule lost money in the 2-year backtest (-0.07R), so it is shown, not traded.';
+  $('phx').innerHTML=(X.picks||[]).map(p=>{const c=p.ready>=80?'up':p.ready>=60?'al':'dn';return `<div class="item"><div class="row"><div class="t">${esc(p.coin)} <span class="pill">${esc(p.state)}</span></div><div class="pill ${c}">${esc(p.ready)}</div></div><div style="height:6px;background:var(--card2);border-radius:4px;margin-top:6px"><div style="height:6px;width:${Math.min(100,p.ready)}%;background:var(--${c==='up'?'up':c==='al'?'al':'dn'});border-radius:4px"></div></div><div class="s">Dustin #${esc(p.rank)}, score ${esc(p.score)} · ${esc(p.why)}</div></div>`}).join('')||'<div class="item s">No Phoenix data.</div>';
+  $('bw').innerHTML=(X.bottom||[]).map(b=>`<div class="item"><div class="t">${esc(b.coin)} <span class="pill">${esc(b.verdict)}</span></div><div class="s">${esc(b.conf)}${b.grade?' · grade '+esc(b.grade):''}</div></div>`).join('')||'<div class="item s">No coin forming a bottom right now.</div>';
   $('foot').textContent='Not financial advice. Rules and backtests: PLAYBOOK.md.';
 }
 $('save').onclick=()=>{API=$('api').value.trim();PIN=$('pin').value.trim();try{localStorage.setItem('cb_api',API);localStorage.setItem('cb_pin',PIN);}catch(e){}load();};

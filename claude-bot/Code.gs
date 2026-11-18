@@ -379,9 +379,27 @@ function doGet(e) {
     if (q.set == 'kill') setVal_('Kill switch', q.v == 'ON' ? 'ON' : 'OFF');
     if (q.set == 'mode' && /^(PAPER|APPROVE|AUTO)$/.test(q.v)) setVal_('Mode', q.v);
     return json_({ ok: true, status: ss_().getSheetByName('Home').getRange(2, 2).getValue(), mode: set_('Mode'), kill: set_('Kill switch'), equity: equity_(),
-      positions: rows_('Positions').slice(-60), orders: rows_('Orders').filter(function (r) { return r[10] == 'PENDING'; }).map(function (r) { return r.slice(0, 11).concat([r[11]]); }), signals: rows_('Signals').slice(-30), log: rows_('Log').slice(-25) });
+      positions: rows_('Positions').slice(-60), orders: rows_('Orders').filter(function (r) { return r[10] == 'PENDING'; }).map(function (r) { return r.slice(0, 11).concat([r[11]]); }), signals: rows_('Signals').slice(-30), log: rows_('Log').slice(-25), phoenix: phoenix_() });
   }
   return json_({ ok: true, service: "Claude's Auto Trading Bot", version: BOT.version });
+}
+// Read-only view of Jacob's Phoenix sheet (his copy of Dustin's screener + BloFin triggers) for the phone app.
+// Display only: nothing here feeds a trade. Never writes to Phoenix.
+var PHOENIX_ID = '1wLqM8v9ITnGj44SLqZPIIQzjt7yTUeRASAnlDSMShf4';
+function phoenix_() {
+  try {
+    var c = CacheService.getScriptCache(), hit = c.get('PHX'); if (hit) return JSON.parse(hit);
+    var px = SpreadsheetApp.openById(PHOENIX_ID);
+    var pk = px.getSheetByName('🎯 Pick Triggers').getRange(1, 1, 33, 16).getDisplayValues();
+    var bt = px.getSheetByName('⚡ BloFin Triggers').getRange(1, 1, 1, 1).getDisplayValues()[0][0];
+    var bw = null; try { bw = SpreadsheetApp.openById('1TjKdjYRRhtPLonWCAc3YRWT66VHhDeUBjG7a5SNo2I8').getSheetByName('🟣 Bottom Watch').getRange(1, 1, 30, 4).getDisplayValues(); } catch (e) { }
+    var picks = pk.slice(3).filter(function (r) { return r[1]; }).map(function (r) { return { rank: r[0], coin: r[1], score: r[2], state: r[6], ready: Number(r[7]) || 0, why: r[8], plan: r[11] }; })
+      .sort(function (a, b) { return b.ready - a.ready; }).slice(0, 8);
+    var bottom = bw ? bw.slice(5).filter(function (r) { return r[0] && /CONFIRMED|Forming/.test(r[1]); }).map(function (r) { return { coin: r[0], verdict: r[1], grade: r[2], conf: r[3] }; }) : [];
+    var o = { header: pk[0][0], gate: bt, picks: picks, bottom: bottom, bottomHeader: bw ? bw[1][0] : '' };
+    c.put('PHX', JSON.stringify(o), 900);
+    return o;
+  } catch (e) { return { err: e.message }; }
 }
 function json_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
 
