@@ -399,7 +399,7 @@ function doGet(e) {
     var rows_ = function (n) { return rowsRaw_(n).map(function (r) { return r.map(function (v) { return v instanceof Date ? ct_(v) : v; }); }); };
     var pin = PropertiesService.getScriptProperties().getProperty('APP_PIN');
     if (String(q.pin || '') != String(pin)) return json_({ ok: false, err: 'PIN' });
-    if (q.chat) return json_(chat_(String(q.chat).slice(0, 600)));
+    if (q.chat) { var hist = []; try { hist = JSON.parse(q.h || '[]').slice(-4); } catch (e) { } return json_(chat_(String(q.chat).slice(0, 600), hist)); }
     if (q.set == 'plan' && q.coin && /^(LONG|SHORT)$/.test(q.side)) return json_(queuePlan_(q));
     if (q.set == 'kill') setVal_('Kill switch', q.v == 'ON' ? 'ON' : 'OFF');
     if (q.set == 'mode' && /^(PAPER|APPROVE|AUTO)$/.test(q.v)) setVal_('Mode', q.v);
@@ -479,15 +479,19 @@ function tfSummary_(coin, bar) {
     atr: +x.atr.toPrecision(5), high40: x.hh40, low20: x.ll20, supertrend: x.st === 1 ? 'up' : 'down', volVsAvg: +(d[n].v / (va || 1)).toFixed(2),
     last5: d.slice(-5).map(function (k) { return [k.o, k.h, k.l, k.c]; }) };
 }
-function chat_(text) {
+function chat_(text, hist) {
+  hist = hist || [];
+  var ck = 'CH_' + Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, text + JSON.stringify(hist))), cache = CacheService.getScriptCache(), hit = cache.get(ck); if (hit) return JSON.parse(hit);
   var key = PropertiesService.getScriptProperties().getProperty('CLAUDE_API_KEY');
   if (!key) return { ok: true, reply: 'Add CLAUDE_API_KEY in Script Properties first.' };
   var up = text.toUpperCase(), coin = (CHAT_COINS.filter(function (c) { return new RegExp('\\b' + c + '\\b').test(up); })[0]) || null;
+  if (!coin && hist.length) { var hu = hist.map(function (h) { return String(h.u || ''); }).join(' ').toUpperCase(); coin = (CHAT_COINS.filter(function (c) { return new RegExp('\\b' + c + '\\b').test(hu); }).pop()) || null; }
   if (!coin && /SOLANA/.test(up)) coin = 'SOL'; if (!coin && /BITCOIN/.test(up)) coin = 'BTC'; if (!coin && /ETHEREUM/.test(up)) coin = 'ETH'; if (!coin && /DOGECOIN/.test(up)) coin = 'DOGE'; if (!coin && /ARBITRUM/.test(up)) coin = 'ARB';
   var swing = /SWING|4 ?H|DAILY|1 ?D\b|DAYS|WEEK/.test(up), tfs = /15 ?M/.test(up) ? ['15m', '1H', '4H'] : swing ? ['1H', '4H', '1D'] : ['15m', '1H', '4H'];
   var data = null;
   if (coin) { data = { coin: coin, style: swing ? 'swing' : 'day trade', frames: tfs.map(function (b) { try { return tfSummary_(coin, b) || { tf: b, err: 'not enough candles' }; } catch (e) { return { tf: b, err: e.message }; } }) };
     try { var f = JSON.parse(UrlFetchApp.fetch('https://openapi.blofin.com/api/v1/market/funding-rate?instId=' + coin + '-USDT', { muteHttpExceptions: true }).getContentText()).data; if (f && f[0]) data.funding = f[0].fundingRate; } catch (e) { } }
+  var mine = rowsRaw_('Positions').filter(function (r) { return r[11] == 'OPEN' && r[10] == 'LIVE'; }).map(function (r) { return { coin: r[1], side: r[3], entry: r[5], qty: r[6], stop: r[9] }; });
   var wash = []; try { wash = JSON.parse(PropertiesService.getScriptProperties().getProperty('WASH') || '[]'); } catch (e) { }
   var sys = "You are Atlas, Jacob's trading assistant inside his phone app. Answer in plain short English, vertical lists, plain dollars, no tables. " +
     "You get live BloFin candles summarised per timeframe. Our TESTED rules (backtests 2023-2026, out-of-sample): " +
@@ -497,18 +501,20 @@ function chat_(text) {
     "FAILED rules (do not recommend): breakout above a recent high on 1H/24h, EMA20 pullback buys, RSI(2) dips, most 4H shorts. " +
     "Fees ~0.15% round trip on WEEX: skip setups whose target is under ~0.6% away. Be honest: if no tested rule fires, say WAIT and give the exact trigger level that would make it a trade. " +
     "Never promise profit. Keep risk small: suggest risking about 1% of the account per trade. " +
+    "Earlier messages in this chat are follow-ups: keep the same coin unless Jacob names a new one. If he asks about his open trade, use his open WEEX trades data (entry, stop, size) and say hold, tighten stop, take profit or close, with the exact price. " +
     "End your answer with one line of JSON exactly like: PLAN {\"coin\":\"XRP\",\"side\":\"LONG|SHORT|NONE\",\"verdict\":\"ENTER|WAIT|AVOID\",\"entry\":0,\"stop\":0,\"tp1\":0,\"tp2\":0,\"rule\":\"name or UNTESTED\"}";
-  var msg = 'Jacob asked: ' + text + '\n\nLive data: ' + JSON.stringify(data || { note: 'no coin recognised - ask which coin' }) + '\nWashout bounces in last 24h: ' + JSON.stringify(wash) + '\nTime: ' + ct_();
+  var msg = 'Jacob asked: ' + text + '\n\nLive data: ' + JSON.stringify(data || { note: 'no coin recognised - ask which coin' }) + '\nWashout bounces in last 24h: ' + JSON.stringify(wash) + '\nJacob\'s open real WEEX trades: ' + JSON.stringify(mine) + '\nTime: ' + ct_();
   var r = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', { method: 'post', contentType: 'application/json', muteHttpExceptions: true,
     headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01' },
-    payload: JSON.stringify({ model: 'claude-haiku-5-5', max_tokens: 4000, system: sys, messages: [{ role: 'user', content: msg }] }) });
+    payload: JSON.stringify({ model: 'claude-haiku-5-5', max_tokens: 4000, system: sys, messages: hist.reduce(function (a, h) { a.push({ role: 'user', content: String(h.u || '').slice(0, 600) }); a.push({ role: 'assistant', content: String(h.a || '').slice(0, 700) || '(answered)' }); return a; }, []).concat([{ role: 'user', content: msg }]) }) });
   var j = JSON.parse(r.getContentText());
   if (r.getResponseCode() != 200) return { ok: true, reply: 'Claude API error: ' + ((j.error && j.error.message) || r.getResponseCode()) };
   var txt = (j.content || []).map(function (b) { return b.text || ''; }).join(''), plan = null, m = txt.match(/PLAN\s*(\{[^\n]*\})/);
   if (!txt) return { ok: true, reply: 'Empty answer (stop: ' + j.stop_reason + ', blocks: ' + (j.content || []).map(function (b) { return b.type; }).join(',') + ', model: ' + j.model + ')' };
   if (m) { try { plan = JSON.parse(m[1]); } catch (e) { } txt = txt.replace(m[0], '').trim(); }
   log_('CHAT', text.slice(0, 120) + ' -> ' + (plan ? plan.verdict + ' ' + plan.side + ' ' + plan.coin : 'no plan'));
-  return { ok: true, reply: txt, plan: plan, coin: coin };
+  var out = { ok: true, reply: txt, plan: plan, coin: coin }; try { cache.put(ck, JSON.stringify(out), 300); } catch (e) { }
+  return out;
 }
 // Jacob tapped "Queue this trade": goes through the normal bot path (Paper fill, or a pending Approve order he still has to tap).
 function queuePlan_(q) {

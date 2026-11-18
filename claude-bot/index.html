@@ -84,6 +84,11 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
 .two{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
 .inp{width:100%;background:var(--card2);border:1px solid var(--line);color:var(--tx);border-radius:12px;padding:13px;font:16px Inter,sans-serif;margin-top:8px}
 .seg2{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:4px;margin:4px 0 14px}.seg2 button{font:700 14px Inter,sans-serif;border:0;border-radius:10px;padding:10px;background:none;color:var(--dim);cursor:pointer}.seg2 button.on{background:#2a1206;color:var(--fire2)}
+.cmsgs{display:flex;flex-direction:column;gap:10px;min-height:40vh;padding-bottom:8px}
+.bu{align-self:flex-end;background:#2a1206;color:var(--fire2);border:1px solid #4a2410;border-radius:16px 16px 4px 16px;padding:10px 13px;max-width:85%;white-space:pre-wrap;font-size:15px}
+.ba{align-self:flex-start;background:var(--card);border:1px solid var(--line);border-radius:16px 16px 16px 4px;padding:11px 13px;max-width:92%;white-space:pre-wrap;font-size:15px;line-height:1.45}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:4px 0 8px;scrollbar-width:none}.chips button{flex:none;font:600 13px Inter,sans-serif;border:1px solid var(--line);background:var(--card2);color:var(--tx);border-radius:999px;padding:8px 12px;cursor:pointer}
+.cbar{position:sticky;bottom:calc(76px + env(safe-area-inset-bottom));background:var(--bg);padding:6px 0}
 .symL{color:var(--up);border-color:#164a2b}.symS{color:var(--dn);border-color:#4a1d20}
 </style>
 </head>
@@ -92,6 +97,7 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
   <img src="atlas-192.png" alt="">
   <div><div class="ttl">Atlas</div><div class="sub"><span class="dot" id="dot"></span><span id="upd">Loading…</span></div></div>
   <div class="ib">
+    <button class="icb" data-v="chat" aria-label="Chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></button>
     <button class="icb" data-v="info" aria-label="Info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v.01M11 12h1v5h1"/></svg></button>
     <button class="icb" id="share" aria-label="Share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg></button>
     <button class="icb" id="ref" aria-label="Refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button>
@@ -181,6 +187,15 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
     <div class="foot" id="scan"></div>
   </section>
 
+  <section class="view" id="v-chat">
+    <div class="two" style="margin-bottom:10px"><div class="k" style="margin:0">Atlas chat</div><div style="display:flex;gap:8px"><button class="mb" id="chist" style="min-height:36px;padding:6px 12px">History</button><button class="mb" id="cnew" style="min-height:36px;padding:6px 12px">New chat</button></div></div>
+    <div class="card" id="chlist" style="display:none"></div>
+    <div class="cmsgs" id="cmsgs"></div>
+    <div class="cbar">
+      <div class="chips" id="cchips"></div>
+      <div style="display:flex;gap:8px"><input class="inp" id="cin" style="margin:0" placeholder="Ask Atlas… (e.g. day trade SOL)" autocomplete="off"><button class="mb" id="csend" style="min-width:70px">Send</button></div>
+    </div>
+  </section>
   <section class="view" id="v-trades">
     <div class="card" id="tconn" style="display:none"><div class="why">Connect the bot first: Trade tab → WEEX · day trades → enter the bot link and PIN.</div><button class="more" data-go="weex" style="margin-top:10px">Go connect</button></div>
     <div class="k" style="margin-top:0">Waiting for your approval</div>
@@ -383,13 +398,38 @@ document.addEventListener('visibilitychange',function(){if(!document.hidden)wloa
 var QP={day:'DAY TRADE check for {T}: 1H trend vs EMA200 and VWAP, last 1H candle % and volume vs average, is the 1H volume-spike rule met, nearest 15m support/resistance, verdict with entry, stop 1.5 ATR, TP1/TP2, or exact trigger price if WAIT.',
  swing:'SWING check for {T}: 4H and daily trend vs EMA50/EMA200, 4H RSI, 40-candle 4H high and 20-candle low, is the TPI breakout or washout bounce met, BTC gate, verdict with entry, stop 2 ATR, TP1 2 ATR, TP2 3 ATR, or exact trigger if WAIT.',
  full:'FULL READ for {T}: price, trend on 15m/1H/4H/daily, RSI, ATR, funding, key support and resistance, which of our tested rules are met or closest, BTC gate, and one verdict for a day trade and one for a swing.'};
-function qask(text){if(!WAPI||!WPIN){$('askout').textContent='Connect the bot first: Trade tab → WEEX · day trades → bot link + PIN.';return}
+function qask(text){go('chat');csend(text);return;if(!WAPI||!WPIN){$('askout').textContent='Connect the bot first: Trade tab → WEEX · day trades → bot link + PIN.';return}
   $('askout').textContent='Thinking… (about 20 seconds)';fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+'&chat='+encodeURIComponent(text.slice(0,590)),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){$('askout').textContent=j.ok?(j.reply||'No answer'):'Error: '+(j.err||'unknown')}).catch(function(e){$('askout').textContent='Could not reach Claude: '+e.message})}
 document.addEventListener('click',function(e){var b=e.target.closest('[data-q]');if(!b)return;var t=$('qtk').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');if(!t){toast('Type a ticker first');return}qask(QP[b.dataset.q].replace('{T}',t))});
 $('qgo').onclick=function(){var t=$('qfree').value.trim();if(t)qask(t)};$('qfree').addEventListener('keydown',function(e){if(e.key==='Enter')$('qgo').click()});
-// ---------- Ask Atlas chat ----------
+// ---------- Atlas chat (small BloFin-AI style) ----------
+var CHS=[],CH=null;try{CHS=JSON.parse(localStorage.getItem('atlas_chats')||'[]')}catch(e){}
+function csave(){try{if(CH&&CH.m.length){CHS=CHS.filter(function(c){return c.id!==CH.id});CHS.unshift(CH);CHS=CHS.slice(0,20)}localStorage.setItem('atlas_chats',JSON.stringify(CHS))}catch(e){}}
+function cnew(){CH={id:Date.now(),t:'',m:[]};crender()}
+function cplan(p){if(!p)return '';var go=p.verdict==='ENTER'&&(p.side==='LONG'||p.side==='SHORT')&&p.stop>0,f=function(v){return v?'$'+Number(v):'-'};
+  return '<div class="hl" style="margin-top:10px"><i class="chip s-'+(go?'ENTER':p.verdict==='AVOID'?'AVOID':'WAIT')+'">'+(go?'✔ ':'')+esc(p.verdict)+'</i><span><b>'+esc(p.side)+' '+esc(p.coin)+'</b> · entry '+f(p.entry)+' · stop '+f(p.stop)+' · TP1 '+f(p.tp1)+' · TP2 '+f(p.tp2)+'<br>Rule: '+esc(p.rule||'')+'</span></div>'+(go?'<button class="buy" data-cq="'+esc(JSON.stringify(p))+'" style="width:100%;margin-top:8px">Queue this trade ('+esc(p.side)+' '+esc(p.coin)+')</button>':'')}
+function crender(){if(!CH)cnew();var h=CH.m.map(function(x){return x.r==='u'?'<div class="bu">'+esc(x.t)+'</div>':'<div class="ba">'+esc(x.t)+cplan(x.p)+'</div>'}).join('');
+  $('cmsgs').innerHTML=h||'<div class="why">Ask about any coin. Atlas reads live charts, checks our tested rules, and remembers this chat for follow-ups.</div>';
+  var lastc=(CH.m.filter(function(x){return x.c}).pop()||{}).c||'';
+  var C=[['Day trade '+(lastc||'…'),lastc?'Day trade check for '+lastc:'Day trade check for '],['Swing '+(lastc||'…'),lastc?'Swing check for '+lastc:'Swing check for '],['Full read '+(lastc||'…'),lastc?'Full read for '+lastc:'Full read for '],['Stress-test my setup','Stress-test my setup: coin , entry , stop , target '],['TP/SL for my open trade','What should I do with my open trade? Give TP and SL levels.'],['Bounce or breakout close?','Which coins are closest to a washout bounce or TPI breakout right now?'],['Market read','Market read: is BTC risk-on or risk-off right now, and is any tested setup firing or close? Short answer.']];
+  $('cchips').innerHTML=C.map(function(c,i){return '<button data-chip="'+i+'">'+esc(c[0])+'</button>'}).join('');$('cchips')._c=C;
+  window.scrollTo(0,document.body.scrollHeight)}
+function csend(text){text=String(text||'').trim();if(!text)return;if(!CH)cnew();if(!WAPI||!WPIN){CH.m.push({r:'a',t:'Connect the bot first: Trade tab → WEEX · day trades → bot link + PIN.'});crender();return}
+  var hist=[];for(var i=0;i<CH.m.length-1;i++){if(CH.m[i].r==='u'&&CH.m[i+1]&&CH.m[i+1].r==='a')hist.push({u:CH.m[i].t.slice(0,200),a:CH.m[i+1].t.slice(0,300)})}hist=hist.slice(-4);
+  CH.m.push({r:'u',t:text});if(!CH.t)CH.t=text.slice(0,40);CH.m.push({r:'a',t:'Thinking… (about 20 seconds)',w:1});crender();$('csend').disabled=true;
+  fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+'&chat='+encodeURIComponent(text.slice(0,590))+'&h='+encodeURIComponent(JSON.stringify(hist)),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+    CH.m.pop();CH.m.push(j.ok?{r:'a',t:j.reply||'No answer',p:j.plan||null,c:j.coin||(j.plan&&j.plan.coin)||''}:{r:'a',t:j.err==='PIN'?'Wrong PIN':'Error: '+(j.err||'unknown')})}).catch(function(e){CH.m.pop();CH.m.push({r:'a',t:'Bot not reachable: '+e.message})}).then(function(){$('csend').disabled=false;csave();crender()})}
+$('csend').onclick=function(){var t=$('cin').value;$('cin').value='';csend(t)};$('cin').addEventListener('keydown',function(e){if(e.key==='Enter')$('csend').click()});
+$('cnew').onclick=function(){csave();cnew();$('chlist').style.display='none'};
+$('chist').onclick=function(){var l=$('chlist');if(l.style.display==='block'){l.style.display='none';return}l.style.display='block';l.innerHTML=CHS.length?CHS.map(function(c,i){return '<div class="hl" data-ch="'+i+'" style="cursor:pointer"><i>💬</i><span>'+esc(c.t||'Chat')+' · '+c.m.length+' msgs · '+new Date(c.id).toLocaleString([], {month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'})+'</span></div>'}).join(''):'<div class="why">No saved chats yet.</div>'};
+document.addEventListener('click',function(e){var c=e.target.closest('[data-chip]');if(c){var x=$('cchips')._c[+c.dataset.chip];if(/ $/.test(x[1])||/ , /.test(x[1])){$('cin').value=x[1];$('cin').focus()}else csend(x[1]);return}
+  var h=e.target.closest('[data-ch]');if(h){CH=CHS[+h.dataset.ch];$('chlist').style.display='none';crender();return}
+  var q=e.target.closest('[data-cq]');if(q){var p=JSON.parse(q.dataset.cq);if(!confirm('Queue '+p.side+' '+p.coin+' with stop $'+p.stop+'? (Approve mode: waits for your tap in Trades)'))return;
+    fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+'&set=plan&coin='+encodeURIComponent(p.coin)+'&side='+p.side+'&stop='+encodeURIComponent(p.stop)+'&rule='+encodeURIComponent(p.rule||''),{cache:'no-store'}).then(function(r){return r.json()}).then(function(k){toast(k.ok?k.msg:(k.err||'Failed'));wload('',false)}).catch(function(){toast('Bot not reachable')})}});
+crender();
+// ---------- Ask Atlas chat (WEEX card) ----------
 function achat(){
-  var q=$('aq').value.trim();if(!q)return;if(!WAPI||!WPIN){$('aout').textContent='Connect the bot first: scroll down to Connect the trading bot, paste the bot link and PIN.';$('wsetup').scrollIntoView({behavior:'smooth'});return}
+  var q=$('aq').value.trim();if(!q)return;$('aq').value='';go('chat');csend(q);return;if(!WAPI||!WPIN){$('aout').textContent='Connect the bot first: scroll down to Connect the trading bot, paste the bot link and PIN.';$('wsetup').scrollIntoView({behavior:'smooth'});return}
   $('aout').textContent='Thinking… (about 20 seconds)';$('aplan').innerHTML='';$('asend').disabled=true;
   fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+'&chat='+encodeURIComponent(q),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
     $('asend').disabled=false;if(!j.ok){$('aout').textContent=j.err==='PIN'?'Wrong PIN':'Error';return}
