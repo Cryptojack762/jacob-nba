@@ -239,3 +239,4 @@ Using only these sources, list every crypto strategy that passed out-of-sample, 
 - Weekly: copy the bot sheet's Reports tab (release, forecast, actual, BTC +1h/+4h/+24h) into the Market News notebook as a source.
 - Prompt (short): "You're talking to Claude through Jacob's copy-paste relay. Using the Reports source, which US releases moved BTC most in the 4h after, and in which direction when the number beat vs missed forecast? One line per event type. Flag anything with under 5 samples."
 - Ties to the event pause: if a release type shows bigger moves than FOMC (2.2% avg 24h), add it to the pause list.
+- #13 S58 daily MACD filter on the 1H volume spike (8 coins, BloFin 1H, 2 yrs): base IS 1.62 -> OOS 1.07; with MACD agreeing IS 1.21 -> OOS 0.95 (worse); MACD against OOS 1.24. REJECTED. Also: the 1H volume spike itself is down to PF 1.07 out-of-sample - day trades stay paper.
