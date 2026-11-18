@@ -45,7 +45,7 @@ var DEFAULTS = [
   ['ntfy topic', '', 'Optional: private ntfy.sh topic for phone pushes'],
   ['Web app URL', '', 'Paste after Deploy > Web app (needed for Approve links and the phone app)'],
 ];
-var STRAT_NAMES = { L_TPI: 'TPI breakout long', L_ST: 'SuperTrend long', S_FUND: 'Funding-extreme short', S_BBRSI: 'BB + RSI short', L_FUND: 'Funding-extreme long', S_BTCFLIP: 'BTC-breakdown short', M_BOTTOM: 'Market-bottom long', L_RSI20: 'Washout bounce long' };
+var STRAT_NAMES = { L_TPI: 'TPI breakout long', L_ST: 'SuperTrend long', S_FUND: 'Funding-extreme short', S_BBRSI: 'BB + RSI short', L_FUND: 'Funding-extreme long', S_BTCFLIP: 'BTC-breakdown short', M_BOTTOM: 'Market-bottom long', L_RSI20: 'Washout bounce long', CHAT: 'Atlas chat plan' };
 var TABS = {
   Signals: ['Time (CT)', 'Coin', 'Strategy', 'Side', 'Price', 'Why', 'Action', 'Claude notes'],
   Orders: ['ID', 'Time (CT)', 'Coin', 'Strategy', 'Side', 'Qty', 'Ref price', 'Protective stop', 'Margin $', 'Leverage', 'Status', 'Token', 'Result', 'Claude notes'],
@@ -252,7 +252,7 @@ function act_(coin, sig, x) {
   ss_().getSheetByName('Signals').appendRow([ct_(), coin, STRAT_NAMES[sig.strategy], sig.side, x.c, sig.why, action, '']);
   if (action.indexOf('Skipped') === 0) return;
   var lev = num_('Leverage', 1, 5), margin = equity_() * num_('Margin per trade %', 1, 50) / 100;
-  var sa = sig.stopAtr || num_('Protective stop (ATR x)', 1, 10), stop = sig.side == 'LONG' ? x.c - sa * x.atr : x.c + sa * x.atr;
+  var sa = sig.stopAtr || num_('Protective stop (ATR x)', 1, 10), stop = sig.stopPx || (sig.side == 'LONG' ? x.c - sa * x.atr : x.c + sa * x.atr);
   var o = { id: 'CB' + Date.now().toString(36).toUpperCase() + coin, coin: coin, strategy: sig.strategy, side: sig.side, ref: x.c, stop: stop, margin: margin, lev: lev, why: sig.why };
   o.qty = qty_(coin, margin * lev / x.c);
   if (!(o.qty > 0)) { log_('SKIP', coin + ' size below the exchange minimum'); return; }
@@ -394,6 +394,8 @@ function doGet(e) {
     var rows_ = function (n) { return rowsRaw_(n).map(function (r) { return r.map(function (v) { return v instanceof Date ? ct_(v) : v; }); }); };
     var pin = PropertiesService.getScriptProperties().getProperty('APP_PIN');
     if (String(q.pin || '') != String(pin)) return json_({ ok: false, err: 'PIN' });
+    if (q.chat) return json_(chat_(String(q.chat).slice(0, 600)));
+    if (q.set == 'plan' && q.coin && /^(LONG|SHORT)$/.test(q.side)) return json_(queuePlan_(q));
     if (q.set == 'kill') setVal_('Kill switch', q.v == 'ON' ? 'ON' : 'OFF');
     if (q.set == 'mode' && /^(PAPER|APPROVE|AUTO)$/.test(q.v)) setVal_('Mode', q.v);
     if (q.set == 'close' && q.id) {   // Jacob's "close now" button in the app (market close; live trades close on WEEX)
@@ -453,3 +455,64 @@ function testRelay() {
   Logger.log('Relay health: HTTP ' + h.getResponseCode() + ' ' + h.getContentText());
   if (keys_()) { try { Logger.log('WEEX balance via relay: ' + JSON.stringify(weex_('GET', '/capi/v3/account/balance', '', '')).slice(0, 300)); } catch (e) { Logger.log('WEEX via relay: ' + e.message); } }
 }
+
+
+// ---------------- Atlas chat: "day trade XRP on the 15m" -> live data + tested rules -> Claude writes the plan ----------------
+// Needs Script Property CLAUDE_API_KEY. Uses the cheap fast model. Plans only; a trade is only queued when Jacob taps the button.
+var CHAT_COINS = ['BTC','ETH','SOL','XRP','DOGE','ADA','AVAX','LINK','LTC','BCH','BNB','TRX','XLM','NEAR','UNI','SUI','HYPE','XMR','ZEC','ARB','OP','APT','INJ','HBAR','DOT','PEPE','WIF','SEI','TIA','ENA','ONDO','TON','FET','RENDER','JUP','KAS','POL','ATOM','FIL','AAVE'];
+function bfCandles_(coin, bar) {
+  var r = UrlFetchApp.fetch('https://openapi.blofin.com/api/v1/market/candles?instId=' + coin + '-USDT&bar=' + bar + '&limit=300', { muteHttpExceptions: true });
+  var d = (JSON.parse(r.getContentText()).data || []).filter(function (x) { return x[8] == '1'; });
+  return d.map(function (x) { return { t: +x[0], o: +x[1], h: +x[2], l: +x[3], c: +x[4], v: +x[6] || +x[5] }; }).reverse();
+}
+function tfSummary_(coin, bar) {
+  var d = bfCandles_(coin, bar); if (d.length < 220) return null;
+  var x = ind_(d), c = d.map(function (k) { return k.c; }), n = c.length - 1, e20 = ema_(c, 20)[n], e50 = ema_(c, 50)[n];
+  var va = 0; for (var j = n - 24; j < n; j++) va += d[j].v; va /= 24;
+  return { tf: bar, close: x.c, ema20: +e20.toPrecision(6), ema50: +e50.toPrecision(6), ema200: +x.e200.toPrecision(6), rsi: +x.rsi.toFixed(1), rsiPrev: +x.rsiPrev.toFixed(1),
+    atr: +x.atr.toPrecision(5), high40: x.hh40, low20: x.ll20, supertrend: x.st === 1 ? 'up' : 'down', volVsAvg: +(d[n].v / (va || 1)).toFixed(2),
+    last5: d.slice(-5).map(function (k) { return [k.o, k.h, k.l, k.c]; }) };
+}
+function chat_(text) {
+  var key = PropertiesService.getScriptProperties().getProperty('CLAUDE_API_KEY');
+  if (!key) return { ok: true, reply: 'Add CLAUDE_API_KEY in Script Properties first.' };
+  var up = text.toUpperCase(), coin = (CHAT_COINS.filter(function (c) { return new RegExp('\\b' + c + '\\b').test(up); })[0]) || null;
+  if (!coin && /SOLANA/.test(up)) coin = 'SOL'; if (!coin && /BITCOIN/.test(up)) coin = 'BTC'; if (!coin && /ETHEREUM/.test(up)) coin = 'ETH'; if (!coin && /DOGECOIN/.test(up)) coin = 'DOGE'; if (!coin && /ARBITRUM/.test(up)) coin = 'ARB';
+  var swing = /SWING|4 ?H|DAILY|1 ?D\b|DAYS|WEEK/.test(up), tfs = /15 ?M/.test(up) ? ['15m', '1H', '4H'] : swing ? ['1H', '4H', '1D'] : ['15m', '1H', '4H'];
+  var data = null;
+  if (coin) { data = { coin: coin, style: swing ? 'swing' : 'day trade', frames: tfs.map(function (b) { try { return tfSummary_(coin, b); } catch (e) { return null; } }).filter(Boolean) };
+    try { var f = JSON.parse(UrlFetchApp.fetch('https://openapi.blofin.com/api/v1/market/funding-rate?instId=' + coin + '-USDT', { muteHttpExceptions: true }).getContentText()).data; if (f && f[0]) data.funding = f[0].fundingRate; } catch (e) { } }
+  var wash = []; try { wash = JSON.parse(PropertiesService.getScriptProperties().getProperty('WASH') || '[]'); } catch (e) { }
+  var sys = "You are Atlas, Jacob's trading assistant inside his phone app. Answer in plain short English, vertical lists, plain dollars, no tables. " +
+    "You get live BloFin candles summarised per timeframe. Our TESTED rules (backtests 2023-2026, out-of-sample): " +
+    "1) Washout bounce L_RSI20: coin below 4H EMA200, 4H RSI crosses back up through 20 while 3+ coins do it within 24h -> long, stop 2 ATR(4H), target 2 ATR, max 2 days (PF 2.9, 66% win). " +
+    "2) TPI: 4H close above prior 40-candle high, above EMA200, RSI>55 -> long, exit on close below 20-candle low or RSI<40 (PF 1.4). " +
+    "3) 1H volume spike: 1H candle up 2.5%+ on 3x avg volume, above 1H EMA200 -> long, stop 1.5 ATR(1H), exit after 6h (PF 1.4, weak since Aug 2026). " +
+    "FAILED rules (do not recommend): breakout above a recent high on 1H/24h, EMA20 pullback buys, RSI(2) dips, most 4H shorts. " +
+    "Fees ~0.15% round trip on WEEX: skip setups whose target is under ~0.6% away. Be honest: if no tested rule fires, say WAIT and give the exact trigger level that would make it a trade. " +
+    "Never promise profit. Keep risk small: suggest risking about 1% of the account per trade. " +
+    "End your answer with one line of JSON exactly like: PLAN {\"coin\":\"XRP\",\"side\":\"LONG|SHORT|NONE\",\"verdict\":\"ENTER|WAIT|AVOID\",\"entry\":0,\"stop\":0,\"tp1\":0,\"tp2\":0,\"rule\":\"name or UNTESTED\"}";
+  var msg = 'Jacob asked: ' + text + '\n\nLive data: ' + JSON.stringify(data || { note: 'no coin recognised - ask which coin' }) + '\nWashout bounces in last 24h: ' + JSON.stringify(wash) + '\nTime: ' + ct_();
+  var r = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', { method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+    headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+    payload: JSON.stringify({ model: 'claude-haiku-5-5', max_tokens: 700, system: sys, messages: [{ role: 'user', content: msg }] }) });
+  var j = JSON.parse(r.getContentText());
+  if (r.getResponseCode() != 200) return { ok: true, reply: 'Claude API error: ' + ((j.error && j.error.message) || r.getResponseCode()) };
+  var txt = (j.content || []).map(function (b) { return b.text || ''; }).join(''), plan = null, m = txt.match(/PLAN\s*(\{[^\n]*\})/);
+  if (m) { try { plan = JSON.parse(m[1]); } catch (e) { } txt = txt.replace(m[0], '').trim(); }
+  log_('CHAT', text.slice(0, 120) + ' -> ' + (plan ? plan.verdict + ' ' + plan.side + ' ' + plan.coin : 'no plan'));
+  return { ok: true, reply: txt, plan: plan, coin: coin };
+}
+// Jacob tapped "Queue this trade": goes through the normal bot path (Paper fill, or a pending Approve order he still has to tap).
+function queuePlan_(q) {
+  var coin = String(q.coin).toUpperCase().replace(/[^A-Z0-9]/g, ''); if (BOT.coins.indexOf(coin) < 0 && CHAT_COINS.indexOf(coin) < 0) return { ok: false, err: 'Unknown coin' };
+  var lk = LockService.getScriptLock(); lk.waitLock(20000);
+  try {
+    var d = candles_(coin); if (d.length < 220) return { ok: false, err: 'Not enough WEEX data for ' + coin };
+    var x = ind_(d), stop = Number(q.stop);
+    if (!(stop > 0) || (q.side == 'LONG' ? stop >= x.c : stop <= x.c)) return { ok: false, err: 'Stop is on the wrong side of the price' };
+    act_(coin, { strategy: 'CHAT', side: q.side, stopPx: stop, why: 'Atlas chat plan (' + (q.rule || 'untested') + ')' }, x);
+    return { ok: true, msg: 'Queued ' + q.side + ' ' + coin + ' (mode ' + set_('Mode') + ')' };
+  } catch (e) { return { ok: false, err: e.message }; } finally { lk.releaseLock(); }
+}
+function testChat() { Logger.log(JSON.stringify(chat_('day trade XRP on the 15m')).slice(0, 1500)); }

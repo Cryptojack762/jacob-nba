@@ -113,6 +113,12 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
 
   <section class="view" id="v-weex">
     <div class="seg2"><button data-go="bf" class="">BloFin · long trades</button><button data-go="weex" class="on">WEEX · day trades</button></div>
+    <div class="k" style="margin-top:0">Ask Atlas</div>
+    <div class="card" id="achat">
+      <div style="display:flex;gap:8px"><input class="inp" id="aq" style="margin:0" placeholder="e.g. day trade XRP on the 15m" autocomplete="off"><button class="mb" id="asend" style="min-width:76px">Ask</button></div>
+      <div class="why" id="aout" style="white-space:pre-wrap;margin-top:10px">Ask for a day trade or swing trade on any coin. Atlas reads the live chart, checks our tested rules and gives entry, stop and targets. Each question costs about a cent of API credit.</div>
+      <div id="aplan"></div>
+    </div>
     <div class="card" id="wsetup" style="display:none">
       <div class="k" style="margin-top:0">Connect the trading bot</div>
       <input class="inp" id="wapi" placeholder="Bot web app URL (ends in /exec)" autocomplete="off">
@@ -149,6 +155,7 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
   </section>
   <section class="view" id="v-bf">
     <div class="seg2"><button data-go="bf" class="on">BloFin · long trades</button><button data-go="weex" class="">WEEX · day trades</button></div>
+    <button class="more" data-go="weex" style="margin:0 0 14px">💬 Ask Atlas for a trade plan</button>
     <div class="card">
       <div class="k" style="margin-top:0">BloFin · long trades</div>
       <div class="why">Your hand-placed long trades. Live BloFin prices, no API key. Refreshes every minute.</div>
@@ -360,6 +367,24 @@ $('wreset').onclick=function(){$('wapi').value=WAPI;$('wpin').value=WPIN;wshow(f
 if(W)wrender();else wshow(!!(WAPI&&WPIN));
 wload('',false);setInterval(function(){if(!document.hidden)wload('',false)},60000);
 document.addEventListener('visibilitychange',function(){if(!document.hidden)wload('',false)});
+
+// ---------- Ask Atlas chat ----------
+function achat(){
+  var q=$('aq').value.trim();if(!q)return;if(!WAPI||!WPIN){toast('Connect the bot first');return}
+  $('aout').textContent='Thinking…';$('aplan').innerHTML='';$('asend').disabled=true;
+  fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+'&chat='+encodeURIComponent(q),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+    $('asend').disabled=false;if(!j.ok){$('aout').textContent=j.err==='PIN'?'Wrong PIN':'Error';return}
+    $('aout').textContent=j.reply||'';var p=j.plan;if(!p)return;
+    var go=p.verdict==='ENTER'&&(p.side==='LONG'||p.side==='SHORT')&&p.stop>0,f=function(v){return v?'$'+Number(v):'-'};
+    $('aplan').innerHTML='<div class="hl" style="margin-top:10px"><i class="chip s-'+(go?'ENTER':p.verdict==='AVOID'?'AVOID':'WAIT')+'">'+(go?'✔ ':'')+esc(p.verdict)+'</i><span><b>'+esc(p.side)+' '+esc(p.coin)+'</b> · entry '+f(p.entry)+' · stop '+f(p.stop)+' · TP1 '+f(p.tp1)+' · TP2 '+f(p.tp2)+'<br>Rule: '+esc(p.rule||'')+'</span></div>'+
+      (go?'<button class="buy" id="aqueue" style="width:100%;margin-top:10px">Queue this trade ('+esc(p.side)+' '+esc(p.coin)+')</button><div class="why" style="margin-top:6px">Approve mode: it then waits in "Waiting for your approval" for your ✔ tap. Paper mode: practice fill.</div>':'');
+    if(go)$('aqueue').onclick=function(){
+      if(!confirm('Queue '+p.side+' '+p.coin+' with stop $'+p.stop+'? (bot mode decides: Paper = practice, Approve = waits for your tap, Auto = sends to WEEX)'))return;
+      fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+'&set=plan&coin='+encodeURIComponent(p.coin)+'&side='+p.side+'&stop='+encodeURIComponent(p.stop)+'&rule='+encodeURIComponent(p.rule||''),{cache:'no-store'}).then(function(r){return r.json()}).then(function(k){toast(k.ok?k.msg:(k.err||'Failed'));wload('',false)}).catch(function(){toast('Bot not reachable')});
+    };
+  }).catch(function(){$('asend').disabled=false;$('aout').textContent='Bot not reachable'});
+}
+$('asend').onclick=achat;$('aq').addEventListener('keydown',function(e){if(e.key==='Enter')achat()});
 // ---------- BloFin tab: long trades, public prices only ----------
 var BFC=[
  {c:'SOL',d:2,lv:[
