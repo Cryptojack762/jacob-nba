@@ -541,14 +541,14 @@ function testFrames() {
 
 // ---------------- News: this week's US economic calendar + crypto headlines (cached 30 min) ----------------
 function news_() {
-  var c = CacheService.getScriptCache(), hit = c.get('NEWS2'); if (hit) return JSON.parse(hit);
+  var c = CacheService.getScriptCache(), hit = c.get('NEWS3'); if (hit) return JSON.parse(hit);
   var out = { ok: true, at: ct_(), cal: [], head: [], err: [] };
   try {
     var H = { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36', 'Accept': 'application/json,text/xml,*/*' }, muteHttpExceptions: true }, ev = null, txt = UrlFetchApp.fetch('https://nfs.faireconomy.media/ff_calendar_thisweek.json', H).getContentText();
     if (/^\s*\[/.test(txt)) ev = JSON.parse(txt);
     else { txt = UrlFetchApp.fetch('https://nfs.faireconomy.media/ff_calendar_thisweek.xml', H).getContentText();
       ev = XmlService.parse(txt).getRootElement().getChildren('event').map(function (e) { var d = e.getChildText('date'), t = e.getChildText('time'), m = String(d).match(/(\d+)-(\d+)-(\d+)/), tm = String(t).match(/(\d+):(\d+)(am|pm)/i), dt = null;
-        if (m) { var hh = tm ? (Number(tm[1]) % 12) + (/pm/i.test(tm[3]) ? 12 : 0) : 0; dt = new Date(Date.UTC(Number(m[3]), Number(m[1]) - 1, Number(m[2]), hh + 5, tm ? Number(tm[2]) : 0)); }  // XML times are US Eastern (EST = UTC-5)
+        if (m) { var hh = tm ? (Number(tm[1]) % 12) + (/pm/i.test(tm[3]) ? 12 : 0) : 0; dt = new Date(Date.UTC(Number(m[3]), Number(m[1]) - 1, Number(m[2]), hh, tm ? Number(tm[2]) : 0)); }  // XML times are GMT (checked: FOMC minutes 7:00pm = JSON 14:00-05:00)
         return { title: e.getChildText('title'), country: e.getChildText('country'), impact: e.getChildText('impact'), date: dt ? dt.toISOString() : d, forecast: e.getChildText('forecast'), previous: e.getChildText('previous'), actual: e.getChildText('actual') }; }); }
     out.cal = ev.filter(function (e) { return e.country == 'USD' && (e.impact == 'High' || e.impact == 'Medium'); }).map(function (e) {
       return { t: e.title, when: e.date, imp: e.impact, fc: e.forecast || '', prev: e.previous || '', act: e.actual || '' }; });
@@ -560,7 +560,7 @@ function news_() {
     } catch (e) { out.err.push(f[0] + ': ' + e.message); }
   });
   out.head.sort(function (a, b) { return new Date(b.when) - new Date(a.when); }); out.head = out.head.slice(0, 12);
-  try { if (out.cal.length) c.put('NEWS2', JSON.stringify(out), 1800); } catch (e) { }
+  try { if (out.cal.length) c.put('NEWS3', JSON.stringify(out), 1800); } catch (e) { }
   return out;
 }
 function testNews() { Logger.log(JSON.stringify(news_()).slice(0, 2000)); }
