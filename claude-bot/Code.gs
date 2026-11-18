@@ -499,6 +499,7 @@ function chat_(text) {
   var j = JSON.parse(r.getContentText());
   if (r.getResponseCode() != 200) return { ok: true, reply: 'Claude API error: ' + ((j.error && j.error.message) || r.getResponseCode()) };
   var txt = (j.content || []).map(function (b) { return b.text || ''; }).join(''), plan = null, m = txt.match(/PLAN\s*(\{[^\n]*\})/);
+  if (!txt) return { ok: true, reply: 'Empty answer (stop: ' + j.stop_reason + ', blocks: ' + (j.content || []).map(function (b) { return b.type; }).join(',') + ', model: ' + j.model + ')' };
   if (m) { try { plan = JSON.parse(m[1]); } catch (e) { } txt = txt.replace(m[0], '').trim(); }
   log_('CHAT', text.slice(0, 120) + ' -> ' + (plan ? plan.verdict + ' ' + plan.side + ' ' + plan.coin : 'no plan'));
   return { ok: true, reply: txt, plan: plan, coin: coin };
