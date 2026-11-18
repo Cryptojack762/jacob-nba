@@ -84,6 +84,11 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
 .two{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
 .inp{width:100%;background:var(--card2);border:1px solid var(--line);color:var(--tx);border-radius:12px;padding:13px;font:16px Inter,sans-serif;margin-top:8px}
 .seg2{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:4px;margin:4px 0 14px}.seg2 button{font:700 14px Inter,sans-serif;border:0;border-radius:10px;padding:10px;background:none;color:var(--dim);cursor:pointer}.seg2 button.on{background:#2a1206;color:var(--fire2)}
+.tcard{border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px;background:var(--card)}
+.tcard .row2{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin:10px 0;font-size:14px}.tcard .row2 b{display:block;font-size:16px}
+.bigbuy{width:100%;font:800 18px Inter,sans-serif;border:0;border-radius:14px;padding:16px;background:var(--up);color:#04130a;cursor:pointer}.bigbuy[disabled]{background:#2a2a30;color:#777}
+.amt{display:flex;gap:6px;margin:8px 0}.amt button{flex:1;font:700 14px Inter,sans-serif;border:1px solid var(--line);background:var(--card2);color:var(--tx);border-radius:10px;padding:9px}.amt button.on{border-color:var(--up);color:var(--up);background:var(--upb)}
+.mb.on{box-shadow:0 0 0 2px var(--fire) inset}
 .cmsgs{display:flex;flex-direction:column;gap:10px;min-height:40vh;padding-bottom:8px}
 .bu{align-self:flex-end;background:#2a1206;color:var(--fire2);border:1px solid #4a2410;border-radius:16px 16px 4px 16px;padding:10px 13px;max-width:85%;white-space:pre-wrap;font-size:15px}
 .ba{align-self:flex-start;background:var(--card);border:1px solid var(--line);border-radius:16px 16px 16px 4px;padding:11px 13px;max-width:92%;white-space:pre-wrap;font-size:15px;line-height:1.45}
@@ -109,6 +114,8 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
   <div class="card inst" id="inst"><p>Install Atlas on your home screen.</p><button id="instb">Install</button></div>
 
   <section class="view on" id="v-home">
+    <div class="k"><span>Trade cards · tap Buy to trade</span><span id="tcat"></span></div>
+    <div id="tcards"><div class="card"><div class="why">Finding setups…</div></div></div>
     <div class="k">Ask Claude</div>
     <div class="card">
       <div style="display:flex;gap:8px"><input class="inp" id="qtk" style="margin:0" placeholder="Ticker, e.g. SOL" autocomplete="off" autocapitalize="characters"></div>
@@ -380,7 +387,7 @@ function wrender(){
   open.forEach(function(p){if(L[p[0]])un+=L[p[0]].pnl});
   $('weq').textContent=String(j.mode).toUpperCase()==='PAPER'?'Paper mode':wm(j.equity);$('wun').textContent=open.length?wsm(un):'$0.00';$('wun').className='big '+(un>=0?'pos':'neg');
   $('wstat').textContent=String(j.status||'')+' · WEEX key: '+(j.keys?'connected':'not set');
-  document.querySelectorAll('.mb').forEach(function(b){b.classList.toggle('on',b.dataset.m===String(j.mode).toUpperCase())});
+  document.querySelectorAll('[data-m]').forEach(function(b){var on=b.dataset.m===String(j.mode).toUpperCase();b.classList.toggle('on',on);b.textContent=(on?'● ':'')+b.dataset.m.charAt(0)+b.dataset.m.slice(1).toLowerCase()});
   var kill=String(j.kill).toUpperCase()==='ON',kb=$('wkill');kb.textContent=kill?'Kill switch is ON · tap to turn OFF':'Kill switch OFF · tap to stop new trades';kb.dataset.v=kill?'OFF':'ON';kb.classList.toggle('on',kill);
   var O=j.orders||[],bd=$('wbdg');bd.textContent=O.length;bd.style.display=O.length?'inline-block':'none';
   $('word').innerHTML=O.length?O.map(function(o){var lg=o[4]==='LONG';return '<div class="row"><div class="sym '+(lg?'symL':'symS')+'">'+esc(String(o[2]).slice(0,5))+'</div><div class="mid"><div class="l1"><b>'+(lg?'BUY':'SELL')+' '+esc(o[2])+'</b><span>~$'+esc(o[6])+'</span></div><div class="why">'+esc(wnm(o[3]))+' · '+esc(o[5])+' coins · margin '+wm(o[8])+' at '+esc(o[9])+'x · stop $'+esc(o[7])+'</div><div style="display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-top:10px"><a class="buy" href="'+esc(WAPI)+'?approve='+encodeURIComponent(o[0])+'&k='+encodeURIComponent(o[11])+'" target="_blank">✔ '+(lg?'Buy':'Sell')+' now</a><a class="more" style="margin:0" href="'+esc(WAPI)+'?reject='+encodeURIComponent(o[0])+'&k='+encodeURIComponent(o[11])+'" target="_blank">Skip</a></div></div></div>'}).join(''):'<div class="why">Nothing waiting. In Approve mode, every new bot trade shows up here with a Buy/Sell button.</div>';
@@ -435,14 +442,41 @@ function tkhtml(T){if(!T)return '<div class="why">Not enough 4H data for that co
   'Trailing stop after TP1: '+tkfmt(b.trail)+' below the high · Exit if 4H closes under '+tkfmt(T.lo)+'<br>'+
   'Size for 1% risk ($'+b.risk.toFixed(2)+'): '+b.qty.toPrecision(3)+' '+esc(T.c)+' ≈ $'+b.notional.toFixed(0)+' position, $'+b.margin.toFixed(0)+' margin at 2x<br><span class="why">'+esc(b.why)+' · RSI '+T.rsi.toFixed(0)+' · ATR '+tkfmt(T.atr)+'</span></span></div>'+
   '<div class="hl"><i class="chip s-'+(T.bb.ok?'ALMOST':'WAIT')+'">'+(T.bb.ok?'NEAR':'WAIT')+'</i><span><b>'+esc(T.bb.name)+'</b> · '+esc(T.bb.why)+'<br>If it fires: stop '+tkfmt(T.bb.stop)+', target '+tkfmt(T.bb.tp[1])+' (2 ATR), out within 2 days</span></div>'}
-function tkget(c){return bfget('candles?instId='+c+'-USDT&bar=4H&limit=300').then(function(d){return tkcalc(c,(d||[]).filter(function(x){return x[8]==='1'}).map(function(x){return [+x[0],+x[1],+x[2],+x[3],+x[4]]}).reverse())})}
-$('tkbtn').onclick=function(){var t=$('qtk').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');if(!t){toast('Type a ticker first');return}$('tkout').innerHTML='<div class="why" style="margin-top:8px">Building ticket…</div>';tkget(t).then(function(T){$('tkout').innerHTML=tkhtml(T)}).catch(function(){$('tkout').innerHTML='<div class="why">Could not load '+esc(t)+' from BloFin.</div>'})};
+function tkget(c){return bfget('candles?instId='+c+'-USDT&bar=4H&limit=300').then(function(d){var k=(d||[]).filter(function(x){return x[8]==='1'}).map(function(x){return [+x[0],+x[1],+x[2],+x[3],+x[4]]}).reverse();var T=tkcalc(c,k);if(T)T.k=k;return T})}
+$('tkbtn').onclick=function(){var t=$('qtk').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');if(!t){toast('Type a ticker first');return}$('tkout').innerHTML='<div class="why" style="margin-top:8px">Building ticket…</div>';tkget(t).then(function(T){var C=T?mkcard(T,T.k):null;$('tkout')._C=C;$('tkout').innerHTML=(C&&C.ok?cardhtml(C):(C?'<div class="why" style="margin-top:8px">No card: '+esc(C.why)+'</div>':''))+tkhtml(T)}).catch(function(){$('tkout').innerHTML='<div class="why">Could not load '+esc(t)+' from BloFin.</div>'})};
 function sbload(){var L=['BTC','ETH','SOL','XRP','DOGE','BNB','ADA','AVAX','LINK','SUI','LTC','DOT','NEAR','APT','ARB','OP','INJ','HBAR','UNI','TRX'];
   var R=[],i=0;(function nx(){if(i>=L.length)return Promise.resolve(R);var c=L[i++];return tkget(c).then(function(T){R.push(T)},function(){}).then(function(){return new Promise(function(r){setTimeout(r,250)})}).then(nx)})().then(function(R){R=R.filter(Boolean);
+    CARDS=R.map(function(T){return mkcard(T,T.k)});cardsrender();
     R.sort(function(a,b){return (b.bo.ok-a.bo.ok)||(a.bo.dist-b.bo.dist)});
     $('sbat').textContent=new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
     $('sboard').innerHTML=R.slice(0,5).map(tkhtml).join('')+'<div class="why" style="margin-top:8px">Top 5 of 20 coins, closest to the tested 4H breakout first (only coins above their 4H EMA200 can fire). Risk is 1% of your WEEX equity. Type any ticker above for its own ticket.</div>'}).catch(function(){$('sboard').innerHTML='<div class="why">Setups board offline.</div>'})}
 setTimeout(sbload,1500);setInterval(function(){if(!document.hidden)sbload()},600000);
+// ---------- Trade cards: $ margin, liquidation just under the 4H swing low / order block ----------
+var AMT=5;try{AMT=Number(localStorage.getItem('card_amt'))||5}catch(e){}
+function levels(k,px,atr){var n=k.length,out=[];
+  for(var i=n-60;i<n-2;i++){if(i<2)continue;var L=k[i][3];if(L<k[i-1][3]&&L<k[i-2][3]&&L<k[i+1][3]&&L<k[i+2][3]&&L<px)out.push({p:L,t:'4H swing low',tested:true,i:i})}
+  for(var j=n-60;j<n-3;j++){if(j<1)continue;var c=k[j];if(c[4]<c[1]&&(k[j+3][4]-c[4])>1.5*atr&&c[3]<px)out.push({p:c[3],t:'order block (untested)',tested:false,i:j})}
+  out.sort(function(a,b){return b.p-a.p});return out}
+function mkcard(T,k){var px=T.px,L=levels(k,px,T.atr),MMR=0.005,pick=null;
+  for(var i=0;i<L.length;i++){var d=(px-L[i].p)/px;if(d>=0.02&&d<=0.06){pick=L[i];break}}
+  if(!pick)return {c:T.c,ok:false,px:px,why:L.length?'nearest support is '+((px-L[0].p)/px*100).toFixed(1)+'% away (need 2-6%)':'no support found below price',T:T};
+  var liq=pick.p*0.997,lev=Math.min(50,Math.max(2,Math.floor(1/((px-liq)/px+MMR)))),liqx=px*(1-1/lev+MMR),stop=Math.max(liqx*1.003,pick.p*0.995);
+  var tps=[1,2,3,4].map(function(m){return px+m*T.atr});var next=L.filter(function(x){return x.p<pick.p*0.985})[0];
+  return {c:T.c,ok:true,px:px,lev:lev,liq:liqx,stop:stop,lvl:pick,tps:tps,next:next,trend:px>T.ema,T:T}}
+function cardhtml(C){if(!C.ok)return '';var f=tkfmt,risk=AMT*(C.px-C.stop)/C.px*C.lev;
+  var re=C.next?'If wicked out and 4H trend still up: re-enter $'+AMT+' at '+f(C.next.p*1.003)+' (liq under '+f(C.next.p)+'). Max 2 re-entries/day.':'No lower support for a re-entry.';
+  return '<div class="tcard"><div class="two"><div><b style="font-size:20px">LONG '+esc(C.c)+'</b><div class="why">'+(C.trend?'<b class="pos">4H trend up</b>':'<b class="neg">4H trend down · counter-trend</b>')+' · '+esc(C.lvl.t)+'</div></div><div class="big">'+f(C.px)+'</div></div>'+
+   '<div class="row2"><div>Entry<b>'+f(C.px)+'</b></div><div>Leverage<b>'+C.lev+'x</b></div><div>Stop (just above liq)<b>'+f(C.stop)+'</b></div><div>Liquidation<b>'+f(C.liq)+'</b></div>'+
+   '<div>Support<b>'+f(C.lvl.p)+'</b></div><div>Resistance (40-bar high)<b>'+f(C.T.hi)+'</b></div><div>TP1 / TP2<b>'+f(C.tps[0])+' / '+f(C.tps[1])+'</b></div><div>TP3 / TP4<b>'+f(C.tps[2])+' / '+f(C.tps[3])+'</b></div></div>'+
+   '<div class="amt">'+[3,5,10].map(function(a){return '<button data-amt="'+a+'" class="'+(a===AMT?'on':'')+'">$'+a+'</button>'}).join('')+'</div>'+
+   '<button class="bigbuy" data-buy="'+esc(JSON.stringify({c:C.c,lev:C.lev,stop:C.stop,lvl:C.lvl.t+' '+f(C.lvl.p)}))+'">BUY $'+AMT+' · '+esc(C.c)+' '+C.lev+'x</button>'+
+   '<div class="why" style="margin-top:8px">Max loss ≈ $'+Math.min(AMT,risk).toFixed(2)+' if the stop hits. '+esc(re)+(C.lvl.tested?'':' Order-block levels are not backtested yet.')+'</div></div>'}
+var CARDS=[];function cardsrender(){var G=CARDS.filter(function(c){return c.ok}).sort(function(a,b){return (b.trend-a.trend)||((a.px-a.lvl.p)/a.px-(b.px-b.lvl.p)/b.px)}).slice(0,3);
+  $('tcards').innerHTML=G.length?G.map(cardhtml).join(''):'<div class="card"><div class="why">No coin has support 2-6% below price right now. Type a ticker below for its own card.</div></div>';$('tcat').textContent=new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}
+document.addEventListener('click',function(e){var a=e.target.closest('[data-amt]');if(a){AMT=+a.dataset.amt;try{localStorage.setItem('card_amt',AMT)}catch(x){}cardsrender();if($('tkout')._C)$('tkout').innerHTML=cardhtml($('tkout')._C)||$('tkout').innerHTML;return}
+  var b=e.target.closest('[data-buy]');if(!b)return;var p=JSON.parse(b.dataset.buy);if(!WAPI||!WPIN){toast('Connect the bot first');return}
+  if(!confirm('BUY $'+AMT+' of '+p.c+' at '+p.lev+'x on WEEX now? Stop $'+Number(p.stop).toPrecision(5)))return;b.disabled=true;b.textContent='Sending to WEEX…';
+  fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+'&set=buynow&coin='+encodeURIComponent(p.c)+'&margin='+AMT+'&lev='+p.lev+'&stop='+encodeURIComponent(p.stop)+'&lvl='+encodeURIComponent(p.lvl),{cache:'no-store'}).then(function(r){return r.json()}).then(function(k){b.textContent=k.ok?'✔ '+k.msg:'✘ '+(k.err||'Failed');toast(k.ok?'Bought':'Not sent');wload('',false)}).catch(function(){b.textContent='✘ Bot not reachable';b.disabled=false})});
 // ---------- News ----------
 var NEXP={'CPI':'Hot = bad for BTC (fewer cuts). Cool = good.','Core CPI':'Hot = bad for BTC. Cool = good.','PPI':'Hot = bad for BTC. Cool = good.','Core PPI':'Hot = bad for BTC. Cool = good.','Non-Farm':'Strong jobs = fewer cuts = bad for BTC short term.','Unemployment':'Higher = more cuts expected = often good for BTC.','FOMC':'Hawkish = bad for BTC. Dovish = good.','Federal Funds':'Hike/hold-hawkish = bad. Cut = good.','PCE':'Hot = bad for BTC. Cool = good.','GDP':'Big miss = risk-off.','Jobless Claims':'Rising claims = weaker jobs = more cuts.','Retail Sales':'Strong = fewer cuts.','ISM':'Above 50 = growth; hot prices part = bad for BTC.'};
 function nexp(t){for(var k in NEXP)if(t.indexOf(k)>-1)return NEXP[k];return ''}

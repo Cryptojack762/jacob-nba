@@ -45,7 +45,7 @@ var DEFAULTS = [
   ['ntfy topic', '', 'Optional: private ntfy.sh topic for phone pushes'],
   ['Web app URL', '', 'Paste after Deploy > Web app (needed for Approve links and the phone app)'],
 ];
-var STRAT_NAMES = { L_TPI: 'TPI breakout long', L_ST: 'SuperTrend long', S_FUND: 'Funding-extreme short', S_BBRSI: 'BB + RSI short', L_FUND: 'Funding-extreme long', S_BTCFLIP: 'BTC-breakdown short', M_BOTTOM: 'Market-bottom long', L_RSI20: 'Washout bounce long', CHAT: 'Atlas chat plan' };
+var STRAT_NAMES = { L_TPI: 'TPI breakout long', L_ST: 'SuperTrend long', S_FUND: 'Funding-extreme short', S_BBRSI: 'BB + RSI short', L_FUND: 'Funding-extreme long', S_BTCFLIP: 'BTC-breakdown short', M_BOTTOM: 'Market-bottom long', L_RSI20: 'Washout bounce long', CHAT: 'Atlas chat plan', CARD: 'Jacob trade card' };
 var TABS = {
   Signals: ['Time (CT)', 'Coin', 'Strategy', 'Side', 'Price', 'Why', 'Action', 'Claude notes'],
   Orders: ['ID', 'Time (CT)', 'Coin', 'Strategy', 'Side', 'Qty', 'Ref price', 'Protective stop', 'Margin $', 'Leverage', 'Status', 'Token', 'Result', 'Claude notes'],
@@ -403,6 +403,7 @@ function doGet(e) {
     if (q.news) return json_(news_());
     if (q.coins) return json_(buildCoins());
     if (q.chat) { var hist = []; try { hist = JSON.parse(q.h || '[]').slice(-4); } catch (e) { } return json_(chat_(String(q.chat).slice(0, 600), hist)); }
+    if (q.set == 'buynow' && q.coin) return json_(buyNow_(q));
     if (q.set == 'plan' && q.coin && /^(LONG|SHORT)$/.test(q.side)) return json_(queuePlan_(q));
     if (q.set == 'kill') setVal_('Kill switch', q.v == 'ON' ? 'ON' : 'OFF');
     if (q.set == 'mode' && /^(PAPER|APPROVE|AUTO)$/.test(q.v)) setVal_('Mode', q.v);
@@ -592,4 +593,27 @@ function buildCoins() {
   var n = { BOT: 0, JACOB: 0, SKIP: 0 }; rows.forEach(function (r) { n[r[9]]++; });
   log_('COINS', rows.length + ' coins: BOT ' + n.BOT + ', JACOB ' + n.JACOB + ', SKIP ' + n.SKIP);
   return { ok: true, total: rows.length, counts: n, both: rows.filter(function (r) { return r[1] && r[2]; }).length, top: rows.slice(0, 15).map(function (r) { return r[0] + ' ' + r[9]; }) };
+}
+
+// ---------------- Trade card "Buy" button: Jacob's tap IS the approval, so send straight to WEEX ----------------
+// Margin is a flat $ amount (default $5, max $10); leverage is picked by the card so liquidation sits just under
+// the 4H swing low / order block. The exchange stop goes just ABOVE liquidation so a stop-out costs less than a liquidation.
+function buyNow_(q) {
+  var coin = String(q.coin).toUpperCase().replace(/[^A-Z0-9]/g, ''), margin = Math.min(Number(q.margin) || 5, 10), lev = Math.round(Number(q.lev) || 0), stop = Number(q.stop);
+  if (!(lev >= 2 && lev <= 50)) return { ok: false, err: 'Leverage must be 2-50x' };
+  if (on_('Kill switch')) return { ok: false, err: 'Kill switch is ON' };
+  var lk = LockService.getScriptLock(); lk.waitLock(20000);
+  try {
+    var px = priceNow_(coin); if (!(px > 0)) return { ok: false, err: 'No WEEX price for ' + coin };
+    if (!(stop > 0 && stop < px)) return { ok: false, err: 'Stop must be below the price' };
+    if ((px - stop) / px > 0.08) return { ok: false, err: 'Stop more than 8% away' };
+    var openN = rows_('Positions').filter(function (r) { return r[11] == 'OPEN' && r[10] != 'PAPER'; }).length;
+    if (openN >= num_('Max open trades', 1, 20)) return { ok: false, err: 'Max open real trades reached' };
+    var o = { id: 'CD' + Date.now().toString(36).toUpperCase() + coin, coin: coin, strategy: 'CARD', side: 'LONG', ref: px, stop: stop, margin: margin, lev: lev, why: 'Trade card: $' + margin + ' at ' + lev + 'x, ' + String(q.lvl || 'swing low').slice(0, 60), tag: 'JACOB-APPROVED' };
+    o.qty = qty_(coin, margin * lev / px); if (!(o.qty > 0)) return { ok: false, err: 'Size below WEEX minimum for ' + coin };
+    ss_().getSheetByName('Signals').appendRow([ct_(), coin, STRAT_NAMES.CARD, 'LONG', px, o.why, 'BUY (card)', '']);
+    if (String(set_('Mode')).toUpperCase() == 'PAPER') { openPos_(o, px, 'PAPER', 'Card buy, paper mode'); return { ok: true, msg: 'Paper mode: practice fill ' + o.qty + ' ' + coin + ' @ $' + px }; }
+    var res = sendLive_(o, 'APPROVED');
+    return res.ok ? { ok: true, msg: 'Bought ' + o.qty + ' ' + coin + ' @ ~$' + px + ' (' + lev + 'x, stop $' + round_(stop) + '). ' + res.msg } : { ok: false, err: res.msg };
+  } catch (e) { return { ok: false, err: e.message }; } finally { lk.releaseLock(); }
 }
