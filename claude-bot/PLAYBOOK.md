@@ -243,3 +243,16 @@ Using only these sources, list every crypto strategy that passed out-of-sample, 
 - #13 S58 daily MACD filter on the 1H volume spike (8 coins, BloFin 1H, 2 yrs): base IS 1.62 -> OOS 1.07; with MACD agreeing IS 1.21 -> OOS 0.95 (worse); MACD against OOS 1.24. REJECTED. Also: the 1H volume spike itself is down to PF 1.07 out-of-sample - day trades stay paper.
 - #16 S55 Jacob's "reload" (15m close under 15m EMA20 with RSI<50 while in profit) as an exit on the 4H breakout (BTC ETH SOL XRP DOGE LINK, BloFin 15m, last 12 months): base PF 0.79 (23% win) | reload any profit PF 0.74 (50% win) | reload after +1 ATR PF 0.75 (43% win). Feels better (wins twice as often) but cuts the big winners. REJECTED as an exit.
   WARNING 2: on these 6 big coins the 4H breakout LOST over the last 12 months (PF 0.79). Across 12-20 coins it's still slightly positive (PF 1.15-1.43). The washout bounce is the stronger rule right now.
+
+## ROUND 6 (11/18 1:45 PM) - full strategy sweep: 25 strategies x 15m / 1H / 4H = 75 tests, 140,066 trades
+Data: BloFin. 4H 20 coins Aug 2023-Nov 2026 | 1H 8 coins 2 yrs | 15m 6 coins 1 yr. Fees 0.16%. Stop 2 ATR. Pass = PF > 1.2 in BOTH the first 60% and the last 40%, 30+ trades.
+- 15m (day trading): 0 of 25 strategies positive in both halves. Day trading on 15m does not beat fees. Confirmed again.
+- 1H: 3 of 25 positive in both halves, none passed the 1.2 bar. Near misses (good lately, flat earlier): Bollinger squeeze breakout up (IS 0.97 / OOS 1.77), 20-bar breakout above EMA200 (1.10 / 1.43), EMA20 crosses EMA200 (1.19 / 1.36), MACD cross up above EMA200 (0.93 / 1.35). Paper only.
+- 4H: 8 of 25 positive both halves, 3 PASS:
+  1. NEW S65: EMA20 crosses above EMA50 while above EMA200 -> IS PF 1.79 (471t) / OOS 1.87 (298t), exit close under EMA20, stop 2 ATR.
+     Every year up (2023 2.64, 2024 1.94, 2025 1.19, 2026 2.00), 17/20 coins up, last 6 mo 3.30, last 3 mo 2.06, double fees 1.67, other stops/exits/EMA lengths 1.69-1.86 (10x30 weaker 1.23).
+     Caveats: best of 75 tests (some luck), top 5 trades = 41% of profit, wins only 31%. $50 at 0.5% risk -> $182 (worst drop 21%); 1% risk -> $590 (drop 38%).
+  2. 20-bar breakout above EMA200: 1.79 / 1.29. 3. 55-bar breakout: 1.60 / 1.28 (same family as S01/S12).
+- Jacob-style rules: 20>50>200 stack + pullback to EMA20 fails on every timeframe (15m 0.73, 1H 0.63, 4H ~0.7 OOS). The CROSS of 20 over 50 (with price above 200) on 4H is the version that works.
+- Shorts: none passed. Best: 4H inside-bar breakdown below EMA200 (0.92 / 1.38) and rally-to-EMA20 rejection in a down stack (0.88 / 1.22) - good lately only.
+- Right now (11/18): every coin is below its 4H EMA200, so S65 and the breakouts can't fire. Washout bounce (S03) is the only long that can trigger in this market.
