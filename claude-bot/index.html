@@ -219,7 +219,8 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
   </section>
   <section class="view" id="v-trades">
     <div class="card" id="tconn" style="display:none"><div class="why">Connect the bot first: Trade tab → WEEX · day trades → enter the bot link and PIN.</div><button class="more" data-go="weex" style="margin-top:10px">Go connect</button></div>
-    <div class="k" style="margin-top:0">Score by trade type</div>
+    <div class="card" id="bank"><div class="why">Bankroll loading…</div></div>
+    <div class="k">Score by trade type</div>
     <div class="card" id="wtags"></div>
     <div class="k">Waiting for your approval</div>
     <div class="card" id="word"></div>
@@ -229,6 +230,8 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
     <div class="card" id="wrec"></div>
     <div class="k">Practice trades · paper, no money</div>
     <div class="card" id="wpaper"></div>
+    <div class="k"><span>NBA bets · Kalshi (read-only)</span><span id="betsat"></span></div>
+    <div class="card" id="bets"><div class="why">Loading…</div></div>
     <div class="why" style="margin:4px 4px 14px">BloFin trades you place by hand don't show here (BloFin has no API key connected). WEEX trades update every minute.</div>
   </section>
   <section class="view" id="v-info">
@@ -385,7 +388,7 @@ function wload(extra,manual){
   if(!WAPI||!WPIN){wshow(false);return}
   fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+(extra||''),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
     if(!j.ok){if(j.err==='PIN'){wshow(false);toast('Wrong PIN')}return}
-    W=j;try{localStorage.setItem('cb_last',JSON.stringify(j))}catch(e){}wshow(true);wrender();if(manual)toast('Done');
+    W=j;try{localStorage.setItem('cb_last',JSON.stringify(j))}catch(e){}wshow(true);wrender();try{bankrender()}catch(e){}if(manual)toast('Done');
   }).catch(function(e){if(manual)toast('Bot not reachable')});
 }
 function wrender(){
@@ -492,6 +495,17 @@ document.addEventListener('click',function(e){var a=e.target.closest('[data-amt]
   var b=e.target.closest('[data-buy]');if(!b)return;var p=JSON.parse(b.dataset.buy);if(!WAPI||!WPIN){toast('Connect the bot first');return}
   if(!confirm('BUY $'+AMT+' of '+p.c+' at '+p.lev+'x on WEEX now? Stop $'+Number(p.stop).toPrecision(5)))return;b.disabled=true;b.textContent='Sending to WEEX…';
   fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+'&set=buynow&coin='+encodeURIComponent(p.c)+'&margin='+AMT+'&lev='+p.lev+'&stop='+encodeURIComponent(p.stop)+'&lvl='+encodeURIComponent(p.lvl),{cache:'no-store'}).then(function(r){return r.json()}).then(function(k){b.textContent=k.ok?'✔ '+k.msg:'✘ '+(k.err||'Failed');toast(k.ok?'Bought':'Not sent');wload('',false)}).catch(function(){b.textContent='✘ Bot not reachable';b.disabled=false})});
+// ---------- Bets (NBA sheet, read-only) + combined bankroll ----------
+var BETS=null;
+function bankrender(){var w=W?Number(W.equity)||0:0,b=BETS||{},k=Number(b.cash)||0,oc=Number(b.openCost)||0;
+  $('bank').innerHTML='<div class="two"><div><div class="k" style="margin:0 0 6px">Total bankroll</div><div class="big">$'+(w+k+oc).toFixed(2)+'</div></div><div class="why" style="text-align:right">WEEX $'+w.toFixed(2)+'<br>Kalshi cash $'+k.toFixed(2)+'<br>Open NBA bets $'+oc.toFixed(2)+'</div></div>'}
+function betsload(){if(!WAPI||!WPIN)return;fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+'&bets=1',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){BETS=j;$('betsat').textContent=j.at||'';
+  if(!j.ok){$('bets').innerHTML='<div class="why">NBA sheet not readable: '+esc(j.err||'')+'</div>';return}
+  var L=(j.live||[]).slice(2),T=[];for(var i=0;i<L.length;i++){if(/^\$/.test(L[i].trim()))T.push({h:L[i],d:(L[i+1]||'').trim()})}
+  $('bets').innerHTML='<div class="why"><b>Open tickets ('+(j.openN||0)+')</b></div>'+(T.length?T.map(function(t){var won=/100%/.test(t.h),lost=/ 0(\.\d)?% /.test(t.h+' ');return '<div class="hl"><i class="chip s-'+(won?'ENTER':lost?'AVOID':'WAIT')+'">'+(won?'WIN':lost?'LOSE':'LIVE')+'</i><span><b>'+esc(t.h)+'</b><br><span class="why">'+esc(t.d.replace(/\(by Kalshi live prices\)/,''))+'</span></span></div>'}).join(''):'<div class="why">No open NBA tickets.</div>')+
+   '<div class="why" style="margin-top:10px"><b>Tonight\'s picked blend</b></div>'+((j.pick||[]).map(function(x,i){return '<div class="hl"><i>'+(i?(/^TOTAL/.test(x)?'Σ':'🎟'):'✔')+'</i><span>'+esc(x)+'</span></div>'}).join('')||'<div class="why">No blend picked yet.</div>')+
+   '<div class="why" style="margin-top:10px"><b>Record</b><br>'+(j.score||[]).slice(1).map(esc).join('<br>')+'</div><div class="why" style="margin-top:6px">Place bets in the NBA app. This tab only reads the NBA sheet.</div>';bankrender()}).catch(function(){$('bets').innerHTML='<div class="why">NBA sheet not reachable.</div>'})}
+betsload();setInterval(function(){if(!document.hidden){betsload();bankrender()}},300000);
 // ---------- News ----------
 var NEXP={'CPI':'Hot = bad for BTC (fewer cuts). Cool = good.','Core CPI':'Hot = bad for BTC. Cool = good.','PPI':'Hot = bad for BTC. Cool = good.','Core PPI':'Hot = bad for BTC. Cool = good.','Non-Farm':'Strong jobs = fewer cuts = bad for BTC short term.','Unemployment':'Higher = more cuts expected = often good for BTC.','FOMC':'Hawkish = bad for BTC. Dovish = good.','Federal Funds':'Hike/hold-hawkish = bad. Cut = good.','PCE':'Hot = bad for BTC. Cool = good.','GDP':'Big miss = risk-off.','Jobless Claims':'Rising claims = weaker jobs = more cuts.','Retail Sales':'Strong = fewer cuts.','ISM':'Above 50 = growth; hot prices part = bad for BTC.'};
 function nexp(t){for(var k in NEXP)if(t.indexOf(k)>-1)return NEXP[k];return ''}
