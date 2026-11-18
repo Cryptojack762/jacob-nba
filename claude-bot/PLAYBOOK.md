@@ -229,3 +229,8 @@ Using only these sources, list every crypto strategy that passed out-of-sample, 
   - #17 Double bottom neckline break (lows within 3%, measured-move target): IS 0.99 / OOS 0.85. REJECTED.
   - #20 Daily pivot R1/R2 as the target on the 4H breakout: OOS PF 1.14 vs trailing exit 1.15, but wins 45% of trades instead of 26%. Same money, smoother ride - optional.
   - WARNING: 4H breakout long on 20 coins over 3.3 years is only PF 1.15 out-of-sample (IS 2.41). It is fading. Keep its size small; washout bounce deserves more weight.
+- #30 6-month replay of the bot's long rules with the live slice (18 coins, BloFin 4H, May-Nov 2026, $2 margin x 10x = $20 position, max 3 open, one per coin, 0.16% fees):
+  409 signals, 59 taken. Total +$24.60 on the $16 slice. Worst drop -$14.30 (almost the whole slice before it recovered).
+  L_TPI 44 trades, 27% won, +$27.17 | L_RSI20 15 trades, 60% won, -$2.56 | L_ST 0 taken (BTC under its EMA200 most of the period / slots full).
+  Stops at 10x: median 3 ATR stop is 3-7% on big coins (fits under ~9.5% liquidation); NEAR and ZEC run ~11% (bot skips those, by design).
+  Read: positive but bumpy; a -$14 drop on a $16 slice is normal for this system. Keep the slice where it is.
