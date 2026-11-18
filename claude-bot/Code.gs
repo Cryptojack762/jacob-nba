@@ -153,6 +153,7 @@ function scan() {
     var newBar = String(lastBar) != p.getProperty('LAST_BAR');
     var be = ema_(btcD.map(function (x) { return x.c; }), 200), nB = btcD.length, btcUp = btcD[nB - 1].c > be[nB - 1];
     var btcFlipDown = !btcUp && btcD[nB - 2].c > be[nB - 2];
+    try { health_(); } catch (e) { }
     expireApprovals_();
     try { reconcile_(); } catch (e) { log_('ERROR', 'reconcile: ' + e.message); }
     try { manageTP_(); } catch (e) { log_('ERROR', 'take-profit check: ' + e.message); }
@@ -439,6 +440,20 @@ function eventPause_() {   // name of a HIGH-impact US report within +-N minutes
 }
 
 // ---------------- notifications ----------------
+// Health check (hourly): Atlas page + relay on the server. 2 misses in a row = one alert; alert again when it's back.
+function health_() {
+  var p = PropertiesService.getScriptProperties(), now = Date.now();
+  if (now - Number(p.getProperty('HEALTH_AT') || 0) < 55 * 60e3) return;
+  p.setProperty('HEALTH_AT', String(now));
+  var relay = String(set_('Relay URL') || '').trim().replace(/\/$/, ''), bad = [];
+  function up(u, needOk) { try { var r = UrlFetchApp.fetch(u, { muteHttpExceptions: true, followRedirects: true }); return needOk ? r.getResponseCode() < 400 : true; } catch (e) { return false; } }
+  if (!up('https://157-230-148-63.sslip.io/atlas/', true)) bad.push('Atlas app');
+  if (relay && !up(relay + '/capi/v3/market/time', false)) bad.push('WEEX relay');
+  var miss = bad.length ? Number(p.getProperty('HEALTH_MISS') || 0) + 1 : 0, was = p.getProperty('HEALTH_DOWN') == '1';
+  p.setProperty('HEALTH_MISS', String(miss));
+  if (miss >= 2 && !was) { p.setProperty('HEALTH_DOWN', '1'); log_('ERROR', 'Health: down - ' + bad.join(', ')); notify_('Server down', bad.join(' + ') + ' not answering for 2 checks (2 hours). Check DigitalOcean droplet 620570168.'); }
+  if (!bad.length && was) { p.setProperty('HEALTH_DOWN', '0'); log_('INFO', 'Health: back up'); notify_('Server back up', 'Atlas + relay answering again.'); }
+}
 function notify_(title, body, clickUrl) {
   try { MailApp.sendEmail(Session.getEffectiveUser().getEmail(), "Claude's Bot | " + title, body); } catch (e) { }
   var topic = String(set_('ntfy topic')).trim();
@@ -470,7 +485,7 @@ function doGet(e) {
       try { var pr = rowsRaw_('Positions').filter(function (r) { return r[0] == q.id && r[11] == 'OPEN'; })[0]; if (pr) closePos_(pr, null, 'Closed from app', ''); } finally { lk.releaseLock(); }
       CacheService.getScriptCache().remove('LIVE');
     }
-    return json_({ ok: true, status: ss_().getSheetByName('Home').getRange(2, 2).getValue(), mode: set_('Mode'), kill: set_('Kill switch'), equity: equity_(),
+    return json_({ ok: true, status: ss_().getSheetByName('Home').getRange(2, 2).getValue(), mode: set_('Mode'), kill: set_('Kill switch'), equity: equity_(), dayStart: Number(PropertiesService.getScriptProperties().getProperty('DAY_START')) || 0, killPct: num_('Daily loss % (kill)', 1, 90), peak: Number(PropertiesService.getScriptProperties().getProperty('PEAK')) || 0, ddPct: num_('Max drawdown % (kill)', 1, 90),
       positions: rows_('Positions').slice(-60), orders: rows_('Orders').filter(function (r) { return r[10] == 'PENDING'; }).map(function (r) { return r.slice(0, 11).concat([r[11]]); }), signals: rows_('Signals').slice(-30), log: rows_('Log').slice(-25), phoenix: phoenix_(), keys: !!keys_(), live: livePnl_() });
   }
   return json_({ ok: true, service: "Claude's Auto Trading Bot", version: BOT.version });
