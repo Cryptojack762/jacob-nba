@@ -220,3 +220,6 @@ Rule: LONG 4H close above 48-candle high while BTC > 20-day avg, stop 2 ATR, exi
   $62,000 88 vs 93 | $62,500 76 vs 84 | $62,750 67 vs 74 | $63,000 56 vs 61 | $63,250 45 vs 45 | $63,500 34 vs 30 | $63,750 24 vs 18 | $64,000 17 vs 9 | $64,500 8 vs 4
 - PAPER PICKS (nothing sent, $10 each): YES $62,500+ at 76c (ours 84) | NO $64,000+ at 84c (ours 91 below) | NO $63,750+ at 77c (ours 82 below). Grade after 5 PM ET.
 - Caution: Kalshi's wider tails may be pricing the 1 PM CT minutes better than our trailing vol. Needs 30+ graded days before any money (#85). Same rules as NBA if it ever goes live: one hedge, plain dollars.
+
+## NotebookLM prompt (short, for the strategy library notebook)
+Using only these sources, list every crypto strategy that passed out-of-sample, one line each: rule, timeframe, profit factor, trades, and why it might stop working. Then list the rejected ones in one line each. No intro.

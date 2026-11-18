@@ -24,3 +24,20 @@ Jacob's steps, in order:
   Atlas  https://157-230-148-63.sslip.io/atlas/   (branch claude-bot, folder claude-bot/)
   Phoenix https://157-230-148-63.sslip.io/phoenix/ (branch main, folder phoenix/)
   Relay code: claude-bot/vps/relay.js (secret prefix lives only in /opt/relay/prefix on the server). Setup: claude-bot/vps/setup_web.sh.
+
+## State 11/18/2026 10 AM CT
+- Droplet resized to 2 GB / $12 a month (5:30 AM).
+- Bot web app deployment = Version 26. Scan runs every 15 min (setTrigger15). Mode APPROVE, live on WEEX with ~$49.
+- Settings live: bot slice $16 ($2 a trade, max 3, BOT coins, 10x), missed-trade fallback $1 (max 6, $15 cap), event pause 60 min, daily loss kill 5%, drawdown kill 20%.
+- New in v25-26: health check hourly (Atlas + relay, push after 2 misses), Reports tab (US releases, forecast vs actual, BTC +1h/4h/24h), app status returns dayStart/peak for the loss bar, candles fall back to BloFin for coins not on WEEX.
+- Phone pushes: ntfy topic atlas-jacob-c2112e987573 (Home tab). Install ntfy and subscribe.
+
+## Server browser (PC can stay off) - installed 11/18 5:52 AM
+- vps/rb/setup_rb.sh installs Xvfb + fluxbox + x11vnc + noVNC (port 6080, Let's Encrypt cert) + Playwright Chromium + rb-worker (systemd).
+- Mailbox = bot sheet "Browser" tab: write a row [ID, command JSON, NEW]; the worker polls the bot web app (doPost rb=poll / rb=done, RB_KEY in Script Properties), runs it, writes DONE + result.
+- Commands: goto, text, elements, click (n/sel/text), type, press, scroll, eval, shot, tabs, tab, newtab, restart, ping. A JSON list runs in order.
+- Tested: ping, WEEX page read, Kalshi API, ESPN API. Torvik blocks the server (CloudFront 403) - use Chrome for Torvik.
+- Jacob logs in once at https://157-230-148-63.sslip.io:6080/vnc.html (VNC password in Claude's notes) to WEEX and BloFin; the profile remembers him.
+
+## Rule for every app (Jacob 11/18)
+- Host it on the VPS with a manifest + service worker so it installs as a real app with no Chrome badge. Bump the sw.js cache name on every change.
