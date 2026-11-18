@@ -485,13 +485,14 @@ function chat_(text, hist) {
   var key = PropertiesService.getScriptProperties().getProperty('CLAUDE_API_KEY');
   if (!key) return { ok: true, reply: 'Add CLAUDE_API_KEY in Script Properties first.' };
   var up = text.toUpperCase(), coin = (CHAT_COINS.filter(function (c) { return new RegExp('\\b' + c + '\\b').test(up); })[0]) || null;
+  var mine = rowsRaw_('Positions').filter(function (r) { return r[11] == 'OPEN' && r[10] == 'LIVE'; }).map(function (r) { return { coin: r[1], side: r[3], entry: r[5], qty: r[6], stop: r[9] }; });
+  if (!coin && mine.length && /\bMY\b|OPEN TRADE|POSITION/.test(up)) coin = mine[mine.length - 1].coin;
   if (!coin && hist.length) { var hu = hist.map(function (h) { return String(h.u || ''); }).join(' ').toUpperCase(); coin = (CHAT_COINS.filter(function (c) { return new RegExp('\\b' + c + '\\b').test(hu); }).pop()) || null; }
   if (!coin && /SOLANA/.test(up)) coin = 'SOL'; if (!coin && /BITCOIN/.test(up)) coin = 'BTC'; if (!coin && /ETHEREUM/.test(up)) coin = 'ETH'; if (!coin && /DOGECOIN/.test(up)) coin = 'DOGE'; if (!coin && /ARBITRUM/.test(up)) coin = 'ARB';
   var swing = /SWING|4 ?H|DAILY|1 ?D\b|DAYS|WEEK/.test(up), tfs = /15 ?M/.test(up) ? ['15m', '1H', '4H'] : swing ? ['1H', '4H', '1D'] : ['15m', '1H', '4H'];
   var data = null;
   if (coin) { data = { coin: coin, style: swing ? 'swing' : 'day trade', frames: tfs.map(function (b) { try { return tfSummary_(coin, b) || { tf: b, err: 'not enough candles' }; } catch (e) { return { tf: b, err: e.message }; } }) };
     try { var f = JSON.parse(UrlFetchApp.fetch('https://openapi.blofin.com/api/v1/market/funding-rate?instId=' + coin + '-USDT', { muteHttpExceptions: true }).getContentText()).data; if (f && f[0]) data.funding = f[0].fundingRate; } catch (e) { } }
-  var mine = rowsRaw_('Positions').filter(function (r) { return r[11] == 'OPEN' && r[10] == 'LIVE'; }).map(function (r) { return { coin: r[1], side: r[3], entry: r[5], qty: r[6], stop: r[9] }; });
   var wash = []; try { wash = JSON.parse(PropertiesService.getScriptProperties().getProperty('WASH') || '[]'); } catch (e) { }
   var sys = "You are Atlas, Jacob's trading assistant inside his phone app. Answer in plain short English, vertical lists, plain dollars, no tables. " +
     "You get live BloFin candles summarised per timeframe. Our TESTED rules (backtests 2023-2026, out-of-sample): " +
