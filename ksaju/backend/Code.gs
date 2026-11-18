@@ -160,14 +160,26 @@ var ELS = ['Wood', 'Fire', 'Earth', 'Metal', 'Water'];
 // Ten-God family of an element relative to the Day Master element (deterministic, not left to the AI).
 function relation_(dmEl, el) {
   var d = (ELS.indexOf(el) - ELS.indexOf(dmEl) + 5) % 5;
-  return ['Companion (peers, self, competition)', 'Output (creativity, expression, fun)', 'Wealth (money, opportunities; for men also romance)', 'Power (career, status, pressure; for women also romance)', 'Resource (support, learning, rest)'][d];
+  return ['Companion (peers, self, competition)', 'Output (creativity, expression, fun)', 'Wealth (money, opportunities)', 'Power (career, status, pressure)', 'Resource (support, learning, rest)'][d];
 }
-var MONTHS_2027 = [ // solar months of the 丁未 year (Tiger month starts at Ipchun, Feb 4 2027)
-  ['Feb 4 - Mar 5', '壬寅', 'Water', 'Wood'], ['Mar 6 - Apr 4', '癸卯', 'Water', 'Wood'], ['Apr 5 - May 5', '甲辰', 'Wood', 'Earth'],
-  ['May 6 - Jun 5', '乙巳', 'Wood', 'Fire'], ['Jun 6 - Jul 6', '丙午', 'Fire', 'Fire'], ['Jul 7 - Aug 7', '丁未', 'Fire', 'Earth'],
-  ['Aug 8 - Sep 7', '戊申', 'Earth', 'Metal'], ['Sep 8 - Oct 8', '己酉', 'Earth', 'Metal'], ['Oct 9 - Nov 7', '庚戌', 'Metal', 'Earth'],
-  ['Nov 8 - Dec 6', '辛亥', 'Metal', 'Water'], ['Dec 7 - Jan 5', '壬子', 'Water', 'Water'], ['Jan 6 - Feb 3 2028', '癸丑', 'Water', 'Earth']
+// Partner star (Dustin fix 1, Nov 17): women = Power (관성, the element that controls the Day Master); men = Wealth (재성, the element the Day Master controls).
+// No gender = no partner-star logic.
+function partnerStar_(dmEl, gender) {
+  var i = ELS.indexOf(dmEl);
+  if (gender == 'female') return { el: ELS[(i + 3) % 5], name: 'Power (관성)' };
+  if (gender == 'male') return { el: ELS[(i + 2) % 5], name: 'Wealth (재성)' };
+  return null;
+}
+// Solar months of the 丁未 year. Dates are exact solar-term starts in Korea time (KST), computed with the same
+// manseryeok library as the chart engine (Dustin fix 2, Nov 17): Ipchun Feb 4 10:46, Hallo Oct 8 21:17, Ipdong Nov 8 00:39, Sohan Jan 6 2028 04:55.
+// Each saju month runs from its start date to the day before the next one. [label, dates, pillar, stem element, branch element]
+var MONTHS_2027 = [
+  ['February', 'Feb 4 - Mar 5', '壬寅', 'Water', 'Wood'], ['March', 'Mar 6 - Apr 4', '癸卯', 'Water', 'Wood'], ['April', 'Apr 5 - May 5', '甲辰', 'Wood', 'Earth'],
+  ['May', 'May 6 - Jun 5', '乙巳', 'Wood', 'Fire'], ['June', 'Jun 6 - Jul 6', '丙午', 'Fire', 'Fire'], ['July', 'Jul 7 - Aug 7', '丁未', 'Fire', 'Earth'],
+  ['August', 'Aug 8 - Sep 7', '戊申', 'Earth', 'Metal'], ['September', 'Sep 8 - Oct 7', '己酉', 'Earth', 'Metal'], ['October', 'Oct 8 - Nov 7', '庚戌', 'Metal', 'Earth'],
+  ['November', 'Nov 8 - Dec 6', '辛亥', 'Metal', 'Water'], ['December', 'Dec 7 - Jan 5, 2028', '壬子', 'Water', 'Water'], ['January 2028', 'Jan 6 - Feb 3, 2028', '癸丑', 'Water', 'Earth']
 ];
+function monthTag_(m) { return m[0] + ' ' + m[2] + ' (about ' + m[1] + ')'; }
 
 var SYSTEM_PROMPT = [
   'You are Haneul, a warm Korean saju (사주) reader writing in natural, modern English for young adults who are curious about Korean culture.',
@@ -178,12 +190,16 @@ var SYSTEM_PROMPT = [
   'Length: 850 to 1,050 words. Short paragraphs. Speak directly to the reader ("you"). Mention their Day Master by its English name and Hanja once or twice, and explain any Korean or Hanja term in plain English the first time.',
   'Tone: encouraging, specific, grounded, self-discovery. Frame everything as tendencies, energies and invitations, never certainties.',
   'Hard rules (never break): no fear-based or threatening language; no guaranteed outcomes or exact predictions (no "you will meet your soulmate in March", "you will get rich"); no health, medical, legal, investment or gambling advice; never tell the reader to stay in or leave a relationship; no celebrity or K-pop idol names; no mention of death, illness, accidents or curses.',
-  'In "Your best months", pick 3 to 4 months from the provided month list that suit the chart best and say why in one or two sentences each, using the given relationships.',
-  'End with exactly this line on its own: "For entertainment and self-reflection. Not a substitute for professional advice."'
+  'In "Your best months", pick 3 to 4 months from the provided month list that suit the chart best and say why in one or two sentences each, using the given relationships. Saju months do not match calendar months, so always name a month exactly as its label is given, with its Hanja and dates, for example "August 戊申 (about Aug 8 - Sep 7)". Never write a bare calendar month.',
+  'Love and romance: use ONLY the partner star given in the chart brief (for women it is Power 관성, for men it is Wealth 재성) and the months listed as carrying it. If the brief says no gender was given, do not use any partner-star or romance-star logic at all; describe love only through the Day Master\'s nature and the year\'s energy.',
+  'Persona: you are Haneul, a young male 선비 (seonbi, a Korean scholar) in a black 갓 (gat, the traditional horsehair hat) who carries a 태극 (taegeuk) fan. You are warm, calm and a bit of a star nerd.',
+  'Include exactly one Korean cultural touch somewhere in the reading, explained in one or two plain sentences (for example: Koreans hang 입춘대길 "great luck at the start of spring" notes on their doors at Ipchun; families check the year ahead around Seollal, the Lunar New Year). Do not invent customs.',
+  '"## A note to carry with you" ends with a short signature in Haneul\'s voice, one or two sentences, then a line with only: "— Haneul".',
+  'End with exactly this line on its own, after the signature: "For entertainment and self-reflection. Not a substitute for professional advice."'
 ].join('\n');
 
 function chartBrief_(c) {
-  var dm = c.dayMaster, el = dm.element, P = c.pillars;
+  var dm = c.dayMaster, el = dm.element, P = c.pillars, ps = partnerStar_(el, c.input && c.input.gender);
   var pil = function (k) { var p = P[k]; return p ? (p.hanja + ' (' + p.stem.element + ' ' + (p.stem.yang ? 'yang' : 'yin') + ' over ' + p.branch.element + ' ' + p.branch.animal + ')') : 'unknown (birth time not given)'; };
   var lines = [
     'Day Master: ' + dm.hanja + ' ' + dm.label + ', "' + dm.title + '" (' + dm.tag + ')',
@@ -191,13 +207,15 @@ function chartBrief_(c) {
     'Five-element balance: ' + ELS.map(function (e) { return e + ' ' + c.elements.pct[e] + '%'; }).join(', ') + '. Strongest: ' + c.elements.strongest + '. Missing: ' + (c.elements.missing.join(', ') || 'none'),
     'Zodiac year: ' + c.animal.color + ' ' + c.animal.name,
     'Gender given: ' + (c.input.gender || 'not given'),
+    (ps ? 'Partner star (romance signal) for this ' + c.input.gender + ' reader: ' + ps.name + ' = ' + ps.el + '. 2027 months carrying ' + ps.el + ': ' + (MONTHS_2027.filter(function (m) { return m[3] == ps.el || m[4] == ps.el; }).map(monthTag_).join('; ') || 'none') + (ps.el == 'Fire' || ps.el == 'Earth' ? '. The 2027 year itself (丁未, Fire over Earth) also carries it.' : '.')
+        : 'Partner star: none. Gender was not given, so do NOT use partner-star or romance-star logic.'),
     'Current 10-year luck pillar: ' + (c.luck && c.luck.current ? c.luck.current.hanja + ' (' + c.luck.current.stem.element + ' over ' + c.luck.current.branch.element + '), ages ' + c.luck.current.age + '-' + c.luck.current.ageEnd + '; relationship to Day Master: ' + relation_(el, c.luck.current.stem.element) : 'not available'),
     '',
     'The year 2027 is 丁未, the Red Goat year: Yin Fire over Earth. For this Day Master, Fire = ' + relation_(el, 'Fire') + '; Earth = ' + relation_(el, 'Earth') + '.',
     'The saju year 2027 starts at Ipchun, February 4 2027.',
-    '2027 solar months (dates approximate):',
+    '2027 saju months (exact start dates, Korea time; name them exactly like this):',
   ];
-  MONTHS_2027.forEach(function (m) { lines.push('- ' + m[0] + ': ' + m[1] + ' (' + m[2] + ' over ' + m[3] + ') -> stem = ' + relation_(el, m[2]).split(' (')[0] + ', branch = ' + relation_(el, m[3]).split(' (')[0]); });
+  MONTHS_2027.forEach(function (m) { lines.push('- ' + monthTag_(m) + ': ' + m[3] + ' over ' + m[4] + ' -> stem = ' + relation_(el, m[3]).split(' (')[0] + ', branch = ' + relation_(el, m[4]).split(' (')[0]); });
   return lines.join('\n');
 }
 
@@ -232,7 +250,7 @@ function compatBrief_(chart, p) {
   if (chart && chart.dayMaster) lines.push('Person A is "' + chart.dayMaster.title + '" (' + chart.dayMaster.tag + ').');
   lines.push('');
   lines.push('2027 is 丁未 (Yin Fire over Earth). 2027 months:');
-  MONTHS_2027.forEach(function (m) { lines.push('- ' + m[0] + ': ' + m[1] + ' (' + m[2] + ' over ' + m[3] + ') -> for A: ' + relation_(p.a_el, m[2]).split(' (')[0] + '; for B: ' + relation_(p.b_el, m[2]).split(' (')[0]); });
+  MONTHS_2027.forEach(function (m) { lines.push('- ' + monthTag_(m) + ': ' + m[3] + ' over ' + m[4] + ' -> for A: ' + relation_(p.a_el, m[3]).split(' (')[0] + '; for B: ' + relation_(p.b_el, m[3]).split(' (')[0]); });
   return lines.join('\n');
 }
 
