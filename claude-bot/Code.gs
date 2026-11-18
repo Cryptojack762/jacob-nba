@@ -867,6 +867,42 @@ function doPost(e) {
       return json_({ ok: true, cmds: out });
     }
     if (b.rb == 'done' && Number(b.row) >= 2) { sh.getRange(Number(b.row), 3, 1, 3).setValues([[b.ok ? 'DONE' : 'ERROR', String(b.result || '').slice(0, 49000), ct_()]]); return json_({ ok: true }); }
+    if (b.rb == 'nbacfg') return json_(nbaCfg_());
+    if (b.rb == 'nbablend') return json_(nbaBlend_(b));
     return json_({ ok: false, err: 'bad request' });
   } finally { lk.releaseLock(); }
+}
+
+// ---------------- NBA blend from the server (vps/nba/blend.js) ----------------
+// The server does the math (live Kalshi prices, Jacob's set rules), this only reads settings and writes results.
+// It never ticks or sends anything: tickets land on Order_Desk as AWAITING for Jacob to tick.
+var NBA_SHEET = '172p8NEQubZR94wgOM-l8CyDmHLd5kgJT03QpAxOU5eA';
+function nbaTab_() {
+  var ss = SpreadsheetApp.openById(NBA_SHEET), sh = ss.getSheetByName('Claude_Blend');
+  if (!sh) { sh = ss.insertSheet('Claude_Blend');
+    sh.getRange(1, 1, 5, 3).setValues([['Total $', 72, 'Money for the whole set'], ['Skip teams', 'TOR', 'Comma list, e.g. TOR,BOS (injuries the price has not caught yet)'],
+      ['Server blend', 'ON', 'ON = load the new set on Order_Desk (unticked). OFF = only write it here'], ['Last run', '', ''], ['Best night $', 100, 'Upside target: the set must be able to make at least this']]);
+    sh.getRange('A1:A5').setFontWeight('bold'); sh.setColumnWidth(1, 120); sh.setColumnWidth(2, 520); sh.setColumnWidth(3, 420); }
+  return sh;
+}
+function nbaCfg_() {
+  var v = nbaTab_().getRange(1, 2, 5, 1).getValues();
+  return { ok: true, best: Number(v[4][0]) || 100, total: Number(v[0][0]) || 72, exclude: String(v[1][0] || '').toUpperCase().split(/[ ,]+/).filter(String), on: String(v[2][0]).toUpperCase() != 'OFF' };
+}
+function nbaBlend_(b) {
+  var sh = nbaTab_(), cfg = nbaCfg_(), now = ct_(), T = b.tickets || [];
+  sh.getRange(4, 2, 1, 2).setValues([[now + ' - ' + String(b.summary || ''), String(b.math || '')]]);
+  sh.getRange(7, 1, Math.max(sh.getMaxRows() - 6, 1), 4).clearContent();
+  if (T.length) sh.getRange(7, 1, T.length + 1, 4).setValues([['Ticket', 'Stake $', 'Pays $', 'Kalshi legs']].concat(T.map(function (t) { return [t.name, t.stake, t.pays, t.legs]; })));
+  if (!cfg.on || !T.length) return { ok: true, loaded: 0 };
+  var od = SpreadsheetApp.openById(NBA_SHEET).getSheetByName('Order_Desk'); if (!od) return { ok: false, err: 'no Order_Desk' };
+  var n = od.getLastRow(), v = n > 1 ? od.getRange(1, 1, n, 8).getValues() : [], today = Utilities.formatDate(new Date(), 'America/Chicago', 'MM/dd');
+  for (var i = 0; i < v.length; i++) {   // a Claude pick already ticked or sent today -> leave the desk alone
+    var isMine = String(v[i][1]).indexOf('CLAUDE PICK') > -1;
+    if (isMine && (v[i][0] === true || (v[i][4] != 'AWAITING' && v[i][4] != 'EXPIRED' && String(v[i][7]).indexOf(today) == 0))) return { ok: true, loaded: 0, note: 'a Claude pick is ticked or already sent today' };
+  }
+  for (var i = 0; i < v.length; i++) if (String(v[i][1]).indexOf('CLAUDE PICK') > -1 && v[i][4] == 'AWAITING') od.getRange(i + 1, 5, 1, 2).setValues([['EXPIRED', 'Replaced by the newer Claude pick ' + now]]);
+  od.insertRowsBefore(3, T.length);   // inherits the checkbox column from the ticket row below
+  od.getRange(3, 1, T.length, 8).setValues(T.map(function (t) { return [false, '\u2714 CLAUDE PICK (server ' + now + ') ' + t.name, t.stake, t.pays, 'AWAITING', '', t.legs, now + ' Claude server pick']; }));
+  return { ok: true, loaded: T.length };
 }
