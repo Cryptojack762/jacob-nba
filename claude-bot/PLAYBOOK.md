@@ -234,3 +234,8 @@ Using only these sources, list every crypto strategy that passed out-of-sample, 
   L_TPI 44 trades, 27% won, +$27.17 | L_RSI20 15 trades, 60% won, -$2.56 | L_ST 0 taken (BTC under its EMA200 most of the period / slots full).
   Stops at 10x: median 3 ATR stop is 3-7% on big coins (fits under ~9.5% liquidation); NEAR and ZEC run ~11% (bot skips those, by design).
   Read: positive but bumpy; a -$14 drop on a $16 slice is normal for this system. Keep the slice where it is.
+
+## Market News NotebookLM hook (#82)
+- Weekly: copy the bot sheet's Reports tab (release, forecast, actual, BTC +1h/+4h/+24h) into the Market News notebook as a source.
+- Prompt (short): "You're talking to Claude through Jacob's copy-paste relay. Using the Reports source, which US releases moved BTC most in the 4h after, and in which direction when the number beat vs missed forecast? One line per event type. Flag anything with under 5 samples."
+- Ties to the event pause: if a release type shows bigger moves than FOMC (2.2% avg 24h), add it to the pause list.
