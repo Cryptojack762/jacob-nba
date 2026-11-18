@@ -116,11 +116,16 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
       <div style="display:flex;gap:8px;margin-top:8px"><input class="inp" id="qfree" style="margin:0" placeholder="Or ask anything…" autocomplete="off"><button class="mb" id="qgo" style="min-width:70px">Ask</button></div>
       <button class="more" id="askc" style="margin-top:8px">Market read (BTC + best setups)</button>
       <div class="why" id="askout" style="white-space:pre-wrap;margin-top:8px"></div></div>
+    <div id="nbanner"></div>
     <div id="gate"><div class="sk"></div></div>
     <div class="k">Today's read</div>
     <div class="card"><div class="read" id="read"><div class="sk" style="height:80px;margin:0"></div></div></div>
     <div class="k">Best setups right now</div>
     <div class="card" id="best"><div class="sk" style="margin:0"></div></div>
+    <div class="k"><span>This week's reports · US</span><span id="nat"></span></div>
+    <div class="card" id="ncal"><div class="why">Loading…</div></div>
+    <div class="k">Crypto headlines</div>
+    <div class="card" id="nhead"><div class="why">Loading…</div></div>
   </section>
 
   <section class="view" id="v-weex">
@@ -402,6 +407,21 @@ function qask(text){go('chat');csend(text);return;if(!WAPI||!WPIN){$('askout').t
   $('askout').textContent='Thinking… (about 20 seconds)';fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+'&chat='+encodeURIComponent(text.slice(0,590)),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){$('askout').textContent=j.ok?(j.reply||'No answer'):'Error: '+(j.err||'unknown')}).catch(function(e){$('askout').textContent='Could not reach Claude: '+e.message})}
 document.addEventListener('click',function(e){var b=e.target.closest('[data-q]');if(!b)return;var t=$('qtk').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');if(!t){toast('Type a ticker first');return}qask(QP[b.dataset.q].replace('{T}',t))});
 $('qgo').onclick=function(){var t=$('qfree').value.trim();if(t)qask(t)};$('qfree').addEventListener('keydown',function(e){if(e.key==='Enter')$('qgo').click()});
+// ---------- News ----------
+var NEXP={'CPI':'Hot = bad for BTC (fewer cuts). Cool = good.','Core CPI':'Hot = bad for BTC. Cool = good.','PPI':'Hot = bad for BTC. Cool = good.','Core PPI':'Hot = bad for BTC. Cool = good.','Non-Farm':'Strong jobs = fewer cuts = bad for BTC short term.','Unemployment':'Higher = more cuts expected = often good for BTC.','FOMC':'Hawkish = bad for BTC. Dovish = good.','Federal Funds':'Hike/hold-hawkish = bad. Cut = good.','PCE':'Hot = bad for BTC. Cool = good.','GDP':'Big miss = risk-off.','Jobless Claims':'Rising claims = weaker jobs = more cuts.','Retail Sales':'Strong = fewer cuts.','ISM':'Above 50 = growth; hot prices part = bad for BTC.'};
+function nexp(t){for(var k in NEXP)if(t.indexOf(k)>-1)return NEXP[k];return ''}
+function nload(){if(!WAPI||!WPIN){$('ncal').innerHTML='<div class="why">Connect the bot (Trade → WEEX) to load news.</div>';$('nhead').innerHTML='';return}
+  fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+'&news=1',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+    var now=Date.now(),soon=null;
+    var cal=(j.cal||[]).map(function(e){e.d=new Date(e.when);return e}).sort(function(a,b){return a.d-b.d});
+    $('nat').textContent=j.at?'updated '+j.at:'';
+    $('ncal').innerHTML=cal.length?cal.map(function(e){var past=e.d<now,hi=e.imp==='High';if(!past&&hi&&e.d-now<864e5&&!soon)soon=e;
+      var when=e.d.toLocaleString([], {weekday:'short',hour:'numeric',minute:'2-digit'});
+      return '<div class="hl" style="opacity:'+(past&&!e.act?'.55':'1')+'"><i class="chip s-'+(hi?'AVOID':'WAIT')+'">'+(hi?'HIGH':'MED')+'</i><span><b>'+esc(e.t)+'</b> · '+esc(when)+' CT<br>'+(e.act?'<b>Actual '+esc(e.act)+'</b> · ':'')+'Forecast '+esc(e.fc||'-')+' · Prior '+esc(e.prev||'-')+(nexp(e.t)?'<br><span class="why">'+esc(nexp(e.t))+'</span>':'')+'</span></div>'}).join(''):'<div class="why">No US reports found'+((j.err||[]).length?': '+esc(j.err.join('; ')):'')+'</div>';
+    $('nbanner').innerHTML=soon?'<div class="card" style="border-color:#5b1d20;background:var(--dnb)"><b>⚠ '+esc(soon.t)+'</b> in '+Math.max(1,Math.round((soon.d-now)/36e5))+'h ('+esc(soon.d.toLocaleString([], {weekday:'short',hour:'numeric',minute:'2-digit'}))+' CT). Expect big moves; size down or wait until after.</div>':'';
+    $('nhead').innerHTML=(j.head||[]).map(function(h){return '<div class="hl"><i>📰</i><span><a href="'+esc(h.link)+'" target="_blank" style="color:inherit">'+esc(h.t)+'</a><br><span class="why">'+esc(h.src)+' · '+esc(new Date(h.when).toLocaleString([], {weekday:'short',hour:'numeric',minute:'2-digit'}))+'</span></span></div>'}).join('')||'<div class="why">No headlines right now.</div>';
+  }).catch(function(){$('ncal').innerHTML='<div class="why">News not reachable right now.</div>'})}
+nload();setInterval(function(){if(!document.hidden)nload()},900000);
 // ---------- Atlas chat (small BloFin-AI style) ----------
 var CHS=[],CH=null;try{CHS=JSON.parse(localStorage.getItem('atlas_chats')||'[]')}catch(e){}
 function csave(){try{if(CH&&CH.m.length){CHS=CHS.filter(function(c){return c.id!==CH.id});CHS.unshift(CH);CHS=CHS.slice(0,20)}localStorage.setItem('atlas_chats',JSON.stringify(CHS))}catch(e){}}

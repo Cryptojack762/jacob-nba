@@ -399,6 +399,7 @@ function doGet(e) {
     var rows_ = function (n) { return rowsRaw_(n).map(function (r) { return r.map(function (v) { return v instanceof Date ? ct_(v) : v; }); }); };
     var pin = PropertiesService.getScriptProperties().getProperty('APP_PIN');
     if (String(q.pin || '') != String(pin)) return json_({ ok: false, err: 'PIN' });
+    if (q.news) return json_(news_());
     if (q.chat) { var hist = []; try { hist = JSON.parse(q.h || '[]').slice(-4); } catch (e) { } return json_(chat_(String(q.chat).slice(0, 600), hist)); }
     if (q.set == 'plan' && q.coin && /^(LONG|SHORT)$/.test(q.side)) return json_(queuePlan_(q));
     if (q.set == 'kill') setVal_('Kill switch', q.v == 'ON' ? 'ON' : 'OFF');
@@ -534,3 +535,25 @@ function testFrames() {
   try { var r = UrlFetchApp.fetch('https://openapi.blofin.com/api/v1/market/candles?instId=XRP-USDT&bar=1H&limit=300', { muteHttpExceptions: true }); Logger.log('HTTP ' + r.getResponseCode() + ' ' + r.getContentText().slice(0, 200)); } catch (e) { Logger.log('fetch err ' + e.message); }
   try { Logger.log(JSON.stringify(tfSummary_('XRP', '1H'))); } catch (e) { Logger.log('tf err ' + e.message + ' ' + e.stack); }
 }
+
+// ---------------- News: this week's US economic calendar + crypto headlines (cached 30 min) ----------------
+function news_() {
+  var c = CacheService.getScriptCache(), hit = c.get('NEWS'); if (hit) return JSON.parse(hit);
+  var out = { ok: true, at: ct_(), cal: [], head: [], err: [] };
+  try {
+    var r = UrlFetchApp.fetch('https://nfs.faireconomy.media/ff_calendar_thisweek.json', { muteHttpExceptions: true });
+    var ev = JSON.parse(r.getContentText());
+    out.cal = ev.filter(function (e) { return e.country == 'USD' && (e.impact == 'High' || e.impact == 'Medium'); }).map(function (e) {
+      return { t: e.title, when: e.date, imp: e.impact, fc: e.forecast || '', prev: e.previous || '', act: e.actual || '' }; });
+  } catch (e) { out.err.push('calendar: ' + e.message); }
+  [['CoinDesk', 'https://www.coindesk.com/arc/outboundfeeds/rss/'], ['Cointelegraph', 'https://cointelegraph.com/rss']].forEach(function (f) {
+    try {
+      var x = XmlService.parse(UrlFetchApp.fetch(f[1], { muteHttpExceptions: true }).getContentText()), items = x.getRootElement().getChild('channel').getChildren('item').slice(0, 8);
+      items.forEach(function (it) { out.head.push({ src: f[0], t: it.getChildText('title'), link: it.getChildText('link'), when: it.getChildText('pubDate') }); });
+    } catch (e) { out.err.push(f[0] + ': ' + e.message); }
+  });
+  out.head.sort(function (a, b) { return new Date(b.when) - new Date(a.when); }); out.head = out.head.slice(0, 12);
+  try { c.put('NEWS', JSON.stringify(out), 1800); } catch (e) { }
+  return out;
+}
+function testNews() { Logger.log(JSON.stringify(news_()).slice(0, 2000)); }
