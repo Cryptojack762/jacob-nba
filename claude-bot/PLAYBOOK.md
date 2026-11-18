@@ -210,3 +210,5 @@ Rule: LONG 4H close above 48-candle high while BTC > 20-day avg, stop 2 ATR, exi
   - Decision days: average 24h move 2.24% vs 1.75% on a normal day (+28% bigger). Up 10 of 21.
   - Minutes releases: average 24h move 2.20%, up only 8 of 20, first 4 hours average +0.14% (no real direction). Biggest: Aug 2026 +6.7%, Jul 2024 -4.4%.
   - Verdict: bigger swings, no reliable direction -> keep the event pause (no new entries 1h before/after), don't bet on a direction.
+- #45 Paper shorts opened 11/17 8 PM CT, graded 11/18 ~10 AM CT (BloFin last price, still open, stops not touched):
+  SOL S_BBRSI 74.13 -> 73.40 = +$0.73 | NEAR S_BBRSI 3.351 -> 3.215 = +$3.13 | HYPE S_FUND 68.646 -> 65.953 = +$2.96. All 3 green, +$6.82 paper so far.
