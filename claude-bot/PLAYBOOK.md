@@ -119,3 +119,30 @@ Same engine, IS 2024-26 / OOS 2021-24, 0.16% fees.
 - Kill switch: stop opening trades if equity is 20% below its peak or down 5% in a day; Jacob turns it back on.
 - Max hold: 120 candles (20 days) on any trade.
 - Paper first (2–4 weeks), then live small.
+
+## ROUND 4 — Day-trade (1H) research for WEEX (11/18, 12:10–12:40 AM)
+
+Data: BloFin 1H candles, 12 coins (BTC ETH SOL XRP DOGE BNB ADA AVAX LINK SUI LTC DOT),
+2024-09-29 → 2026-11-18 (18,720 bars each). In-sample before 2025-11-01, out-of-sample after.
+Costs: 0.15% per round trip (WEEX taker 0.06% x2 + slippage). Entry next bar open. ~30 backtest runs.
+
+Verdict per idea (IS PF / OOS PF):
+- 24h breakout long, trend-gated: 0.92 / 0.87 — FAILS
+- 24h breakdown short: 0.96 / 1.02 — flat, FAILS after costs
+- RSI(2) dip-buy long: 0.90 / 0.61 — FAILS
+- RSI(2) fade short: 0.85 / 0.81 — FAILS
+- EMA50 pullback long/short: 0.77/0.64 and 0.87/0.97 — FAILS
+- Bollinger squeeze breakout: 1.00 / 0.92 — FAILS
+- Fade big volume candles: 0.74 / 0.69 — FAILS (do the opposite)
+- **Volume-spike momentum long (L_VOL1H): 1.54 / 1.43 — ONLY PASS**
+  Rule: 1H volume > 3x its 24h average AND the 1H candle closes +2.5% or more above its open
+  AND close > 1H EMA200 → buy next bar open, stop 1.5 ATR(14), exit after 6 hours.
+  377 trades total, 49% win, +0.39% avg per trade OOS (unlevered, after costs).
+  Robust: all 9 volume/size combos positive OOS; stop 1–3 ATR all positive; 9/12 coins positive OOS.
+  Weak spots: holding 12–24h kills it (keep 6h); volume-spike SHORT fails OOS (0.74);
+  adding BTC/coin trend filters made it WORSE (OOS 0.62–0.91) — skip filters.
+  Recent decay: Aug–Nov 2026 net negative (-21% summed over 60 trades). Paper it first.
+
+Lesson: on 1H with real fees most classic day-trade setups lose. The 0.15% cost eats any
+edge under ~0.3% per trade. Only big, volume-confirmed moves are worth chasing.
+Next: add L_VOL1H to the bot as PAPER-only (1H scan), compare 4 weeks vs backtest.
