@@ -1169,17 +1169,17 @@ function readyBoard_(DX) {
     else if (up && tpi <= 2 && x.rsi > 50) { st = 'ALMOST'; rule = 'L_TPI'; note = tpi.toFixed(1) + '% under the breakout ' + f(x.hh40) + ', RSI ' + x.rsi.toFixed(0) + ' (needs 55)'; dist = tpi; }
     else if (!up && x.rsi < 25) { st = 'ALMOST'; rule = 'L_RSI20'; note = 'Washout zone: RSI ' + x.rsi.toFixed(0) + ', fires when it closes back above 20'; dist = 0.5; }
     else if (up) { rule = 'L_TPI'; note = 'Uptrend. ' + tpi.toFixed(1) + '% under the breakout ' + f(x.hh40); dist = tpi; }
-    else if (x.st === -1) { st = 'AVOID'; note = 'Below EMA200 ' + f(x.e200) + ' and SuperTrend down'; dist = 99; }
-    else { note = 'Below EMA200 ' + f(x.e200) + ', RSI ' + x.rsi.toFixed(0); dist = 50; }
+    else if (x.st === -1) { st = 'AVOID'; note = 'Downtrend: ' + ((1 - x.c / x.e200) * 100).toFixed(0) + '% under EMA200 ' + f(x.e200) + '. RSI ' + x.rsi.toFixed(0) + ' (washout buy zone starts under 25)'; dist = 50 + x.rsi; }
+    else { note = 'Below EMA200 ' + f(x.e200) + ', RSI ' + x.rsi.toFixed(0) + ' (washout buy zone starts under 25)'; dist = 20 + x.rsi; }
     out.push({ c: coin, px: x.c, st: st, note: note, d: dist, rule: rule, on: rule ? on_(rule) : true });
   });
-  var o = { at: ct_(), coins: out };
+  var o = { v: 2, at: ct_(), coins: out };
   PropertiesService.getScriptProperties().setProperty('READY', JSON.stringify(o));
   return o;
 }
 function readyGet_() {
   var v = PropertiesService.getScriptProperties().getProperty('READY');
-  if (v) return { ok: true, board: JSON.parse(v) };
+  if (v && JSON.parse(v).v == 2) return { ok: true, board: JSON.parse(v) };
   var lk = LockService.getScriptLock(); if (!lk.tryLock(5000)) return { ok: false, err: 'Bot busy, try again in a minute' };
   try { return { ok: true, board: readyBoard_(null) }; } finally { lk.releaseLock(); }
 }
