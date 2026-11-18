@@ -739,7 +739,7 @@ function manageTP_() {
 // ---------------- Bets tab: read-only view of Jacob's NBA sheet (Kalshi) ----------------
 var NBA_ID = '172p8NEQubZR94wgOM-l8CyDmHLd5kgJT03QpAxOU5eA';
 function bets_() {
-  var c = CacheService.getScriptCache(), hit = c.get('BETS'); if (hit) return JSON.parse(hit);
+  var c = CacheService.getScriptCache(), hit = c.get('BETS2'); if (hit) return JSON.parse(hit);
   var out = { ok: true, at: ct_() };
   try {
     var ss = SpreadsheetApp.openById(NBA_ID), col = function (n, rng) { var sh = ss.getSheetByName(n); return sh ? sh.getRange(rng).getDisplayValues().map(function (r) { return r.filter(String).join(' | '); }).filter(String) : []; };
@@ -748,9 +748,9 @@ function bets_() {
     if (m) { out.cash = Number(m[1].replace(/,/g, '')); out.openN = Number(m[2]); out.openCost = Number(m[3].replace(/,/g, '')); }
     out.score = col('Scoreboard', 'A1:A6');
     var bv = ss.getSheetByName('Blends_View'), v = bv ? bv.getRange('A1:G80').getDisplayValues() : [], pick = [], on = false;
-    v.forEach(function (r) { var a = String(r[0]); if (/PICKED/.test(a)) { on = true; pick.push(a); return; } if (on) { if (/^TOTAL/.test(a)) { pick.push(r.slice(0, 6).filter(String).join(' | ')); on = false; } else if (a && !/^Calculations|^Ticket$/.test(a)) pick.push(r.slice(0, 6).filter(String).join(' | ')); } });
+    v.forEach(function (r) { var a = String(r[0]); if (/PICKED/.test(a) && /put \$/.test(a)) { on = true; pick.push(a); return; } if (on) { if (/^TOTAL/.test(a)) { pick.push(r.slice(0, 6).filter(String).join(' | ')); on = false; } else if (a && !/^Calculations|^Ticket$/.test(a)) pick.push(r.slice(0, 6).filter(String).join(' | ')); } });
     out.blendAt = String((v[0] || [''])[0]).slice(0, 80); out.pick = pick;
   } catch (e) { out.ok = false; out.err = e.message; }
-  try { c.put('BETS', JSON.stringify(out), 300); } catch (e) { }
+  try { c.put('BETS2', JSON.stringify(out), 300); } catch (e) { }
   return out;
 }
