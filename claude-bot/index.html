@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0d12">
+<title>Claude's Bot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0d12;--card:#121821;--card2:#18202b;--line:#253041;--tx:#eef3f8;--mut:#93a1b3;--dim:#64738a;--up:#22c55e;--upb:#0e2a1a;--dn:#ef4444;--dnb:#2c1013;--al:#f59e0b;--ac:#7aa7ff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--tx);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:640px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 16px 60px}
+h1{font-size:22px;margin:4px 0 2px}.sub{color:var(--mut);font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:12px 0}
+.sec{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);font-weight:700;margin:0 0 10px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.big{font-size:28px;font-weight:800}
+.pill{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:var(--card2);border:1px solid var(--line)}
+.pill.up{background:var(--upb);color:var(--up);border-color:#14532d}.pill.dn{background:var(--dnb);color:var(--dn);border-color:#7f1d1d}.pill.al{color:var(--al)}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+button,.btn{font:700 15px Inter,sans-serif;border-radius:12px;border:1px solid var(--line);background:var(--card2);color:var(--tx);padding:12px;min-height:46px;cursor:pointer;text-align:center;text-decoration:none;display:block}
+button.on{border-color:var(--ac);color:var(--ac)}
+.go{background:var(--up);color:#04130a;border:0}.no{background:none}
+.kill{background:var(--dnb);color:var(--dn);border-color:#7f1d1d}
+.item{border-top:1px solid var(--line);padding:10px 0}.item:first-child{border-top:0}
+.item .t{font-weight:700}.item .s{color:var(--mut);font-size:13px;margin-top:2px;line-height:1.4}
+.pos{color:var(--up)}.neg{color:var(--dn)}
+input{width:100%;background:var(--card2);border:1px solid var(--line);color:var(--tx);border-radius:12px;padding:13px;font:16px Inter,sans-serif}
+.note{font-size:12px;color:var(--dim);line-height:1.5;margin-top:8px}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="row"><div><h1>Claude's Bot</h1><div class="sub" id="status">Loading…</div></div><button id="refresh" style="min-height:40px;padding:8px 12px">↻</button></div>
+
+  <div class="card hide" id="setup">
+    <div class="sec">Connect</div>
+    <input id="api" placeholder="Bot web app URL (Home tab, 'Web app URL')">
+    <input id="pin" placeholder="App PIN (Log tab, SETUP line)" inputmode="numeric" style="margin-top:8px">
+    <button class="go" id="save" style="margin-top:10px;width:100%">Connect</button>
+    <div class="note">Saved on this phone only.</div>
+  </div>
+
+  <div id="main" class="hide">
+    <div class="card">
+      <div class="row"><div><div class="sec">Equity</div><div class="big" id="eq">—</div></div><div style="text-align:right"><div class="sec">Today's bot P&L</div><div class="big" id="pl">—</div></div></div>
+    </div>
+
+    <div class="card">
+      <div class="sec">Mode</div>
+      <div class="seg" id="mode"><button data-m="PAPER">Paper</button><button data-m="APPROVE">Approve</button><button data-m="AUTO">Auto</button></div>
+      <button id="killbtn" class="kill" style="width:100%;margin-top:10px">Kill switch</button>
+      <div class="note">Paper = practice. Approve = every trade waits for your tap. Auto = the bot trades by itself. Kill switch ON = no new trades.</div>
+    </div>
+
+    <div class="card"><div class="sec">Waiting for your approval</div><div id="orders"><div class="item s">Nothing waiting.</div></div></div>
+    <div class="card"><div class="sec">Open trades</div><div id="open"></div></div>
+    <div class="card"><div class="sec">Recent signals</div><div id="sig"></div></div>
+    <div class="card"><div class="sec">Closed trades</div><div id="closed"></div></div>
+    <div class="note" id="foot"></div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let API='',PIN='';
+try{API=localStorage.getItem('cb_api')||'';PIN=localStorage.getItem('cb_pin')||'';}catch(e){}
+const NAMES={L_TPI:'TPI breakout long',L_ST:'SuperTrend long',S_FUND:'Funding-extreme short',S_BBRSI:'BB + RSI short',L_FUND:'Funding-extreme long'};
+function money(n){n=Number(n)||0;return (n<0?'-':'')+'$'+Math.abs(n).toFixed(2);}
+async function load(extra){
+  if(!API||!PIN){$('setup').classList.remove('hide');$('main').classList.add('hide');$('status').textContent='Not connected';return;}
+  $('status').textContent='Loading…';
+  try{
+    const r=await fetch(API+(API.includes('?')?'&':'?')+'json=1&pin='+encodeURIComponent(PIN)+(extra||''),{cache:'no-store'});const j=await r.json();
+    if(!j.ok){$('status').textContent=j.err==='PIN'?'Wrong PIN':'Error';$('setup').classList.remove('hide');return;}
+    $('setup').classList.add('hide');$('main').classList.remove('hide');render(j);
+  }catch(e){$('status').textContent='Could not reach the bot ('+e.message+')';}
+}
+function render(j){
+  $('status').textContent=j.status||'';
+  $('eq').textContent=money(j.equity);
+  document.querySelectorAll('#mode button').forEach(b=>b.classList.toggle('on',b.dataset.m===String(j.mode).toUpperCase()));
+  const kill=String(j.kill).toUpperCase()==='ON';$('killbtn').textContent=kill?'Kill switch is ON (tap to turn OFF)':'Kill switch OFF (tap to stop new trades)';$('killbtn').dataset.v=kill?'OFF':'ON';
+  // approvals
+  $('orders').innerHTML=(j.orders||[]).length?j.orders.map(o=>`<div class="item"><div class="t">${esc(o[4])} ${esc(o[2])} <span class="pill ${o[4]==='LONG'?'up':'dn'}">${esc(o[3])}</span></div><div class="s">${esc(o[5])} ${esc(o[2])} at about $${esc(o[6])} · margin ${money(o[8])} at ${esc(o[9])}x · stop $${esc(o[7])}</div><div class="seg" style="grid-template-columns:2fr 1fr;margin-top:8px"><a class="btn go" href="${esc(API)}?approve=${encodeURIComponent(o[0])}&k=${encodeURIComponent(o[11])}" target="_blank">✔ Approve</a><a class="btn no" href="${esc(API)}?reject=${encodeURIComponent(o[0])}&k=${encodeURIComponent(o[11])}" target="_blank">Skip</a></div></div>`).join(''):'<div class="item s">Nothing waiting.</div>';
+  const P=j.positions||[],open=P.filter(p=>p[11]==='OPEN'),closed=P.filter(p=>p[11]==='CLOSED').reverse();
+  $('open').innerHTML=open.length?open.map(p=>`<div class="item"><div class="t">${esc(p[3])} ${esc(p[1])} <span class="pill ${p[3]==='LONG'?'up':'dn'}">${esc(NAMES[p[2]]||p[2])}</span> <span class="pill ${p[10]==='LIVE'?'al':''}">${esc(p[10])}</span></div><div class="s">${esc(p[6])} at $${esc(p[5])} · margin ${money(p[7])} at ${esc(p[8])}x · stop $${esc(p[9])}</div></div>`).join(''):'<div class="item s">No open trades.</div>';
+  const today=new Date().toDateString();let pl=0;
+  $('closed').innerHTML=closed.length?closed.slice(0,15).map(p=>{const v=Number(p[14])||0;return `<div class="item"><div class="row"><div class="t">${esc(p[3])} ${esc(p[1])}</div><div class="t ${v>=0?'pos':'neg'}">${v>=0?'+':''}${money(v)}</div></div><div class="s">${esc(NAMES[p[2]]||p[2])} · ${esc(p[5])} → ${esc(p[13])} · ${esc(p[16])} · ${esc(p[12])}</div></div>`}).join(''):'<div class="item s">No closed trades yet.</div>';
+  closed.forEach(p=>{if(String(p[12]).startsWith(new Date().toLocaleDateString('en-US',{month:'numeric',day:'numeric',timeZone:'America/Chicago'})+' '))pl+=Number(p[14])||0;});
+  $('pl').textContent=money(pl);$('pl').className='big '+(pl>=0?'pos':'neg');
+  $('sig').innerHTML=(j.signals||[]).slice(-10).reverse().map(s=>`<div class="item"><div class="t">${esc(s[3])} ${esc(s[1])} <span class="pill">${esc(s[2])}</span></div><div class="s">${esc(s[0])} · $${esc(s[4])} · ${esc(s[6])}<br>${esc(s[5])}${s[7]?'<br>Claude: '+esc(s[7]):''}</div></div>`).join('')||'<div class="item s">No signals yet. The bot checks every 4-hour candle.</div>';
+  $('foot').textContent='Not financial advice. Rules and backtests: PLAYBOOK.md.';
+}
+$('save').onclick=()=>{API=$('api').value.trim();PIN=$('pin').value.trim();try{localStorage.setItem('cb_api',API);localStorage.setItem('cb_pin',PIN);}catch(e){}load();};
+$('refresh').onclick=()=>load();
+document.querySelectorAll('#mode button').forEach(b=>b.onclick=()=>{if(b.dataset.m==='AUTO'&&!confirm('Auto mode sends real orders to WEEX without asking you. Turn it on?'))return;load('&set=mode&v='+b.dataset.m);});
+$('killbtn').onclick=()=>load('&set=kill&v='+$('killbtn').dataset.v);
+load();setInterval(()=>{if(document.visibilityState==='visible')load();},60000);
+</script>
+</body>
+</html>
