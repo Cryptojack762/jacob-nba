@@ -412,7 +412,7 @@ function wrender(){
   var _seen={},_sig=(j.signals||[]).filter(function(s){var k=s[1]+'|'+s[2]+'|'+s[3]+'|'+s[4];if(_seen[k])return false;_seen[k]=1;return true});
   var _lbl=function(s){var a=String(s[6]);if(a.toUpperCase()!=='APPROVE')return a;
     if((j.orders||[]).some(function(o){return o[2]===s[1]&&o[10]==='PENDING'}))return 'APPROVE';
-    var p=(j.positions||[]).filter(function(r){return r[1]===s[1]&&r[2]===s[2]})[0];if(p)return p[11]==='OPEN'?'OPEN: trade is live':'DONE: '+(p[14]!==''?'$'+(+p[14]).toFixed(2):'closed');
+    var st=Date.parse(String(s[0]).replace(/^(\d+\/\d+) /,'$1/'+new Date().getFullYear()+' '))||0;var p=(j.positions||[]).filter(function(r){var t=Date.parse(r[4])||0;return r[1]===s[1]&&t>=st-6e4&&t-st<864e5})[0];if(p)return p[11]==='OPEN'?'OPEN: trade is live':'DONE: '+(p[14]!==''?'$'+(+p[14]).toFixed(2):'closed');
     return 'EXPIRED: not taken'};
   $('wsig').innerHTML=_sig.slice(-10).reverse().map(function(s){s=s.slice();s[6]=_lbl(s);var sh=s[3]==='SHORT';return '<div class="row"><div class="sym '+(sh?'symS':'symL')+'">'+esc(String(s[1]).slice(0,5))+'</div><div class="mid"><div class="l1"><b>'+esc(s[3])+' '+esc(s[1])+'</b><span>$'+esc(s[4])+'</span></div><div class="why">'+esc(s[5])+'</div><div class="plan">'+esc(wnm(s[2]))+' · '+esc(s[0])+'</div></div><span class="chip s-'+esc(String(s[6]).split(':')[0].toUpperCase())+'">'+esc(String(s[6]).split(':')[0])+'</span></div>'}).join('')||'<div class="why">No signals yet.</div>';
   var w=closed.filter(function(p){return Number(p[14])>0}).length,tot=closed.reduce(function(s,p){return s+(Number(p[14])||0)},0);
