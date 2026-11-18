@@ -762,3 +762,29 @@ function liq_() {
   var rows = sh.getRange(2, 1, sh.getLastRow() - 1, 10).getValues();
   return { ok: true, coins: rows.filter(function (r) { return r[1] == 'Y' && (r[9] == 'BOT' || r[9] == 'JACOB'); }).map(function (r) { return { c: r[0], cat: r[9] }; }) };
 }
+
+// ---------------- Server browser mailbox (VPS worker polls here) ----------------
+// Claude writes rows to the "Browser" tab: [id, command JSON, NEW]. The VPS worker picks up NEW rows, runs them, writes the result back.
+function rbSheet_() {
+  var ss = ss_(), sh = ss.getSheetByName('Browser');
+  if (!sh) { sh = ss.insertSheet('Browser'); sh.getRange(1, 1, 1, 5).setValues([['ID', 'Command (JSON)', 'Status', 'Result', 'Updated (CT)']]).setFontWeight('bold'); sh.setFrozenRows(1); sh.setColumnWidth(2, 420); sh.setColumnWidth(4, 640); }
+  return sh;
+}
+function doPost(e) {
+  var b = {}; try { b = JSON.parse(e.postData.contents); } catch (x) { }
+  var k = PropertiesService.getScriptProperties().getProperty('RB_KEY');
+  if (!k || b.key !== k) return json_({ ok: false, err: 'key' });
+  var lk = LockService.getScriptLock(); lk.waitLock(15000);
+  try {
+    var sh = rbSheet_();
+    if (b.rb == 'poll') {
+      var n = sh.getLastRow(), out = []; if (n < 2) return json_({ ok: true, cmds: [] });
+      var v = sh.getRange(2, 1, n - 1, 3).getValues();
+      for (var i = 0; i < v.length && out.length < 5; i++) if (String(v[i][2]).toUpperCase() == 'NEW') { out.push({ row: i + 2, id: String(v[i][0]), cmd: String(v[i][1]) }); sh.getRange(i + 2, 3, 1, 3).setValues([['RUNNING', '', ct_()]]); }
+      PropertiesService.getScriptProperties().setProperty('RB_SEEN', String(Date.now()));
+      return json_({ ok: true, cmds: out });
+    }
+    if (b.rb == 'done' && Number(b.row) >= 2) { sh.getRange(Number(b.row), 3, 1, 3).setValues([[b.ok ? 'DONE' : 'ERROR', String(b.result || '').slice(0, 49000), ct_()]]); return json_({ ok: true }); }
+    return json_({ ok: false, err: 'bad request' });
+  } finally { lk.releaseLock(); }
+}
