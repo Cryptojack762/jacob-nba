@@ -360,6 +360,7 @@ setInterval(load,300000);
 document.addEventListener('visibilitychange',function(){if(!document.hidden)load(false)});
 // ---------- WEEX tab: Claude's trading bot (buy/sell buttons) ----------
 var WAPI='',WPIN='',W=null;
+try{var hp=new URLSearchParams(location.hash.slice(1));if(hp.get('api')&&hp.get('pin')){localStorage.setItem('cb_api',hp.get('api'));localStorage.setItem('cb_pin',hp.get('pin'));history.replaceState(null,'',location.pathname)}}catch(e){}
 try{WAPI=localStorage.getItem('cb_api')||'';WPIN=localStorage.getItem('cb_pin')||'';var wc=localStorage.getItem('cb_last');if(wc)W=JSON.parse(wc)}catch(e){}
 var WN={L_TPI:'TPI breakout',L_ST:'SuperTrend',S_FUND:'Funding-extreme',S_BBRSI:'BB + RSI',L_FUND:'Funding long',S_BTCFLIP:'BTC breakdown',M_BOTTOM:'Market bottom',L_RSI20:'Washout bounce'};
 function wnm(s){for(var k in WN){if(k===s||WN[k]===s)return WN[k]}return s}
