@@ -380,6 +380,11 @@ function doGet(e) {
     if (String(q.pin || '') != String(pin)) return json_({ ok: false, err: 'PIN' });
     if (q.set == 'kill') setVal_('Kill switch', q.v == 'ON' ? 'ON' : 'OFF');
     if (q.set == 'mode' && /^(PAPER|APPROVE|AUTO)$/.test(q.v)) setVal_('Mode', q.v);
+    if (q.set == 'close' && q.id) {   // Jacob's "close now" button in the app (market close; live trades close on WEEX)
+      var lk = LockService.getScriptLock(); lk.waitLock(20000);
+      try { var pr = rowsRaw_('Positions').filter(function (r) { return r[0] == q.id && r[11] == 'OPEN'; })[0]; if (pr) closePos_(pr, null, 'Closed from app', ''); } finally { lk.releaseLock(); }
+      CacheService.getScriptCache().remove('LIVE');
+    }
     return json_({ ok: true, status: ss_().getSheetByName('Home').getRange(2, 2).getValue(), mode: set_('Mode'), kill: set_('Kill switch'), equity: equity_(),
       positions: rows_('Positions').slice(-60), orders: rows_('Orders').filter(function (r) { return r[10] == 'PENDING'; }).map(function (r) { return r.slice(0, 11).concat([r[11]]); }), signals: rows_('Signals').slice(-30), log: rows_('Log').slice(-25), phoenix: phoenix_(), keys: !!keys_(), live: livePnl_() });
   }
