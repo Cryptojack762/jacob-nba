@@ -3,47 +3,246 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0e1020">
-<title>K-Saju · Your free Korean birth chart</title>
-<meta name="description" content="Find your Korean saju Day Master and five-element balance in 30 seconds. Free.">
-<meta property="og:title" content="What's your Korean Day Master?">
-<meta property="og:description" content="Free Korean saju birth chart: your Day Master, five elements and zodiac in 30 seconds.">
+<meta name="theme-color" content="#14132B">
+<title>K-Saju · Your free Korean birth code</title>
+<meta name="description" content="Koreans have a secret birth code. Find your Korean saju type, four pillars and five-element balance free in 30 seconds.">
+<meta property="og:title" content="Koreans have a secret birth code. What's yours?">
+<meta property="og:description" content="Your zodiac sign is one of 12. Your Korean birth code is one of 518,400. Get yours free in 30 seconds.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Serif+KR:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/site.css?v=3">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Serif+KR:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css?v=9">
+<link rel="stylesheet" href="css/v2.css?v=1">
 </head>
 <body>
 <div class="wrap">
-  <header class="top"><div class="logo"><b>四柱</b><span id="brand">K-Saju</span></div></header>
+<header class="top"><div class="logo"><b>四柱</b><span id="brand">K-Saju</span></div></header>
 
-  <section class="hero" id="hero">
-    <div class="han">年 · 月 · 日 · 時</div>
-    <h1>What's your <em>Korean Day Master</em>?</h1>
-    <p>Korean saju (사주) reads the four pillars of your birth moment. Get your free chart in 30 seconds.</p>
+<!-- ========== SCREEN 1: HOME ========== -->
+<div id="v-home">
+  <p class="poem">Your birth is the riverbed. The years are the water.<br>Saju reads both: the balance you were born with, and the energy each new year carries in. Koreans call it <b>gi-un</b> (<span class="serif">기운</span>).<br>There are 518,400 riverbeds. Which one is yours?</p>
+
+  <section class="hero2" id="hero">
+    <div class="stage"><svg viewBox="0 0 480 520" role="img" aria-label="Haneul, a young Korean scholar in a black gat holding a taegeuk fan, in front of a five-color ring and night sky">
+      <rect width="480" height="520" fill="#14132B"></rect>
+      <circle cx="240" cy="270" r="208" fill="#2B2865"></circle>
+      <g class="ring" fill="none" stroke-width="12">
+        <circle cx="240" cy="270" r="200" stroke="#2F6FD6" stroke-dasharray="251.3 1005.3" stroke-dashoffset="0"></circle>
+        <circle cx="240" cy="270" r="200" stroke="#E2453C" stroke-dasharray="251.3 1005.3" stroke-dashoffset="-251.3"></circle>
+        <circle cx="240" cy="270" r="200" stroke="#F2C230" stroke-dasharray="251.3 1005.3" stroke-dashoffset="-502.6"></circle>
+        <circle cx="240" cy="270" r="200" stroke="#F4F1EA" stroke-dasharray="251.3 1005.3" stroke-dashoffset="-753.9"></circle>
+        <circle cx="240" cy="270" r="200" stroke="#0B0A14" stroke-dasharray="251.3 1005.3" stroke-dashoffset="-1005.2"></circle>
+      </g>
+      <g fill="#FFF6D6"><circle class="tw" cx="70" cy="70" r="2.5"></circle><circle class="tw" cx="120" cy="40" r="1.8"></circle><circle class="tw" cx="410" cy="60" r="2.5"></circle><circle class="tw" cx="440" cy="130" r="1.6"></circle><circle class="tw" cx="36" cy="160" r="1.8"></circle><circle class="tw" cx="96" cy="120" r="1.4"></circle><circle class="tw" cx="378" cy="28" r="1.6"></circle><circle class="tw" cx="452" cy="230" r="2"></circle></g>
+      <path d="M70 520 Q80 400 190 372 L290 372 Q400 400 410 520 Z" fill="#7FD3BE" stroke="#4FA893" stroke-width="2"></path>
+      <path d="M150 470 Q240 490 330 470 L332 486 Q240 506 148 486 Z" fill="#E2453C"></path>
+      <path d="M236 488 L226 520 M244 490 L250 520" stroke="#F2C230" stroke-width="5" stroke-linecap="round"></path>
+      <rect x="212" y="330" width="56" height="50" rx="8" fill="#E0B898"></rect>
+      <path d="M282 374 L262 374 L236 424 L250 432 Z" fill="#23306E"></path>
+      <path d="M196 374 L216 374 L300 500 L280 510 Z" fill="#23306E"></path>
+      <path d="M216 374 L226 374 L306 492 L300 500 Z" fill="#FFFFFF"></path>
+      <g>
+        <circle cx="178" cy="226" r="5.5" fill="#FF6F61"></circle><circle cx="182" cy="254" r="5.5" fill="#3CB89A"></circle><circle cx="186" cy="281" r="5.5" fill="#F2C230"></circle><circle cx="190" cy="309" r="5.5" fill="#4D8FD6"></circle><circle cx="194" cy="337" r="5.5" fill="#FF6F61"></circle><circle cx="198" cy="364" r="5.5" fill="#3CB89A"></circle><circle cx="202" cy="392" r="5.5" fill="#F2C230"></circle><circle cx="206" cy="420" r="5.5" fill="#4D8FD6"></circle>
+        <circle cx="302" cy="226" r="5.5" fill="#FF6F61"></circle><circle cx="298" cy="254" r="5.5" fill="#3CB89A"></circle><circle cx="294" cy="281" r="5.5" fill="#F2C230"></circle><circle cx="290" cy="309" r="5.5" fill="#4D8FD6"></circle><circle cx="286" cy="337" r="5.5" fill="#FF6F61"></circle><circle cx="282" cy="364" r="5.5" fill="#3CB89A"></circle><circle cx="278" cy="392" r="5.5" fill="#F2C230"></circle><circle cx="274" cy="420" r="5.5" fill="#4D8FD6"></circle>
+      </g>
+      <ellipse cx="240" cy="262" rx="74" ry="80" fill="#14121C"></ellipse>
+      <circle cx="176" cy="286" r="12" fill="#EBC6A6"></circle>
+      <circle cx="304" cy="286" r="12" fill="#EBC6A6"></circle>
+      <path d="M178 262 Q178 212 240 206 Q302 212 302 262 L300 314 Q297 336 278 350 L256 362 Q240 367 224 362 L202 350 Q183 336 180 314 Z" fill="#EBC6A6"></path>
+      <path d="M178 250 L178 296 L186 296 L186 250 Z" fill="#14121C"></path>
+      <path d="M302 250 L302 296 L294 296 L294 250 Z" fill="#14121C"></path>
+      <path d="M176 262 Q182 206 240 202 Q298 206 304 262 Q286 232 240 230 Q194 232 176 262 Z" fill="#14121C"></path>
+      <path d="M194 258 L231 261 L231 269 L195 266 Z" fill="#14121C"></path>
+      <path d="M249 261 L286 258 L285 266 L249 269 Z" fill="#14121C"></path>
+      <g class="eyes">
+        <path d="M202 284 L228 281" stroke="#14121C" stroke-width="3.5" fill="none" stroke-linecap="round"></path>
+        <path d="M252 281 L278 284" stroke="#14121C" stroke-width="3.5" fill="none" stroke-linecap="round"></path>
+        <circle cx="216" cy="286" r="4.5" fill="#14121C"></circle>
+        <circle cx="264" cy="286" r="4.5" fill="#14121C"></circle>
+      </g>
+      <path d="M240 272 L237 304 Q236 311 245 311" stroke="#B88A6A" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path d="M227 331 Q240 334 253 331" stroke="#6E3A32" stroke-width="3.5" fill="none" stroke-linecap="round"></path>
+      <g class="hat">
+        <path d="M206 206 L212 128 Q240 118 268 128 L274 206 Z" fill="#0E0C14" fill-opacity="0.92"></path>
+        <ellipse cx="240" cy="128" rx="28" ry="7" fill="#0E0C14"></ellipse>
+        <rect x="206" y="190" width="68" height="12" fill="#E2453C"></rect>
+        <ellipse cx="240" cy="210" rx="150" ry="26" fill="#0E0C14" fill-opacity="0.82"></ellipse>
+        <ellipse cx="240" cy="206" rx="140" ry="19" fill="none" stroke="#8A85A8" stroke-width="1.5" stroke-opacity="0.7"></ellipse>
+      </g>
+      <path d="M330 420 Q372 430 358 472 L320 472 Z" fill="#7FD3BE" stroke="#4FA893" stroke-width="2"></path>
+      <g class="fan">
+        <line x1="340" y1="452" x2="356" y2="418" stroke="#8C6A3A" stroke-width="7" stroke-linecap="round"></line>
+        <circle cx="362" cy="376" r="47" fill="#F2C230"></circle>
+        <circle cx="362" cy="376" r="44" fill="#2F5FC4"></circle>
+        <path d="M318 376 A44 44 0 0 1 406 376 A22 22 0 0 1 362 376 A22 22 0 0 0 318 376 Z" fill="#D83A3A"></path>
+      </g>
+      <circle cx="338" cy="456" r="16" fill="#EBC6A6"></circle>
+    </svg><div class="bubble" id="bubble">Annyeong! I'm Haneul. Tell me when you were born, and I'll tell you who you are.</div></div>
+    <h1>Koreans have a secret birth code. <em>What's yours?</em></h1>
+    <p class="sub" id="sub">Your zodiac sign is one of 12. Your Korean birth code is one of 518,400. Get yours free in 30 seconds.</p>
+    <button class="btn goform" type="button">Reveal my birth code</button><div class="micro">Free · 30 seconds</div>
   </section>
 
-  <form class="card" id="form" autocomplete="off">
-    <label for="bd">Birth date</label>
-    <input id="bd" type="date" min="1900-01-01" required>
-    <label for="bt">Birth time</label>
-    <input id="bt" type="time">
-    <label class="chk"><input id="nt" type="checkbox"> I don't know my birth time</label>
-    <label for="city">Birth city</label>
-    <div class="city"><input id="city" placeholder="Start typing, e.g. Seoul, Los Angeles" required><div class="sug" id="sug"></div></div>
-    <label>Gender <span style="font-weight:400;color:var(--dim)">(used for your 10-year luck cycle)</span></label>
-    <div class="seg" id="gender"><button type="button" data-g="female">Female</button><button type="button" data-g="male">Male</button><button type="button" data-g="" class="on">Skip</button></div>
-    <div class="err" id="err"></div>
-    <button class="btn" id="go" type="submit">Reveal my chart</button>
+  <section>
+    <h2 class="h">What is saju? Haneul explains</h2>
+    <div class="fhead"><div class="mini"></div><div class="bubble static">Saju sounds complicated, but it's really simple. Let me walk you through it in five small steps.</div></div>
+
+    <div class="step"><div class="num">1</div><div>
+      <h3>Your birth moment becomes four pillars</h3>
+      <p>Saju (<span class="serif">사주</span>) means "four pillars". Koreans turn the moment you were born into four pillars: one for the <b>year</b>, one for the <b>month</b>, one for the <b>day</b> and one for the <b>hour</b>. Think of them as four snapshots of time, taken the moment you arrived.</p>
+    </div></div>
+
+    <div class="step"><div class="num">2</div><div>
+      <h3>Each pillar has two characters</h3>
+      <p>Every pillar is written with two old characters. The <b>top</b> one comes from a set of 10, such as <span class="serif">甲</span> (a big tree) or <span class="serif">丙</span> (the sun). The <b>bottom</b> one is one of the 12 zodiac animals, like the Rat, Tiger or Rabbit. Four pillars × two characters = <b>eight characters</b>, which Koreans call your <b>palja</b> (<span class="serif">팔자</span>). Together, your <b>saju palja</b> (<span class="serif">사주팔자</span>).</p>
+      <div class="ex-chart">
+        <div class="ex-cap">Example: born March 14, 1998, around 8:30 AM</div>
+        <div class="pillars">
+          <div class="pil"><div class="t">Hour</div><div class="h"><span style="color:var(--Metal)">庚</span><br><span style="color:var(--Earth)">辰</span></div><div class="e">Metal<br>Dragon</div></div>
+          <div class="pil me"><div class="t">Day ★</div><div class="h"><span style="color:var(--Metal)">庚</span><br><span style="color:var(--Metal)">申</span></div><div class="e">Metal<br>Monkey</div></div>
+          <div class="pil"><div class="t">Month</div><div class="h"><span style="color:var(--Wood)">乙</span><br><span style="color:var(--Wood)">卯</span></div><div class="e">Wood<br>Rabbit</div></div>
+          <div class="pil"><div class="t">Year</div><div class="h"><span style="color:var(--Earth)">戊</span><br><span style="color:var(--Wood)">寅</span></div><div class="e">Earth<br>Tiger</div></div>
+        </div>
+        <div class="ex-cap">Korean charts read right to left: year, month, day, hour.</div>
+      </div>
+    </div></div>
+
+    <div class="step"><div class="num">3</div><div>
+      <h3>One character is you</h3>
+      <p>Of all eight, one matters most: the <b>top character of your day pillar</b>. It's called your <b>Day Master</b> (<span class="serif">일간</span>), and it describes your core personality. In the example it's <span class="serif">庚</span>, <b>The Sword</b>: brave, direct and at their best when there's a real decision to make. There are 10 Day Masters, and you'll meet yours in a minute.</p>
+    </div></div>
+
+    <div class="step"><div class="num">4</div><div>
+      <h3>Five elements, one balance</h3>
+      <p>Every character belongs to one of five elements, called <b>ohaeng</b> (<span class="serif">오행</span>): <span class="cw">Wood</span>, <span class="cf">Fire</span>, <span class="ce">Earth</span>, <span class="cm">Metal</span> and <span class="ca">Water</span>. Most charts have a lot of some and none of others. The example has three Metal, three Wood and two Earth, but no Fire or Water.</p>
+      <p>Koreans read that balance like a recipe. What you have plenty of shows your natural strengths. What's missing shows what you tend to look for, in work and in the people you're drawn to.</p>
+    </div></div>
+
+    <div class="step"><div class="num">5</div><div>
+      <h3>Your chart moves through seasons</h3>
+      <p>Your chart doesn't stay still. Every year brings a new element, and every ten years you enter a new "season of luck" (<span class="serif">대운</span>). That's why Koreans check their saju before a new year, a new job or a wedding. In a 2026 survey, 62.3% of Koreans said they had used fortune-telling services.</p>
+      <p>Today, most people use saju the way you might use your star sign: to understand yourself and your timing, not to predict your fate.</p>
+    </div></div>
+    <button class="btn goform" type="button">Reveal my birth code</button><div class="micro">Free · 30 seconds</div>
+  </section>
+
+  <section>
+    <h2 class="h">Saju vs. your star sign: what's the difference?</h2>
+    <p class="lead">Love astrology? Keep it. Saju just reads your birthday in a different way. The easiest way to see it: one birthday, two answers.</p>
+    <div class="card">
+      <table class="cmp">
+        <tr><th></th><th>Western astrology</th><th>Korean saju</th></tr>
+        <tr><td>It looks at</td><td>The sky when you were born: sun, moon and planets</td><td>Your birth time itself: year, month, day and hour</td></tr>
+        <tr><td>You get</td><td>One of 12 signs</td><td>One of 10 core types, inside one of 518,400 full charts</td></tr>
+        <tr><td>Made of</td><td>Fire, earth, air and water signs</td><td>Five elements: wood, fire, earth, metal, water</td></tr>
+        <tr><td>It tells you</td><td>What you're like</td><td>What you're like, what you have too much or too little of, and which years are good for you</td></tr>
+        <tr><td>For love</td><td>Do our signs match?</td><td>Gunghap (<span class="serif">궁합</span>): many Korean couples still check it before marriage</td></tr>
+        <tr><td>Example: born Aug 7, 1998</td><td>Leo</td><td><span class="serif">丙</span> The Sun (Fire)</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="h">Made by a Korean</h2>
+    <div class="card founder">
+      <img src="img/samchon.jpg" alt="Samchon, the Korean uncle behind Haneul, in a backwards cap holding an iced coffee on a Korean street" width="180" height="180" loading="lazy">
+      <div>
+        <p class="fq">"In Korea, saju is part of everyday life: people check it before a new year, a new job or a wedding. We built Haneul so you can meet yours."</p>
+        <p class="fn">Samchon <span class="serif">삼촌</span> · the Korean uncle behind Haneul</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="h">Questions</h2>
+    <details class="faq"><summary>Is this fortune-telling?</summary><p>Not the scary kind. Saju is a centuries-old Korean way of reading personality and timing from your birth moment. We use it for self-reflection and fun. It doesn't predict fixed outcomes. For entertainment and self-reflection only.</p></details>
+    <details class="faq"><summary>I don't know my birth time. Can I still do it?</summary><p>Yes. Without the hour you still get six of your eight characters, including your Day Master. Your hour pillar just stays blank.</p></details>
+    <details class="faq"><summary>Why do you ask for my birth city?</summary><p>We use true solar time for your birth city, as traditional Korean saju does. Clock time can be 30 minutes or more off the sun, which can change your chart.</p></details>
+    <details class="faq"><summary>I only know my lunar birthday.</summary><p>Please convert it to the regular (solar) calendar first, then enter it. A family member or any online lunar-to-solar converter can help.</p></details>
+    <details class="faq"><summary>Why does my year start in February?</summary><p>In saju, the new year begins at Ipchun (<span class="serif">입춘</span>), the start of spring, around Feb 4. If you were born in January or early February, your zodiac animal may be the previous year's.</p></details>
+    <details class="faq"><summary>Why do you ask for gender?</summary><p>Only to set the direction of your 10-year luck cycles, which is how traditional saju works. You can skip it.</p></details>
+    <details class="faq"><summary>What happens to my birth details?</summary><p>Your free chart is calculated on your phone. We only store your details if you buy a reading or join the list, and we never sell them.</p></details>
+    <details class="faq"><summary>Can I get a refund?</summary><p>If your reading doesn't arrive or has a technical error, email us and we'll fix it or refund you in full. Because readings are digital and delivered instantly, we don't offer refunds otherwise.</p></details>
+  </section>
+
+  <section style="text-align:center">
+    <h2 class="h">Ready to meet your Korean self?</h2>
+    <button class="btn goform" type="button">Reveal my birth code</button><div class="micro">Free · 30 seconds · no sign-up</div>
+  </section>
+</div>
+
+<!-- ========== SCREEN 2: BIRTH FORM ========== -->
+<div id="v-form" class="hide">
+  <button class="back" type="button" data-go="v-home">← Back</button>
+  <div class="fhead"><div class="mini"></div><div class="bubble static" id="bubble2">Tell me when you were born, and I'll tell you who you are.</div></div>
+  <h2 class="h" style="margin-top:8px">Your birth moment</h2>
+  <form class="card" id="form" autocomplete="off" novalidate>
+    <fieldset><legend>Birthday</legend>
+      <div class="row3">
+        <select id="bm" aria-label="Birth month"><option value="">Month</option></select>
+        <select id="bdd" aria-label="Birth day"><option value="">Day</option></select>
+        <select id="by" aria-label="Birth year"><option value="">Year</option></select>
+      </div>
+    </fieldset>
+    <fieldset><legend>Do you know what time you were born?</legend>
+      <div class="seg" id="tq">
+        <button type="button" data-t="exact">Yes, exactly</button>
+        <button type="button" data-t="rough">Roughly</button>
+        <button type="button" data-t="none">I don't know</button>
+      </div>
+      <div id="t-exact" class="hide"><div class="row3">
+        <select id="th" aria-label="Hour"></select>
+        <select id="tm" aria-label="Minute"></select>
+        <select id="tap" aria-label="AM or PM"><option>AM</option><option>PM</option></select>
+      </div></div>
+      <div id="t-rough" class="hide"><div class="chips" id="blocks"></div><button type="button" class="change hide" id="chg">Change</button></div>
+      <div id="t-none" class="hide">
+        <div class="hnote">Haneul: "Most people don't! Your Day Master, the heart of your chart, comes from your birthday. You'll still get 6 of your 8 characters."</div>
+        <a class="btn ghost" id="askmom" href="sms:?&amp;body=Random%20question%20%F0%9F%98%82%20what%20time%20was%20I%20born%3F%20Doing%20my%20Korean%20birth%20chart.">Ask Mom by text</a>
+      </div>
+    </fieldset>
+    <fieldset id="cityset"><legend>Where were you born?</legend>
+      <div class="chips" id="quick"></div>
+      <div class="city">
+        <input id="city" placeholder="Or type any city" aria-label="Birth city">
+        <div class="sug" id="sug"></div>
+      </div>
+      <div class="small" id="cityfb" style="display:none">Can't find it? <a href="#" id="tzlink">Pick your time zone instead</a>.</div>
+      <div id="tzbox" class="hide"><label for="tz">Your birth time zone</label><select id="tz"></select></div>
+    </fieldset>
+    <fieldset><legend>Gender <span style="font-weight:400;color:var(--dim)">(optional, for your luck cycles)</span></legend>
+      <div class="seg" id="gender">
+        <button type="button" data-g="female">Female</button><button type="button" data-g="male">Male</button><button type="button" data-g="" class="on">Skip</button>
+      </div>
+    </fieldset>
+    <button class="btn" id="go" type="submit" style="margin-top:4px">Show my eight characters</button>
+    <div class="err" id="err" aria-live="polite"></div>
     <div class="note">Your birth details are calculated right on your phone. We don't store them unless you buy a reading or join the list.</div>
   </form>
-
-  <section id="result" class="hide"></section>
-
-  <footer class="foot">
-    For entertainment and self-reflection. Not a substitute for professional advice.<br>
-    <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a>
-  </footer>
 </div>
-<script type="module" src="js/app.js?v=8"></script>
+
+<!-- ========== SCREEN 3: RESULT ========== -->
+<div id="v-result" class="hide">
+  <button class="back" type="button" id="again">← Try another birthday</button>
+  <section id="result"></section>
+</div>
+
+<footer class="foot">
+  For entertainment and self-reflection. Not a substitute for professional advice.<br>
+  <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a>
+</footer>
+</div>
+
+<div class="overlay" id="ov" aria-live="polite">
+  <svg viewBox="0 0 100 100" aria-hidden="true">
+    <g class="spin2"><circle cx="50" cy="50" r="40" fill="none" stroke="#38355F" stroke-width="4" stroke-dasharray="40 12"></circle></g>
+    <circle class="dot" cx="50" cy="10" r="7" fill="#3CB89A" style="animation-delay:0s"></circle>
+    <circle class="dot" cx="88" cy="38" r="7" fill="#E2453C" style="animation-delay:.25s"></circle>
+    <circle class="dot" cx="74" cy="82" r="7" fill="#F2C230" style="animation-delay:.5s"></circle>
+    <circle class="dot" cx="26" cy="82" r="7" fill="#E8E4F0" style="animation-delay:.75s"></circle>
+    <circle class="dot" cx="12" cy="38" r="7" fill="#2F5FC4" style="animation-delay:1s"></circle>
+  </svg>
+  <p>Haneul is reading your four pillars…</p>
+</div>
+<script type="module" src="js/app.js?v=9"></script>
 </body>
 </html>
