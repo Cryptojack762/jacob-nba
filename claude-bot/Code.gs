@@ -339,7 +339,12 @@ function sendLive_(o, how) {
   if (on_('Kill switch')) { log_('SKIP', 'Kill switch ON, not sending ' + o.coin); return { ok: false, msg: 'kill switch ON' }; }
   try {
     var lev = o.lev;
-    try { weex_('POST', '/capi/v3/account/leverage', '', JSON.stringify(o.side == 'LONG' ? { symbol: o.coin + 'USDT', marginType: 'ISOLATED', isolatedLongLeverage: String(lev) } : { symbol: o.coin + 'USDT', marginType: 'ISOLATED', isolatedShortLeverage: String(lev) })); } catch (e) { log_('WARN', 'leverage ' + o.coin + ': ' + e.message); }
+    // WEEX docs: send both isolated sides; if the symbol is in cross mode WEEX wants crossLeverage instead
+    try { weex_('POST', '/capi/v3/account/leverage', '', JSON.stringify({ symbol: o.coin + 'USDT', marginType: 'ISOLATED', isolatedLongLeverage: String(lev), isolatedShortLeverage: String(lev) })); }
+    catch (e) {
+      try { weex_('POST', '/capi/v3/account/leverage', '', JSON.stringify({ symbol: o.coin + 'USDT', crossLeverage: String(lev) })); log_('WARN', 'leverage ' + o.coin + ': isolated refused, set cross ' + lev + 'x (' + e.message.slice(0, 80) + ')'); }
+      catch (e2) { log_('WARN', 'leverage ' + o.coin + ': ' + e2.message); }
+    }
     var body = { symbol: o.coin + 'USDT', side: o.side == 'LONG' ? 'BUY' : 'SELL', positionSide: o.side, type: 'MARKET', quantity: String(o.qty), newClientOrderId: o.id, slTriggerPrice: priceStr_(o.coin, o.stop), SlWorkingType: 'MARK_PRICE', reduceOnly: false };
     var res = weex_('POST', '/capi/v3/order', '', JSON.stringify(body));
     if (!res.success) throw new Error(res.errorCode + ' ' + res.errorMessage);
