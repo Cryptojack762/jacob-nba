@@ -158,3 +158,12 @@ Next: add L_VOL1H to the bot as PAPER-only (1H scan), compare 4 weeks vs backtes
 - Short breakout above 24h high (like BloFin AI's "1H close above X" trigger): 0.90 / 0.90 — FAILS.
 - 4H volume spike long: 1.31 / 1.18 with EMA200 filter — weak pass.
 App: BloFin tab now has a live L_RSI20 scanner for 20 coins; failing rules are labelled "backtest FAILS".
+
+## ROUND 4c — L_RSI20 is a MARKET WASHOUT signal (00:20–00:35 AM)
+- Signals cluster on crash days (2024-08-05, 2025-04-07, 2025-10-11, 2026-01-31: 15–18 coins same day).
+- Crash-day signals (4+ coins same day): +0.24R avg, 68% win. Lone single-coin signals: -0.08R, 48% win → LOSE.
+- Causal breadth filter (count coins that fired in the prior 24h incl. this one), OOS results:
+  k>=1 PF 2.22 · k>=2 2.60 · **k>=3 2.87 (102t, 66% win)** · k>=4 2.84 · k>=6 3.25. Rule now: need 3+.
+- Sizing sim (1% account risk per trade, no breadth filter): $100 → $177 over 3.5 yrs, max drawdown 13%, worst losing streak 13.
+  Capping trades per day HURTS (cap 3 → $109): on washout days take every signal.
+- 4H shorts tested in downtrends — none reliable: RSI70 fade 0.75/2.44 (fails IS), rally-to-EMA50 1.15/1.02, 40-bar breakdown 0.88/1.19.

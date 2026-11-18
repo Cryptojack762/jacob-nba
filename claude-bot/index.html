@@ -412,13 +412,14 @@ function bbscan(){
       var e=c[0],a=2/201,E=[];c.forEach(function(v){e=v*a+e*(1-a);E.push(e)});
       var g=0,l=0,RS=[50];for(var i=1;i<n;i++){var d=c[i]-c[i-1],G=Math.max(d,0),D=Math.max(-d,0);if(i<=14){g+=G/14;l+=D/14}else{g=(g*13+G)/14;l=(l*13+D)/14}RS.push(l===0?100:100-100/(1+g/l))}
       var at=0,A=[];k.forEach(function(x,i){var tr=i?Math.max(x[2]-x[3],Math.abs(x[2]-c[i-1]),Math.abs(x[3]-c[i-1])):x[2]-x[3];at=i<14?(at*i+tr)/(i+1):(at*13+tr)/14;A.push(at)});
-      var hit=null;for(var j=n-3;j<n;j++)if(c[j]<E[j]&&RS[j-1]<20&&RS[j]>=20)hit={age:n-1-j,ent:c[j],stop:c[j]-2*A[j],tp:c[j]+2*A[j]};
-      rows.push({c:r.c,rsi:RS[n-1],below:c[n-1]<E[n-1],hit:hit})});
+      var hit=null,any24=false;for(var j=n-6;j<n;j++)if(c[j]<E[j]&&RS[j-1]<20&&RS[j]>=20){any24=true;if(j>=n-3)hit={age:n-1-j,ent:c[j],stop:c[j]-2*A[j],tp:c[j]+2*A[j]}}
+      rows.push({c:r.c,rsi:RS[n-1],below:c[n-1]<E[n-1],hit:hit,any24:any24})});
+    var breadth=rows.filter(function(r){return r.any24}).length,ok=breadth>=3;
     rows.sort(function(a,b){return (b.hit?1:0)-(a.hit?1:0)||a.rsi-b.rsi});
     var hits=rows.filter(function(r){return r.hit}),near=rows.filter(function(r){return !r.hit&&r.below&&r.rsi<30}).slice(0,5);
-    $('bfbb').innerHTML=(hits.length?hits.map(function(r){var h=r.hit;return '<div class="hl"><i class="chip s-ENTER">✔ GO</i><span><b>LONG '+r.c+'</b> · in ~$'+h.ent.toPrecision(5)+' · stop $'+h.stop.toPrecision(5)+' · target $'+h.tp.toPrecision(5)+' · '+(h.age?h.age*4+'h ago':'just now')+'</span></div>'}).join(''):'<div class="why">No bottom bounce right now.</div>')+
+    $('bfbb').innerHTML=(hits.length?hits.map(function(r){var h=r.hit;return '<div class="hl"><i class="chip s-'+(ok?'ENTER':'WAIT')+'">'+(ok?'✔ GO':'SKIP')+'</i><span><b>LONG '+r.c+'</b> · in ~$'+h.ent.toPrecision(5)+' · stop $'+h.stop.toPrecision(5)+' · target $'+h.tp.toPrecision(5)+' · '+(h.age?h.age*4+'h ago':'just now')+'</span></div>'}).join(''):'<div class="why">No bottom bounce right now.</div>')+'<div class="why" style="margin-top:6px">Coins bouncing in last 24h: <b>'+breadth+' of 20</b> (need 3+ = market-wide washout)</div>'+
       (near.length?'<div class="why" style="margin-top:6px">Getting close (4H RSI under 30): '+near.map(function(r){return r.c+' '+r.rsi.toFixed(0)}).join(' · ')+'</div>':'<div class="why" style="margin-top:6px">Lowest 4H RSI: '+rows.slice().sort(function(a,b){return a.rsi-b.rsi}).slice(0,3).map(function(r){return r.c+' '+r.rsi.toFixed(0)}).join(' · ')+'</div>')+
-      '<div class="why" style="margin-top:8px">Rule: coin below its 4H EMA200, 4H RSI drops under 20 then closes back above 20 → long, stop 2 ATR, target 2 ATR, max 2 days. Backtest 3 yrs, 20 coins: out-of-sample wins 61%, profit factor 2.2, 17 of 20 coins positive. Rare: about 1 signal per coin every 4 months.</div>';
+      '<div class="why" style="margin-top:8px">Rule: coin below its 4H EMA200, 4H RSI drops under 20 then closes back above 20 → long, stop 2 ATR, target 2 ATR, max 2 days. Only take it when 3+ coins bounce within 24h (a market-wide washout). Backtest 3.5 yrs, 20 coins: out-of-sample wins 66%, profit factor 2.9. Lone single-coin signals lose money — skip those.</div>';
   }).catch(function(){$('bfbb').innerHTML='<div class="why">Scanner offline.</div>'});
 }
 bbscan();setInterval(function(){if(!document.hidden)bbscan()},600000);
