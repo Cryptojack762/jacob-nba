@@ -171,6 +171,7 @@ function scan() {
     try { manageTP_(); } catch (e) { log_('ERROR', 'take-profit check: ' + e.message); }
     try { watchCheck_(); } catch (e) { log_('ERROR', 'watch list: ' + e.message); }
     try { favCheck_(); } catch (e) { log_('ERROR', 'favorites: ' + e.message); }
+    try { pickPush_(); } catch (e) { log_('ERROR', 'pick push: ' + e.message); }
     var eq = equity_(); killCheck_(eq);
     if (!newBar) { status_('Waiting for the next 4H candle. BTC ' + (btcUp ? 'UP' : 'DOWN') + '. Equity $' + eq.toFixed(2) + '. Mode ' + set_('Mode') + (on_('Kill switch') ? ' | KILL SWITCH ON' : '')); return; }
     var open = rows_('Positions').filter(function (r) { return r[11] == 'OPEN'; });
@@ -1135,3 +1136,18 @@ function favCheck_(only) {
   });
 }
 function testWatch() { Logger.log(JSON.stringify(watchJson_())); Logger.log(JSON.stringify(favState_('SOL'))); }
+
+// Phoenix pick board -> phone push when a coin turns ENTER (once per coin per day). Covers coins not on WEEX/BloFin triggers (e.g. XPIN).
+function pickPush_() {
+  var ph = phoenix_(); if (!ph || !ph.picks) return;
+  var P = PropertiesService.getScriptProperties(), day = Utilities.formatDate(new Date(), 'America/Chicago', 'yyyy-MM-dd'), sent = {};
+  try { sent = JSON.parse(P.getProperty('PICK_SENT') || '{}'); } catch (e) { }
+  if (sent._d != day) sent = { _d: day };
+  ph.picks.forEach(function (p) {
+    if (String(p.state).toUpperCase() != 'ENTER' || sent[p.coin]) return;
+    sent[p.coin] = 1;
+    ss_().getSheetByName('Signals').appendRow([ct_(), p.coin, 'Phoenix pick', '-', '', 'Phoenix pick board ENTER: ' + (p.why || ''), 'Alert only', '']);
+    notify_('PICK ENTER: ' + p.coin, p.coin + ' turned ENTER on the Phoenix pick board.\n' + (p.plan || p.why || '') + (onWeex_(p.coin) ? '' : '\nNot on WEEX: alert only, trade it on BloFin.') + '\nOpen Atlas > Triggers.');
+  });
+  P.setProperty('PICK_SENT', JSON.stringify(sent));
+}
