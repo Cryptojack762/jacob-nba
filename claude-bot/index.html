@@ -68,7 +68,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let API='',PIN='';
 try{API=localStorage.getItem('cb_api')||'';PIN=localStorage.getItem('cb_pin')||'';}catch(e){}
-const NAMES={L_TPI:'TPI breakout long',L_ST:'SuperTrend long',S_FUND:'Funding-extreme short',S_BBRSI:'BB + RSI short',L_FUND:'Funding-extreme long'};
+const NAMES={L_TPI:'TPI breakout long',L_ST:'SuperTrend long',S_FUND:'Funding-extreme short',S_BBRSI:'BB + RSI short',L_FUND:'Funding-extreme long',S_BTCFLIP:'BTC-breakdown short',M_BOTTOM:'Market-bottom long'};
 function money(n){n=Number(n)||0;return (n<0?'-':'')+'$'+Math.abs(n).toFixed(2);}
 async function load(extra){
   if(!API||!PIN){$('setup').classList.remove('hide');$('main').classList.add('hide');$('status').textContent='Not connected';return;}

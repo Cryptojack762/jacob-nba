@@ -37,10 +37,13 @@ var DEFAULTS = [
   ['S_FUND', 'ON', 'Short: funding top 5% of last 90 + BTC down, 72h hold'],
   ['S_BBRSI', 'ON', 'Short: close above upper BB + RSI<70, BTC down, below EMA200'],
   ['L_FUND', 'OFF', 'Long: funding bottom 5% + BTC up, 72h hold (weak extra edge)'],
+  ['S_BTCFLIP', 'OFF', 'Watch list: short coins below EMA200 when BTC just lost its EMA200; cover when BTC regains it'],
+  ['Bottom alert', 'ON', 'Alert when BTC funding is -0.01% or lower (shorts crowded = market bottom zone). Alert only, no trade'],
+  ['M_BOTTOM', 'OFF', 'Watch list: on a bottom alert, go long the coin for 72h (2024-26 only: 17 of 27 episodes green)'],
   ['ntfy topic', '', 'Optional: private ntfy.sh topic for phone pushes'],
   ['Web app URL', '', 'Paste after Deploy > Web app (needed for Approve links and the phone app)'],
 ];
-var STRAT_NAMES = { L_TPI: 'TPI breakout long', L_ST: 'SuperTrend long', S_FUND: 'Funding-extreme short', S_BBRSI: 'BB + RSI short', L_FUND: 'Funding-extreme long' };
+var STRAT_NAMES = { L_TPI: 'TPI breakout long', L_ST: 'SuperTrend long', S_FUND: 'Funding-extreme short', S_BBRSI: 'BB + RSI short', L_FUND: 'Funding-extreme long', S_BTCFLIP: 'BTC-breakdown short', M_BOTTOM: 'Market-bottom long' };
 var TABS = {
   Signals: ['Time (CT)', 'Coin', 'Strategy', 'Side', 'Price', 'Why', 'Action', 'Claude notes'],
   Orders: ['ID', 'Time (CT)', 'Coin', 'Strategy', 'Side', 'Qty', 'Ref price', 'Protective stop', 'Margin $', 'Leverage', 'Status', 'Token', 'Result', 'Claude notes'],
@@ -137,21 +140,23 @@ function scan() {
     var p = PropertiesService.getScriptProperties();
     var btcD = candles_('BTC'), lastBar = btcD[btcD.length - 1].t;
     var newBar = String(lastBar) != p.getProperty('LAST_BAR');
-    var be = ema_(btcD.map(function (x) { return x.c; }), 200), btcUp = btcD[btcD.length - 1].c > be[be.length - 1];
+    var be = ema_(btcD.map(function (x) { return x.c; }), 200), nB = btcD.length, btcUp = btcD[nB - 1].c > be[nB - 1];
+    var btcFlipDown = !btcUp && btcD[nB - 2].c > be[nB - 2];
     expireApprovals_();
     var eq = equity_(); killCheck_(eq);
     if (!newBar) { status_('Waiting for the next 4H candle. BTC ' + (btcUp ? 'UP' : 'DOWN') + '. Equity $' + eq.toFixed(2) + '. Mode ' + set_('Mode') + (on_('Kill switch') ? ' | KILL SWITCH ON' : '')); return; }
     var open = rows_('Positions').filter(function (r) { return r[11] == 'OPEN'; });
     var pending = rows_('Orders').filter(function (r) { return r[10] == 'PENDING'; });
     var busy = {}; open.concat(pending).forEach(function (r) { busy[r[1 + (r.length == TABS.Orders.length ? 1 : 0)]] = 1; });
-    var found = 0;
+    var found = 0, bottom = bottomCheck_(lastBar);
     BOT.coins.forEach(function (coin) {
       try {
         var d = coin == 'BTC' ? btcD : candles_(coin); if (d.length < 260) return;
         var x = ind_(d);
+        x.btcUp = btcUp;
         manage_(coin, d, x, open);
         if (busy[coin]) return;
-        var sig = signal_(coin, x, btcUp);
+        var sig = signal_(coin, x, btcUp, btcFlipDown, bottom);
         if (sig) { found++; act_(coin, sig, x); busy[coin] = 1; }
       } catch (e) { log_('ERROR', coin + ': ' + e.message); }
     });
@@ -162,8 +167,10 @@ function scan() {
 }
 
 // Entry rules (PLAYBOOK.md). Returns {strategy, side, why} or null.
-function signal_(coin, x, btcUp) {
+function signal_(coin, x, btcUp, btcFlipDown, bottom) {
   var S = [];
+  if (bottom && on_('M_BOTTOM') && coin != 'BTC') S.push({ strategy: 'M_BOTTOM', side: 'LONG', why: 'BTC funding ' + (bottom * 100).toFixed(4) + '% (shorts crowded, market bottom zone)' });
+  if (btcFlipDown && on_('S_BTCFLIP') && coin != 'BTC' && x.c < x.e200) S.push({ strategy: 'S_BTCFLIP', side: 'SHORT', why: 'BTC just closed under its EMA200; coin is under its EMA200 too' });
   if (on_('L_TPI') && btcUp && x.c > x.hh40 && x.c > x.e200 && x.rsi > 55 && x.atr / x.c < 0.05) S.push({ strategy: 'L_TPI', side: 'LONG', why: 'Close ' + x.c + ' broke the 40-candle high ' + x.hh40 + ', RSI ' + x.rsi.toFixed(0) + ', above EMA200, BTC up' });
   if (on_('L_ST') && btcUp && x.st === 1 && x.stPrev === -1) S.push({ strategy: 'L_ST', side: 'LONG', why: 'SuperTrend 30/5 flipped up, BTC up' });
   if (on_('S_BBRSI') && !btcUp && x.c < x.e200 && x.c > x.bbu && x.rsi < 70) S.push({ strategy: 'S_BBRSI', side: 'SHORT', why: 'Close ' + x.c + ' above upper BB ' + x.bbu.toFixed(4) + ', RSI ' + x.rsi.toFixed(0) + ', below EMA200, BTC down' });
@@ -196,9 +203,28 @@ function manage_(coin, d, x, open) {
     if (strat == 'L_ST' && x.st === -1) reason = 'SuperTrend flipped down';
     if ((strat == 'S_FUND' || strat == 'L_FUND') && bars >= 18) reason = '72h hold done';
     if (strat == 'S_BBRSI' && (x.c < x.bbl || bars >= 30)) reason = x.c < x.bbl ? 'Close under lower BB' : '30 candles';
+    if (strat == 'S_BBRSI' && !reason && x.st === 1 && x.stPrev === -1) reason = 'Long trigger: SuperTrend flipped up';
+    if (strat == 'S_BTCFLIP' && x.btcUp) reason = 'BTC back above EMA200';
+    if (strat == 'M_BOTTOM' && bars >= 18) reason = '72h hold done';
     if (!reason && bars >= 120) reason = 'Max hold 20 days';
     if (reason) closePos_(r, null, reason, bars);
   });
+}
+// Market-bottom check (PLAYBOOK round 2): BTC funding <= -0.01% at a settlement inside the candle that just closed.
+// Returns the funding rate when it fires, else 0. Alerts once per settlement.
+function bottomCheck_(barT) {
+  if (!on_('Bottom alert') && !on_('M_BOTTOM')) return 0;
+  try {
+    var f = get_('/capi/v3/market/fundingRate?symbol=BTCUSDT&limit=5').map(function (x) { return { t: Number(x.fundingTime), r: Number(x.fundingRate) }; }).sort(function (a, b) { return a.t - b.t; });
+    var last = f[f.length - 1]; if (!last || last.t < barT || last.r > -0.0001) return 0;
+    var p = PropertiesService.getScriptProperties();
+    if (on_('Bottom alert') && p.getProperty('LAST_BOTTOM') != String(last.t)) {
+      p.setProperty('LAST_BOTTOM', String(last.t));
+      ss_().getSheetByName('Signals').appendRow([ct_(), 'MARKET', 'BOTTOM_ALERT', '-', '', 'BTC funding ' + (last.r * 100).toFixed(4) + '% (shorts crowded)', 'Alert only', '']);
+      notify_('Market bottom zone', 'BTC funding is ' + (last.r * 100).toFixed(4) + '% - shorts are crowded. In 2024-26 this was followed by a 72h alt bounce 17 of 27 times. Consider covering shorts / looking for longs.');
+    }
+    return last.r;
+  } catch (e) { log_('ERROR', 'bottomCheck: ' + e.message); return 0; }
 }
 function parseTime_(s) { if (s instanceof Date) return s.getTime(); var t = Date.parse(s); return isFinite(t) ? t : 0; }
 
