@@ -200,3 +200,9 @@ Rule: LONG 4H close above 48-candle high while BTC > 20-day avg, stop 2 ATR, exi
 - #28 Fees: limit entries (0.04% total) +0.32R/trade vs market (0.12%) +0.30R. Limit orders add ~+12% total R. Use limit when the setup isn't racing.
 - #26 Washout bounce on BTC/ETH alone (no 3-coin breadth): 36t, PF 1.08. FAILS - keep the 3+ coins rule.
 - #25 Risk per trade for $50 with 20% max drawdown (trades in sequence, bootstrap 2,000 runs): 0.5% risk -> $50 to $171, median worst drop 16%, 22% chance of a drop over 20%. 1% risk -> median drop 30% (96% chance over 20%). Answer: 0.5% risk or less per trade (about $0.25 of a $50 account) to stay near 20%.
+- Split test (first 60% of dates = in-sample, last 40% = out-of-sample), long side only:
+  - 4H breakout base (trailing 24-low exit): IS PF 2.21 (292t) -> OOS PF 1.22 (165t). Still positive but much weaker lately.
+  - #14 S57 fixed 3.5 ATR target instead of trailing: IS 1.15 -> OOS 0.88. REJECTED (trailing exit is better).
+  - #15 S60 wait for pullback to the breakout level (within 6 candles): IS 2.00 -> OOS 1.07. REJECTED (no better than base, fewer trades).
+  - #11 S56 daily close crosses above 50-day avg with ADX>25: IS 0.26 / OOS 0.88. REJECTED.
+  - #12 S59 28-day momentum (top 3 coins weekly, BTC up): IS PF 1.46 -> OOS 0.84. REJECTED (worked early, failed lately).
