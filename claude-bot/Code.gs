@@ -813,7 +813,7 @@ function manageTP_() {
 // ---------------- Bets tab: read-only view of Jacob's NBA sheet (Kalshi) ----------------
 var NBA_ID = '172p8NEQubZR94wgOM-l8CyDmHLd5kgJT03QpAxOU5eA';
 function bets_() {
-  var c = CacheService.getScriptCache(), hit = c.get('BETS3'); if (hit) return JSON.parse(hit);
+  var c = CacheService.getScriptCache(), hit = c.get('BETS4'); if (hit) return JSON.parse(hit);
   var out = { ok: true, at: ct_() };
   try {
     var ss = SpreadsheetApp.openById(NBA_ID), col = function (n, rng) { var sh = ss.getSheetByName(n); return sh ? sh.getRange(rng).getDisplayValues().map(function (r) { return r.filter(String).join(' | '); }).filter(String) : []; };
@@ -824,6 +824,10 @@ function bets_() {
     var bv = ss.getSheetByName('Blends_View'), v = bv ? bv.getRange('A1:G80').getDisplayValues() : [], pick = [], on = false;
     v.forEach(function (r) { var a = String(r[0]); if (/PICKED/.test(a) && /put \$/.test(a)) { on = true; pick.push(a); return; } if (on) { if (/^TOTAL/.test(a)) { pick.push(r.slice(0, 6).filter(String).join(' | ')); on = false; } else if (a && !/^Calculations|^Ticket$/.test(a)) pick.push(r.slice(0, 6).filter(String).join(' | ')); } });
     out.blendAt = String((v[0] || [''])[0]).slice(0, 80); out.pick = pick;
+    // v33: the set Jacob agreed on (Claude pick rows on Order_Desk) wins over the bot's own Blends_View pick
+    var od = ss.getSheetByName('Order_Desk'), ov = od && od.getLastRow() > 1 ? od.getRange(2, 1, od.getLastRow() - 1, 8).getDisplayValues() : [], cp = [], ct = 0, cpay = 0;
+    ov.forEach(function (r) { if (String(r[1]).indexOf('CLAUDE PICK') > -1 && r[4] != 'EXPIRED' && r[4] != 'FAILED') { var nm = String(r[1]).replace(/^.*?\) /, ''); cp.push('put $' + r[2] + ' ' + nm + ', pays $' + Number(r[3]).toFixed(2) + ' | ' + r[4]); ct += Number(r[2]) || 0; } });
+    if (cp.length) { out.pick = ['PICKED: Claude set (' + cp.length + ' tickets, $' + ct + ')'].concat(cp).concat(['TOTAL put $' + ct + ' (+ about 3% Kalshi fees)']); out.blendAt = 'Claude pick on Order_Desk'; }
     // Score by ticket type (Trades-tab idea for NBA): every settled ticket on Order_Desk + Order_History, deduped by Kalshi order id
     var T = {}, seen = {};
     ['Order_Desk', 'Order_History'].forEach(function (n) { var sh = ss.getSheetByName(n); if (!sh || sh.getLastRow() < 2) return;
@@ -834,7 +838,7 @@ function bets_() {
         var x = T[k] || (T[k] = { n: 0, w: 0, pl: 0 }); x.n++; if (m2[1] == 'WON') x.w++; x.pl += (m2[2] == '-' ? -1 : 1) * Number(m2[3]); }); });
     out.types = Object.keys(T).map(function (k) { return { k: k, n: T[k].n, w: T[k].w, pl: Math.round(T[k].pl * 100) / 100 }; }).sort(function (a, b) { return b.pl - a.pl; });
   } catch (e) { out.ok = false; out.err = e.message; }
-  try { c.put('BETS3', JSON.stringify(out), 300); } catch (e) { }
+  try { c.put('BETS4', JSON.stringify(out), 300); } catch (e) { }
   return out;
 }
 
