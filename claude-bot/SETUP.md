@@ -20,3 +20,7 @@ Jacob's steps, in order:
   Only forwards already-signed requests to api-contract.weex.com under a secret path prefix; /health returns ok. WEEX keys stay in Apps Script.
 - Bot setting **Relay URL** (Home tab) = `https://157-230-148-63.sslip.io/r/<prefix>` (Let's Encrypt cert, auto-renews; restarts relay on renew) (prefix in Claude's scratchpad vps/prefix.txt, also on the droplet in /opt/relay/relay.js).
 - WEEX: make a new API key with Read + Trade (NO withdraw), IP allowlist 157.230.148.63.
+- 11/18 1:20 AM: the server also hosts the apps (permanent links, auto-update from GitHub every 5 min):
+  Atlas  https://157-230-148-63.sslip.io/atlas/   (branch claude-bot, folder claude-bot/)
+  Phoenix https://157-230-148-63.sslip.io/phoenix/ (branch main, folder phoenix/)
+  Relay code: claude-bot/vps/relay.js (secret prefix lives only in /opt/relay/prefix on the server). Setup: claude-bot/vps/setup_web.sh.
