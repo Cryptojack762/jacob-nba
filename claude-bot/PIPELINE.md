@@ -14,6 +14,7 @@
 - No failed runs in the sample and no Google failure emails, but the pace is over the 90-min line.
 
 ## Done today
+- autoJobs: closing prices + pre-game warnings skip 2-9 AM CT. fbHourly2 turned into a no-op (duplicate of ncbHourly). YouTuber scan paused (vidIQ out of credits). claudeReview already caches by game, left as is. Worker idle poll 60 s (needs restart on server).
 - lpAuto v2.4: edge scan, extras and CLV now run every 10 min 3 PM-2 AM CT, every 30 min 9 AM-3 PM, off 2-9 AM (order desk, results, retry, live positions still every 10 min). Saves ~25 min/day.
 - Bot v30/v31: chat reads any BloFin coin; BloFin candle retries + WEEX fallback + 60 s cache.
 - Atlas v25: signals show EXPIRED/DONE/OPEN, duplicates removed, bold text renders, new icon.

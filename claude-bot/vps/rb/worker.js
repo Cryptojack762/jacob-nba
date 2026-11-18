@@ -51,7 +51,7 @@ async function run(c) {
 }
 async function loop() {
   for (;;) {
-    let wait = Date.now() - lastCmd < 180000 ? 2000 : 20000;
+    let wait = Date.now() - lastCmd < 180000 ? 2000 : 60000;   // idle: check once a minute (was 20 s) to save Apps Script runs
     try {
       const j = await post({ rb: 'poll' });
       for (const x of (j.cmds || [])) {
