@@ -220,6 +220,7 @@ Rule: LONG 4H close above 48-candle high while BTC > 20-day avg, stop 2 ATR, exi
 - 11/18 5 PM ET read (BTC $63,142, 6.1h left): Kalshi vs ours (FOMC-adjusted)
   $62,000 88 vs 93 | $62,500 76 vs 84 | $62,750 67 vs 74 | $63,000 56 vs 61 | $63,250 45 vs 45 | $63,500 34 vs 30 | $63,750 24 vs 18 | $64,000 17 vs 9 | $64,500 8 vs 4
 - PAPER PICKS (nothing sent, $10 each): YES $62,500+ at 76c (ours 84) | NO $64,000+ at 84c (ours 91 below) | NO $63,750+ at 77c (ours 82 below). Grade after 5 PM ET.
+- GRADED 11/18 4:41 PM CT: BTC at 5 PM ET = $62,307.8 (BloFin 1H close 22:00Z). YES $62,500+ LOST (-$10.00) | NO $64,000+ WON (+$1.90 on $10 at 84c) | NO $63,750+ WON (+$2.99 at 77c). 2 of 3 right, net -$5.11 on $30 paper (before fees). Our model said 84% for $62,500+; BTC fell after the FOMC minutes. Day 1 of 30.
 - Caution: Kalshi's wider tails may be pricing the 1 PM CT minutes better than our trailing vol. Needs 30+ graded days before any money (#85). Same rules as NBA if it ever goes live: one hedge, plain dollars.
 
 ## NotebookLM prompt (short, for the strategy library notebook)
