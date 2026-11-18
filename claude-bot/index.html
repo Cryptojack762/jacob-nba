@@ -445,12 +445,13 @@ function tkhtml(T){if(!T)return '<div class="why">Not enough 4H data for that co
 function tkget(c){return bfget('candles?instId='+c+'-USDT&bar=4H&limit=300').then(function(d){var k=(d||[]).filter(function(x){return x[8]==='1'}).map(function(x){return [+x[0],+x[1],+x[2],+x[3],+x[4]]}).reverse();var T=tkcalc(c,k);if(T)T.k=k;return T})}
 $('tkbtn').onclick=function(){var t=$('qtk').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');if(!t){toast('Type a ticker first');return}$('tkout').innerHTML='<div class="why" style="margin-top:8px">Building ticket…</div>';tkget(t).then(function(T){var C=T?mkcard(T,T.k):null;$('tkout')._C=C;$('tkout').innerHTML=(C&&C.ok?cardhtml(C):(C?'<div class="why" style="margin-top:8px">No card: '+esc(C.why)+'</div>':''))+tkhtml(T)}).catch(function(){$('tkout').innerHTML='<div class="why">Could not load '+esc(t)+' from BloFin.</div>'})};
 function sbload(){var L=['BTC','ETH','SOL','XRP','DOGE','BNB','ADA','AVAX','LINK','SUI','LTC','DOT','NEAR','APT','ARB','OP','INJ','HBAR','UNI','TRX'];
-  var R=[],i=0;(function nx(){if(i>=L.length)return Promise.resolve(R);var c=L[i++];return tkget(c).then(function(T){R.push(T)},function(){}).then(function(){return new Promise(function(r){setTimeout(r,250)})}).then(nx)})().then(function(R){R=R.filter(Boolean);
+  var R=[],i=0;(function nx(){if(i>=L.length)return Promise.resolve(R);var B=L.slice(i,i+5);i+=5;return Promise.all(B.map(function(c){return tkget(c).then(function(T){R.push(T)},function(){})})).then(function(){return new Promise(function(r){setTimeout(r,150)})}).then(nx)})().then(function(R){R=R.filter(Boolean);
     CARDS=R.map(function(T){return mkcard(T,T.k)});cardsrender();
     R.sort(function(a,b){return (b.bo.ok-a.bo.ok)||(a.bo.dist-b.bo.dist)});
     $('sbat').textContent=new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
     $('sboard').innerHTML=R.slice(0,5).map(tkhtml).join('')+'<div class="why" style="margin-top:8px">Top 5 of 20 coins, closest to the tested 4H breakout first (only coins above their 4H EMA200 can fire). Risk is 1% of your WEEX equity. Type any ticker above for its own ticket.</div>'}).catch(function(){$('sboard').innerHTML='<div class="why">Setups board offline.</div>'})}
-setTimeout(sbload,1500);setInterval(function(){if(!document.hidden)sbload()},600000);
+try{var ch=localStorage.getItem('cards_html');if(ch){$('tcards').innerHTML=ch;$('tcat').textContent='from '+(localStorage.getItem('cards_at')||'')+' · updating…'}}catch(e){}
+setTimeout(sbload,200);setInterval(function(){if(!document.hidden)sbload()},600000);
 // ---------- Trade cards: $ margin, liquidation just under the 4H swing low / order block ----------
 var AMT=5;try{AMT=Number(localStorage.getItem('card_amt'))||5}catch(e){}
 function levels(k,px,atr){var n=k.length,out=[];
@@ -472,7 +473,7 @@ function cardhtml(C){if(!C.ok)return '';var f=tkfmt,risk=AMT*(C.px-C.stop)/C.px*
    '<button class="bigbuy" data-buy="'+esc(JSON.stringify({c:C.c,lev:C.lev,stop:C.stop,lvl:(C.trend?'uptrend ':'COUNTER-TREND ')+C.lvl.t+' '+f(C.lvl.p)}))+'">BUY $'+AMT+' · '+esc(C.c)+' '+C.lev+'x</button>'+
    '<div class="why" style="margin-top:8px">Max loss ≈ $'+Math.min(AMT,risk).toFixed(2)+' if the stop hits. '+esc(re)+(C.lvl.tested?'':' Order-block levels are not backtested yet.')+'</div></div>'}
 var CARDS=[];function cardsrender(){var G=CARDS.filter(function(c){return c.ok}).sort(function(a,b){return (b.trend-a.trend)||((a.px-a.lvl.p)/a.px-(b.px-b.lvl.p)/b.px)}).slice(0,3);
-  $('tcards').innerHTML=G.length?G.map(cardhtml).join(''):'<div class="card"><div class="why">No coin has support 2-6% below price right now. Type a ticker below for its own card.</div></div>';$('tcat').textContent=new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}
+  $('tcards').innerHTML=G.length?G.map(cardhtml).join(''):'<div class="card"><div class="why">No coin has support 2-6% below price right now. Type a ticker below for its own card.</div></div>';$('tcat').textContent=new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});try{localStorage.setItem('cards_html',$('tcards').innerHTML);localStorage.setItem('cards_at',$('tcat').textContent)}catch(e){}}
 document.addEventListener('click',function(e){var a=e.target.closest('[data-amt]');if(a){AMT=+a.dataset.amt;try{localStorage.setItem('card_amt',AMT)}catch(x){}cardsrender();if($('tkout')._C)$('tkout').innerHTML=cardhtml($('tkout')._C)||$('tkout').innerHTML;return}
   var b=e.target.closest('[data-buy]');if(!b)return;var p=JSON.parse(b.dataset.buy);if(!WAPI||!WPIN){toast('Connect the bot first');return}
   if(!confirm('BUY $'+AMT+' of '+p.c+' at '+p.lev+'x on WEEX now? Stop $'+Number(p.stop).toPrecision(5)))return;b.disabled=true;b.textContent='Sending to WEEX…';
