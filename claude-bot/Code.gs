@@ -538,7 +538,7 @@ function testFrames() {
 
 // ---------------- News: this week's US economic calendar + crypto headlines (cached 30 min) ----------------
 function news_() {
-  var c = CacheService.getScriptCache(), hit = c.get('NEWS'); if (hit) return JSON.parse(hit);
+  var c = CacheService.getScriptCache(), hit = c.get('NEWS2'); if (hit) return JSON.parse(hit);
   var out = { ok: true, at: ct_(), cal: [], head: [], err: [] };
   try {
     var H = { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36', 'Accept': 'application/json,text/xml,*/*' }, muteHttpExceptions: true }, ev = null, txt = UrlFetchApp.fetch('https://nfs.faireconomy.media/ff_calendar_thisweek.json', H).getContentText();
@@ -557,7 +557,7 @@ function news_() {
     } catch (e) { out.err.push(f[0] + ': ' + e.message); }
   });
   out.head.sort(function (a, b) { return new Date(b.when) - new Date(a.when); }); out.head = out.head.slice(0, 12);
-  try { c.put('NEWS', JSON.stringify(out), 1800); } catch (e) { }
+  try { if (out.cal.length) c.put('NEWS2', JSON.stringify(out), 1800); } catch (e) { }
   return out;
 }
 function testNews() { Logger.log(JSON.stringify(news_()).slice(0, 2000)); }
