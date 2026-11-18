@@ -606,7 +606,7 @@ function buyNow_(q) {
   try {
     var px = priceNow_(coin); if (!(px > 0)) return { ok: false, err: 'No WEEX price for ' + coin };
     if (!(stop > 0 && stop < px)) return { ok: false, err: 'Stop must be below the price' };
-    if ((px - stop) / px > 0.08) return { ok: false, err: 'Stop more than 8% away' };
+    if ((px - stop) / px > 0.26) return { ok: false, err: 'Stop more than 26% away' };  // weekly cards use 8-25% supports
     var openN = rows_('Positions').filter(function (r) { return r[11] == 'OPEN' && r[10] != 'PAPER'; }).length;
     if (openN >= num_('Max open trades', 1, 20)) return { ok: false, err: 'Max open real trades reached' };
     var o = { id: 'CD' + Date.now().toString(36).toUpperCase() + coin, coin: coin, strategy: 'CARD', side: 'LONG', ref: px, stop: stop, margin: margin, lev: lev, why: 'Trade card: $' + margin + ' at ' + lev + 'x, ' + String(q.lvl || 'swing low').slice(0, 60), tag: 'JACOB-APPROVED' };

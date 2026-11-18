@@ -204,6 +204,8 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
 
   <section class="view" id="v-cards">
     <div class="k" style="margin-top:0"><span>Trade cards · tap Buy to trade</span><span id="tcat"></span></div>
+    <div class="amt" id="tfbar"><button data-tf="1H">1H</button><button data-tf="4H">4H</button><button data-tf="1D">Daily</button><button data-tf="1W">Weekly</button></div>
+    <div class="why" id="tfnote" style="margin:0 4px 10px"></div>
     <div id="tcards"><div class="card"><div class="why">Finding setups…</div></div></div>
   </section>
   <section class="view" id="v-chat">
@@ -430,7 +432,7 @@ function qask(text){go('chat');csend(text);return;if(!WAPI||!WPIN){$('askout').t
 document.addEventListener('click',function(e){var b=e.target.closest('[data-q]');if(!b)return;var t=$('qtk').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');if(!t){toast('Type a ticker first');return}qask(QP[b.dataset.q].replace('{T}',t))});
 $('qgo').onclick=function(){var t=$('qfree').value.trim();if(t)qask(t)};$('qfree').addEventListener('keydown',function(e){if(e.key==='Enter')$('qgo').click()});
 // ---------- Trade tickets + setups board (4H, tested rules) ----------
-function tkcalc(c,k){var n=k.length;if(n<220)return null;var C=k.map(function(x){return x[4]});
+function tkcalc(c,k,minN){var n=k.length;if(n<(minN||220))return null;var C=k.map(function(x){return x[4]});
   var e=C[0],E=[];C.forEach(function(v){e=v*2/201+e*(1-2/201);E.push(e)});
   var g=0,l=0,R=[50];for(var i=1;i<n;i++){var d=C[i]-C[i-1],G=Math.max(d,0),D=Math.max(-d,0);if(i<=14){g+=G/14;l+=D/14}else{g=(g*13+G)/14;l=(l*13+D)/14}R.push(l===0?100:100-100/(1+g/l))}
   var at=0;k.forEach(function(x,i){var tr=i?Math.max(x[2]-x[3],Math.abs(x[2]-C[i-1]),Math.abs(x[3]-C[i-1])):x[2]-x[3];at=i<14?(at*i+tr)/(i+1):(at*13+tr)/14});
@@ -451,32 +453,39 @@ function tkget(c){return bfget('candles?instId='+c+'-USDT&bar=4H&limit=300').the
 $('tkbtn').onclick=function(){var t=$('qtk').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');if(!t){toast('Type a ticker first');return}$('tkout').innerHTML='<div class="why" style="margin-top:8px">Building ticket…</div>';tkget(t).then(function(T){var C=T?mkcard(T,T.k):null;$('tkout')._C=C;$('tkout').innerHTML=(C&&C.ok?cardhtml(C):(C?'<div class="why" style="margin-top:8px">No card: '+esc(C.why)+'</div>':''))+tkhtml(T)}).catch(function(){$('tkout').innerHTML='<div class="why">Could not load '+esc(t)+' from BloFin.</div>'})};
 function sbload(){var L=['BTC','ETH','SOL','XRP','DOGE','BNB','ADA','AVAX','LINK','SUI','LTC','DOT','NEAR','APT','ARB','OP','INJ','HBAR','UNI','TRX'];
   var R=[],i=0;(function nx(){if(i>=L.length)return Promise.resolve(R);var B=L.slice(i,i+5);i+=5;return Promise.all(B.map(function(c){return tkget(c).then(function(T){R.push(T)},function(){})})).then(function(){return new Promise(function(r){setTimeout(r,150)})}).then(nx)})().then(function(R){R=R.filter(Boolean);
-    CARDS=R.map(function(T){return mkcard(T,T.k)});cardsrender();
+    if(CTF==='4H'){CARDS=R.map(function(T){return mkcard(T,T.k)});cardsrender()}
     R.sort(function(a,b){return (b.bo.ok-a.bo.ok)||(a.bo.dist-b.bo.dist)});
     $('sbat').textContent=new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
     $('sboard').innerHTML=R.slice(0,5).map(tkhtml).join('')+'<div class="why" style="margin-top:8px">Top 5 of 20 coins, closest to the tested 4H breakout first (only coins above their 4H EMA200 can fire). Risk is 1% of your WEEX equity. Type any ticker above for its own ticket.</div>'}).catch(function(){$('sboard').innerHTML='<div class="why">Setups board offline.</div>'})}
 try{var ch=localStorage.getItem('cards_html');if(ch){$('tcards').innerHTML=ch;$('tcat').textContent='from '+(localStorage.getItem('cards_at')||'')+' · updating…'}}catch(e){}
 setTimeout(sbload,200);setInterval(function(){if(!document.hidden)sbload()},600000);
 // ---------- Trade cards: $ margin, liquidation just under the 4H swing low / order block ----------
+var TFR={'1H':[0.01,0.03],'4H':[0.02,0.06],'1D':[0.04,0.12],'1W':[0.08,0.25]},CTF='4H';try{CTF=localStorage.getItem('card_tf')||'4H';if(!TFR[CTF])CTF='4H'}catch(e){}
 var AMT=5;try{AMT=Number(localStorage.getItem('card_amt'))||5}catch(e){}
 function levels(k,px,atr){var n=k.length,out=[];
-  for(var i=n-60;i<n-2;i++){if(i<2)continue;var L=k[i][3];if(L<k[i-1][3]&&L<k[i-2][3]&&L<k[i+1][3]&&L<k[i+2][3]&&L<px)out.push({p:L,t:'4H swing low',tested:true,i:i})}
-  for(var j=n-60;j<n-3;j++){if(j<1)continue;var c=k[j];if(c[4]<c[1]&&(k[j+3][4]-c[4])>1.5*atr&&c[3]<px)out.push({p:c[3],t:'order block (untested)',tested:false,i:j})}
+  for(var i=n-60;i<n-2;i++){if(i<2)continue;var L=k[i][3];if(L<k[i-1][3]&&L<k[i-2][3]&&L<k[i+1][3]&&L<k[i+2][3]&&L<px)out.push({p:L,t:CTF+' swing low',tested:true,i:i})}
+  for(var j=n-60;j<n-3;j++){if(j<1)continue;var c=k[j];if(c[4]<c[1]&&(k[j+3][4]-c[4])>1.5*atr&&c[3]<px)out.push({p:c[3],t:CTF+' order block (untested)',tested:false,i:j})}
   out.sort(function(a,b){return b.p-a.p});return out}
 function mkcard(T,k){var px=T.px,L=levels(k,px,T.atr),MMR=0.005,pick=null;
-  for(var i=0;i<L.length;i++){var d=(px-L[i].p)/px;if(d>=0.02&&d<=0.06){pick=L[i];break}}
-  if(!pick)return {c:T.c,ok:false,px:px,why:L.length?'nearest support is '+((px-L[0].p)/px*100).toFixed(1)+'% away (need 2-6%)':'no support found below price',T:T};
+  for(var i=0;i<L.length;i++){var d=(px-L[i].p)/px;if(d>=TFR[CTF][0]&&d<=TFR[CTF][1]){pick=L[i];break}}
+  if(!pick)return {c:T.c,ok:false,px:px,why:L.length?'nearest support is '+((px-L[0].p)/px*100).toFixed(1)+'% away (need '+TFR[CTF][0]*100+'-'+TFR[CTF][1]*100+'%)':'no support found below price',T:T};
   var liq=pick.p*0.997,lev=Math.min(50,Math.max(2,Math.floor(1/((px-liq)/px+MMR)))),liqx=px*(1-1/lev+MMR),stop=Math.max(liqx*1.003,pick.p*0.995);
   var tps=[1,2,3,4].map(function(m){return px+m*T.atr});var next=L.filter(function(x){return x.p<pick.p*0.985})[0];
   return {c:T.c,ok:true,px:px,lev:lev,liq:liqx,stop:stop,lvl:pick,tps:tps,next:next,trend:px>T.ema,T:T}}
 function cardhtml(C){if(!C.ok)return '';var f=tkfmt,risk=AMT*(C.px-C.stop)/C.px*C.lev;
-  var re=C.next?'If wicked out and 4H trend still up: re-enter $'+AMT+' at '+f(C.next.p*1.003)+' (liq under '+f(C.next.p)+'). Max 2 re-entries/day.':'No lower support for a re-entry.';
-  return '<div class="tcard"><div class="two"><div><b style="font-size:20px">LONG '+esc(C.c)+'</b><div class="why">'+(C.trend?'<b class="pos">4H trend up</b>':'<b class="neg">4H trend down · counter-trend</b>')+' · '+esc(C.lvl.t)+'</div></div><div class="big">'+f(C.px)+'</div></div>'+
+  var re=C.next?'If wicked out and '+CTF+' trend still up: re-enter $'+AMT+' at '+f(C.next.p*1.003)+' (liq under '+f(C.next.p)+'). Max 2 re-entries/day.':'No lower support for a re-entry.';
+  return '<div class="tcard"><div class="two"><div><b style="font-size:20px">LONG '+esc(C.c)+'</b><div class="why">'+(C.trend?'<b class="pos">'+CTF+' trend up</b>':'<b class="neg">'+CTF+' trend down · counter-trend</b>')+' · '+esc(C.lvl.t)+'</div></div><div class="big">'+f(C.px)+'</div></div>'+
    '<div class="row2"><div>Entry<b>'+f(C.px)+'</b></div><div>Leverage<b>'+C.lev+'x</b></div><div>Stop (just above liq)<b>'+f(C.stop)+'</b></div><div>Liquidation<b>'+f(C.liq)+'</b></div>'+
    '<div>Support<b>'+f(C.lvl.p)+'</b></div><div>Resistance (40-bar high)<b>'+f(C.T.hi)+'</b></div><div>TP1 / TP2<b>'+f(C.tps[0])+' / '+f(C.tps[1])+'</b></div><div>TP3 / TP4<b>'+f(C.tps[2])+' / '+f(C.tps[3])+'</b></div></div>'+
    '<div class="amt">'+[1,3,5,10].map(function(a){return '<button data-amt="'+a+'" class="'+(a===AMT?'on':'')+'">$'+a+'</button>'}).join('')+'</div>'+
    '<button class="bigbuy" data-buy="'+esc(JSON.stringify({c:C.c,lev:C.lev,stop:C.stop,lvl:(C.trend?'uptrend ':'COUNTER-TREND ')+C.lvl.t+' '+f(C.lvl.p)}))+'">BUY $'+AMT+' · '+esc(C.c)+' '+C.lev+'x</button>'+
    '<div class="why" style="margin-top:8px">Max loss ≈ $'+Math.min(AMT,risk).toFixed(2)+' if the stop hits. '+esc(re)+(C.lvl.tested?'':' Order-block levels are not backtested yet.')+'</div></div>'}
+function cardsload(){var L=['BTC','ETH','SOL','XRP','DOGE','BNB','ADA','AVAX','LINK','SUI','LTC','DOT','NEAR','APT','ARB','OP','INJ','HBAR','UNI','TRX'],tf=CTF,R=[],i=0;
+  document.querySelectorAll('[data-tf]').forEach(function(b){b.classList.toggle('on',b.dataset.tf===CTF)});
+  $('tfnote').textContent=CTF==='4H'?'4H: the timeframe our breakout rules passed backtests on. Support must be 2-6% below price.':CTF+': not backtested yet. Support must be '+TFR[CTF][0]*100+'-'+TFR[CTF][1]*100+'% below price, so leverage is '+(CTF==='1H'?'higher':'lower')+'.';
+  (function nx(){if(i>=L.length)return Promise.resolve();var B=L.slice(i,i+5);i+=5;return Promise.all(B.map(function(c){return bfget('candles?instId='+c+'-USDT&bar='+tf+'&limit=300').then(function(d){var k=(d||[]).filter(function(x){return x[8]==='1'}).map(function(x){return [+x[0],+x[1],+x[2],+x[3],+x[4]]}).reverse();var T=tkcalc(c,k,70);if(T){T.k=k;R.push(T)}},function(){})})).then(function(){return new Promise(function(r){setTimeout(r,150)})}).then(nx)})().then(function(){if(tf!==CTF)return;CARDS=R.map(function(T){return mkcard(T,T.k)});cardsrender()})}
+document.addEventListener('click',function(e){var b=e.target.closest('[data-tf]');if(!b)return;CTF=b.dataset.tf;try{localStorage.setItem('card_tf',CTF)}catch(x){}$('tcards').innerHTML='<div class="card"><div class="why">Loading '+CTF+' setups…</div></div>';cardsload()});
+setTimeout(cardsload,300);setInterval(function(){if(!document.hidden)cardsload()},600000);
 var CARDS=[];function cardsrender(){var G=CARDS.filter(function(c){return c.ok}).sort(function(a,b){return (b.trend-a.trend)||((a.px-a.lvl.p)/a.px-(b.px-b.lvl.p)/b.px)}).slice(0,3);
   $('tcards').innerHTML=G.length?G.map(cardhtml).join(''):'<div class="card"><div class="why">No coin has support 2-6% below price right now. Type a ticker below for its own card.</div></div>';$('tcat').textContent=new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});try{localStorage.setItem('cards_html',$('tcards').innerHTML);localStorage.setItem('cards_at',$('tcat').textContent)}catch(e){}}
 document.addEventListener('click',function(e){var a=e.target.closest('[data-amt]');if(a){AMT=+a.dataset.amt;try{localStorage.setItem('card_amt',AMT)}catch(x){}cardsrender();if($('tkout')._C)$('tkout').innerHTML=cardhtml($('tkout')._C)||$('tkout').innerHTML;return}
