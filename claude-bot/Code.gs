@@ -551,9 +551,17 @@ function testRelay() {
 var CHAT_COINS = ['BTC','ETH','SOL','XRP','DOGE','ADA','AVAX','LINK','LTC','BCH','BNB','TRX','XLM','NEAR','UNI','SUI','HYPE','XMR','ZEC','ARB','OP','APT','INJ','HBAR','DOT','PEPE','WIF','SEI','TIA','ENA','ONDO','TON','FET','RENDER','JUP','KAS','POL','ATOM','FIL','AAVE'];
 function bfCandles_(coin, bar) {
   var u = 'https://openapi.blofin.com/api/v1/market/candles?instId=' + coin + '-USDT&bar=' + bar + '&limit=300', j = null;
-  for (var k = 0; k < 3 && !j; k++) { try { j = JSON.parse(UrlFetchApp.fetch(u, { muteHttpExceptions: true }).getContentText()); } catch (e) { Utilities.sleep(1200); } }   // BloFin rate limit returns an HTML page
+  var ck = 'BFC_' + coin + '_' + bar, cc = CacheService.getScriptCache(), hit = cc.get(ck); if (hit) try { return JSON.parse(hit); } catch (e) { }
+  for (var k = 0; k < 4 && !(j && j.data && j.data.length); k++) { try { j = JSON.parse(UrlFetchApp.fetch(u, { muteHttpExceptions: true }).getContentText()); } catch (e) { j = null; } if (!(j && j.data && j.data.length)) Utilities.sleep(1500 * (k + 1)); }   // BloFin rate limit returns an HTML page
   var d = ((j && j.data) || []).filter(function (x) { return x[8] == '1'; });
-  return d.map(function (x) { return { t: +x[0], o: +x[1], h: +x[2], l: +x[3], c: +x[4], v: +x[6] || +x[5] }; }).reverse();
+  var out = d.map(function (x) { return { t: +x[0], o: +x[1], h: +x[2], l: +x[3], c: +x[4], v: +x[6] || +x[5] }; }).reverse();
+  if (out.length < 220) {   // BloFin busy: use WEEX candles for the same timeframe
+    try { var now = Date.now(), raw = get_('/capi/v3/market/klines?symbol=' + coin + 'USDT&interval=' + ({ '15m': '15m', '1H': '1h', '4H': '4h', '1D': '1d' }[bar] || '4h') + '&limit=300') || [];
+      var w = raw.filter(function (x) { return Number(x[6]) < now; }).map(function (x) { return { t: Number(x[0]), o: +x[1], h: +x[2], l: +x[3], c: +x[4], v: +x[5] }; }).sort(function (a, b) { return a.t - b.t; });
+      if (w.length > out.length) out = w; } catch (e) { }
+  }
+  if (out.length >= 220) try { cc.put(ck, JSON.stringify(out), 60); } catch (e) { }
+  return out;
 }
 function tfSummary_(coin, bar) {
   var d = bfCandles_(coin, bar); if (d.length < 220) return null;
