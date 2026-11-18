@@ -133,7 +133,12 @@ function supertrend_(d) {
   return dir;
 }
 function candles_(coin) {
-  var raw = get_('/capi/v3/market/klines?symbol=' + coin + 'USDT&interval=4h&limit=500'), now = Date.now();
+  var raw = [], now = Date.now();
+  try { raw = get_('/capi/v3/market/klines?symbol=' + coin + 'USDT&interval=4h&limit=500') || []; } catch (e) { raw = []; }
+  if (!raw.length) { // coin not on WEEX (e.g. XPIN): fall back to BloFin public 4H candles (confirmed bars only)
+    try { var j = JSON.parse(UrlFetchApp.fetch('https://openapi.blofin.com/api/v1/market/candles?instId=' + coin + '-USDT&bar=4H&limit=500', { muteHttpExceptions: true }).getContentText());
+      return (j.data || []).filter(function (x) { return x[8] == '1'; }).map(function (x) { return { t: Number(x[0]), o: +x[1], h: +x[2], l: +x[3], c: +x[4] }; }).sort(function (a, b) { return a.t - b.t; }); } catch (e) { return []; }
+  }
   return raw.filter(function (x) { return Number(x[6]) < now; }).map(function (x) { return { t: Number(x[0]), o: +x[1], h: +x[2], l: +x[3], c: +x[4] }; }).sort(function (a, b) { return a.t - b.t; });
 }
 function ind_(d) {
