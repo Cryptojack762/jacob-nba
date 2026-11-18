@@ -11,7 +11,7 @@ const NTFY = 'atlas-jacob-c2112e987573', DIR = '/opt/nba', FEE = 0.07, HAIR = 0.
 const ct = (f) => new Intl.DateTimeFormat('en-US', Object.assign({ timeZone: 'America/Chicago' }, f)).format(new Date());
 const post = async (b) => (await fetch(CFG.url, { method: 'POST', headers: { 'content-type': 'text/plain' }, body: JSON.stringify(Object.assign({ key: CFG.key }, b)), redirect: 'follow' })).json();
 const push = (t, m) => fetch('https://ntfy.sh/' + NTFY, { method: 'POST', headers: { Title: t }, body: m }).catch(() => {});
-let rng = 7; const rand = () => (rng = (rng * 16807) % 2147483647) / 2147483647;
+let rng = Number(process.env.NBA_SEED) || 7; const rand = () => (rng = (rng * 16807) % 2147483647) / 2147483647;
 const pick = (a) => a[Math.floor(rand() * a.length)];
 const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
@@ -73,7 +73,7 @@ async function main() {
     return free[0].st >= 3 ? T : null;
   }
   const clone = (T) => T.map((t) => ({ k: t.k, legs: t.legs.map((l) => [...l]), st: t.st }));
-  let best = null, bestE = null, MINBEST = 0; const tries = N > 10 ? 8000 : 20000;
+  let best = null, bestE = null, MINBEST = 0; const tries = Number(process.env.NBA_TRIES) || (N > 10 ? 8000 : 20000);
   for (const target of [cfg.best || 100, 70, 40, 0]) {   // Jacob wants upside: best night at least $100, relax only if nothing passes
     MINBEST = target;
     for (let i = 0; i < tries; i++) { const T = randSet(); if (!T) continue; const e = ev(T); if (ok(T, e) && better(e, bestE)) { best = T; bestE = e; } }
