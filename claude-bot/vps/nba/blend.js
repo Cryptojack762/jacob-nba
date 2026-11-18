@@ -73,16 +73,31 @@ async function main() {
     return free[0].st >= 3 ? T : null;
   }
   const clone = (T) => T.map((t) => ({ k: t.k, legs: t.legs.map((l) => [...l]), st: t.st }));
-  let best = null, bestE = null, MINBEST = 0; const tries = Number(process.env.NBA_TRIES) || (N > 10 ? 8000 : 20000);
+  let best = null, bestE = null, MINBEST = 0; const tries = Number(process.env.NBA_TRIES) || (N > 10 ? 8000 : 20000), TOPK = Number(process.env.NBA_TOPK) || 12;
+  let pool = [];   // keep the top sets, not just one, and polish each (v2: many starting points)
   for (const target of [cfg.best || 100, 70, 40, 0]) {   // Jacob wants upside: best night at least $100, relax only if nothing passes
-    MINBEST = target;
-    for (let i = 0; i < tries; i++) { const T = randSet(); if (!T) continue; const e = ev(T); if (ok(T, e) && better(e, bestE)) { best = T; bestE = e; } }
-    if (best) break;
+    MINBEST = target; pool = [];
+    for (let i = 0; i < tries; i++) { const T = randSet(); if (!T) continue; const e = ev(T); if (!ok(T, e)) continue;
+      pool.push([T, e]); if (pool.length > TOPK * 4) { pool.sort((a, b) => (better(a[1], b[1]) ? -1 : 1)); pool.length = TOPK; } }
+    if (pool.length) break;
   }
+  pool.sort((a, b) => (better(a[1], b[1]) ? -1 : 1)); pool = pool.slice(0, TOPK);
+  if (pool.length) { best = pool[0][0]; bestE = pool[0][1]; }
   if (!best) { await post({ rb: 'nbablend', tickets: [], summary: 'No set passed the rules', math: sets + ' sets tried' }); await push('NBA set: none passed', 'No set passed the rules tonight. Skip or build by hand.'); return; }
-  let bad = 0, rounds = 0;
-  while (bad < 2 && rounds < 40) {
-    rounds++; let imp = false;
+  let rounds = 0, gBest = best, gE = bestE;
+  for (const [T0, E0] of pool) { best = T0; bestE = E0; let bad = 0, r0 = 0;
+  while (bad < 2 && r0 < 40) {
+    rounds++; r0++; let imp = false;
+    // add / remove a leg on mains and the lotto (2-4 legs mains, 2-3 legs lotto)
+    for (let i = 0; i < best.length; i++) {
+      const t = best[i];
+      if ((t.k == 'main' && t.legs.length < 4) || (t.k == 'lotto' && t.legs.length < 3)) for (let g = 0; g < N; g++) {
+        if (t.legs.some(([x]) => x == g)) continue; const U = clone(best); U[i].legs.push([g, 1]); const e = ev(U);
+        if (ok(U, e) && better(e, bestE)) { best = U; bestE = e; imp = true; } }
+      if ((t.k == 'main' && t.legs.length > 2) || (t.k == 'lotto' && t.legs.length > 2)) for (let l = 0; l < t.legs.length; l++) {
+        if (t.k == 'lotto' && t.legs[l][1] === 0) continue; const U = clone(best); U[i].legs.splice(l, 1); const e = ev(U);
+        if (ok(U, e) && better(e, bestE)) { best = U; bestE = e; imp = true; } }
+    }
     for (let i = 0; i < best.length; i++) for (let k = 0; k < best.length; k++) for (const d of [1, 2]) {
       if (i == k) continue; const U = clone(best); U[i].st -= d; U[k].st += d; const e = ev(U);
       if (ok(U, e) && better(e, bestE) && e.lose <= bestE.lose + 1e-9) { best = U; bestE = e; imp = true; }
@@ -93,6 +108,8 @@ async function main() {
     }
     bad = imp ? 0 : bad + 1;
   }
+  if (better(bestE, gE)) { gBest = best; gE = bestE; } }
+  best = gBest; bestE = gE;
   const nm = (legs) => legs.map(([g, s]) => (s ? G[g].fav : G[g].dog)).join(' + ');
   const KIND = { straight: 'STRAIGHT', main: 'MAIN', hedge: 'HEDGE', lotto: 'LOTTO' };
   const tickets = best.map((t, i) => ({ name: KIND[t.k] + ': ' + nm(t.legs), stake: t.st, pays: Math.round(bestE.pays[i] * 100) / 100, legs: t.legs.map(([g, s]) => (s ? G[g].ft : G[g].dt) + ':yes').join(';') }));
