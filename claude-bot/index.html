@@ -316,7 +316,7 @@ document.addEventListener('visibilitychange',function(){if(!document.hidden)load
 // ---------- WEEX tab: Claude's trading bot (buy/sell buttons) ----------
 var WAPI='',WPIN='',W=null;
 try{WAPI=localStorage.getItem('cb_api')||'';WPIN=localStorage.getItem('cb_pin')||'';var wc=localStorage.getItem('cb_last');if(wc)W=JSON.parse(wc)}catch(e){}
-var WN={L_TPI:'TPI breakout',L_ST:'SuperTrend',S_FUND:'Funding-extreme',S_BBRSI:'BB + RSI',L_FUND:'Funding long',S_BTCFLIP:'BTC breakdown',M_BOTTOM:'Market bottom'};
+var WN={L_TPI:'TPI breakout',L_ST:'SuperTrend',S_FUND:'Funding-extreme',S_BBRSI:'BB + RSI',L_FUND:'Funding long',S_BTCFLIP:'BTC breakdown',M_BOTTOM:'Market bottom',L_RSI20:'Washout bounce'};
 function wnm(s){for(var k in WN){if(k===s||WN[k]===s)return WN[k]}return s}
 function wm(n){n=Number(n)||0;return (n<0?'-':'')+'$'+Math.abs(n).toFixed(2)}
 function wsm(n){n=Number(n)||0;return (n>=0?'+':'-')+'$'+Math.abs(n).toFixed(2)}

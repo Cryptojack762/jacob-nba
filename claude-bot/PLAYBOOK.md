@@ -167,3 +167,6 @@ App: BloFin tab now has a live L_RSI20 scanner for 20 coins; failing rules are l
 - Sizing sim (1% account risk per trade, no breadth filter): $100 → $177 over 3.5 yrs, max drawdown 13%, worst losing streak 13.
   Capping trades per day HURTS (cap 3 → $109): on washout days take every signal.
 - 4H shorts tested in downtrends — none reliable: RSI70 fade 0.75/2.44 (fails IS), rally-to-EMA50 1.15/1.02, 40-bar breakdown 0.88/1.19.
+- 11/18 12:28 AM: L_RSI20 added to the bot (Code.gs, deployment v6). ON by default, Paper mode. Needs 3+ coins in the
+  WASH property (24h window). Stop 2 ATR, target 2 ATR (entry*2 - stop), exit after 12 bars. Logs a WASHOUT row when breadth >= 3.
+- TPI exit check (20 coins 4H): EMA50 exit 1.30/1.41, EMA20 1.16/1.33, RSI<45 1.29/1.40, 30-bar time 1.29/1.44 — keep current exits.
