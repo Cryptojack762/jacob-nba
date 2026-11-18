@@ -39,6 +39,7 @@ var DEFAULTS = [
   ['L_FUND', 'OFF', 'Long: funding bottom 5% + BTC up, 72h hold (weak extra edge)'],
   ['S_BTCFLIP', 'OFF', 'Watch list: short coins below EMA200 when BTC just lost its EMA200; cover when BTC regains it'],
   ['Bottom alert', 'ON', 'Alert when BTC funding is -0.01% or lower (shorts crowded = market bottom zone). Alert only, no trade'],
+  ['Relay URL', '', 'VPS relay (fixed IP) for WEEX trading keys, e.g. https://1.2.3.4/r/xxxx. Blank = call WEEX directly'],
   ['L_RSI20', 'ON', 'Long: market washout bounce - coin under 4H EMA200, RSI back above 20, while 3+ coins do it within 24h. Stop 2 ATR, target 2 ATR, max 2 days (OOS PF 2.87, 66% win)'],
   ['M_BOTTOM', 'OFF', 'Watch list: on a bottom alert, go long the coin for 72h (2024-26 only: 17 of 27 episodes green)'],
   ['ntfy topic', '', 'Optional: private ntfy.sh topic for phone pushes'],
@@ -325,8 +326,9 @@ function weex_(method, path, query, body) {
   var p = keys_(); if (!p) throw new Error('No WEEX keys in Script Properties');
   var ts = String(Date.now()), msg = ts + method + path + (query ? '?' + query : '') + (body || '');
   var sig = Utilities.base64Encode(Utilities.computeHmacSha256Signature(msg, p.getProperty('WEEX_SECRET')));
-  var r = UrlFetchApp.fetch(BOT.base + path + (query ? '?' + query : ''), {
-    method: method.toLowerCase(), contentType: 'application/json', payload: body || undefined, muteHttpExceptions: true,
+  var relay = String(set_('Relay URL') || '').trim().replace(/\/$/, '');
+  var r = UrlFetchApp.fetch((relay || BOT.base) + path + (query ? '?' + query : ''), {
+    method: method.toLowerCase(), contentType: 'application/json', payload: body || undefined, muteHttpExceptions: true, validateHttpsCertificates: !relay,
     headers: { 'ACCESS-KEY': p.getProperty('WEEX_KEY'), 'ACCESS-SIGN': sig, 'ACCESS-PASSPHRASE': p.getProperty('WEEX_PASSPHRASE'), 'ACCESS-TIMESTAMP': ts }
   });
   var txt = r.getContentText();
