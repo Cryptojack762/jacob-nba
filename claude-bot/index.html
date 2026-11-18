@@ -134,6 +134,8 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
       <div class="card" id="word"></div>
       <div class="k"><span>Real trades on WEEX</span><span id="wopenN"></span></div>
       <div class="card" id="wopen"></div>
+      <div class="k">Day-trade scanner · 1H volume spikes</div>
+      <div class="card" id="wdt"><div class="why">Scanning…</div></div>
       <div class="k">Bot signals · 4H</div>
       <div class="card" id="wsig"></div>
       <div class="k">Real track record</div>
@@ -385,6 +387,20 @@ function bfload(){
   }).catch(function(){$('bfstamp').textContent='BloFin prices not reachable right now.'});
 }
 bfload();setInterval(function(){if(!document.hidden)bfload()},60000);
+// ---------- WEEX day-trade scanner: L_VOL1H (backtest PF 1.43 out-of-sample, paper idea) ----------
+var DTC=['BTC','ETH','SOL','XRP','DOGE','BNB','ADA','AVAX','LINK','SUI','LTC','DOT'];
+function dtscan(){
+  Promise.all(DTC.map(function(c){return bfget('candles?instId='+c+'-USDT&bar=1H&limit=300').then(function(d){return {c:c,k:d.filter(function(x){return x[8]==='1'}).map(function(x){return [+x[0],+x[1],+x[2],+x[3],+x[4],+x[6]||+x[5]]}).reverse()}})}))
+  .then(function(R){var hits=[];
+    R.forEach(function(r){var k=r.k,n=k.length;if(n<230)return;var c=k.map(function(x){return x[4]});
+      var e=c[0],a=2/201,E=[];c.forEach(function(v){e=v*a+e*(1-a);E.push(e)});
+      var at=0,A=[];k.forEach(function(x,i){var tr=i?Math.max(x[2]-x[3],Math.abs(x[2]-c[i-1]),Math.abs(x[3]-c[i-1])):x[2]-x[3];at=i<14?(at*i+tr)/(i+1):(at*13+tr)/14;A.push(at)});
+      for(var i=n-6;i<n;i++){var va=0;for(var j=i-24;j<i;j++)va+=k[j][5];va/=24;
+        if(k[i][5]>3*va&&k[i][4]>k[i][1]*1.025&&k[i][4]>E[i]){var ent=c[i],stop=ent-1.5*A[i],ex=new Date(k[i][0]+7*3600e3);hits.push({c:r.c,ent:ent,stop:stop,ex:ex,age:n-1-i,now:c[n-1]})}}});
+    $('wdt').innerHTML=(hits.length?hits.map(function(h){var pl=100*(h.now-h.ent)/h.ent;return '<div class="hl"><i class="chip s-'+(h.age===0?'ENTER':'WAIT')+'">'+(h.age===0?'✔ NEW':h.age+'h ago')+'</i><span><b>LONG '+h.c+'</b> · spike close $'+h.ent.toPrecision(5)+' · stop $'+h.stop.toPrecision(5)+' · exit by '+h.ex.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})+' · now '+(pl>=0?'+':'')+pl.toFixed(1)+'%</span></div>'}).join(''):'<div class="why">No volume spikes in the last 6 hours.</div>')+'<div class="why" style="margin-top:8px">Rule: 1-hour candle up 2.5%+ on 3x normal volume, above the 200 EMA → long next hour, stop 1.5 ATR, exit after 6 hours. Backtest 2 yrs, 12 coins: wins 49%, +0.39% avg per trade after fees; weak since Aug 2026. Paper only.</div>';
+  }).catch(function(){$('wdt').innerHTML='<div class="why">Scanner offline.</div>'});
+}
+dtscan();setInterval(function(){if(!document.hidden)dtscan()},300000);
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 </script>
 </body>
