@@ -223,3 +223,9 @@ Rule: LONG 4H close above 48-candle high while BTC > 20-day avg, stop 2 ATR, exi
 
 ## NotebookLM prompt (short, for the strategy library notebook)
 Using only these sources, list every crypto strategy that passed out-of-sample, one line each: rule, timeframe, profit factor, trades, and why it might stop working. Then list the rejected ones in one line each. No intro.
+- Batch 3 (20 coins, BloFin 4H Aug 2023 - Nov 2026, first 60% in-sample / last 40% out-of-sample):
+  - Washout bounce (3+ coins in 24h) still holds: IS PF 4.67 (126t) -> OOS PF 1.63 (102t, 66% win). Best rule we have.
+  - #19 MFI under 20 on top of washout: OOS PF 1.24 (worse than without). REJECTED.
+  - #17 Double bottom neckline break (lows within 3%, measured-move target): IS 0.99 / OOS 0.85. REJECTED.
+  - #20 Daily pivot R1/R2 as the target on the 4H breakout: OOS PF 1.14 vs trailing exit 1.15, but wins 45% of trades instead of 26%. Same money, smoother ride - optional.
+  - WARNING: 4H breakout long on 20 coins over 3.3 years is only PF 1.15 out-of-sample (IS 2.41). It is fading. Keep its size small; washout bounce deserves more weight.
