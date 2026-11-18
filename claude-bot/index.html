@@ -468,8 +468,8 @@ function cardhtml(C){if(!C.ok)return '';var f=tkfmt,risk=AMT*(C.px-C.stop)/C.px*
   return '<div class="tcard"><div class="two"><div><b style="font-size:20px">LONG '+esc(C.c)+'</b><div class="why">'+(C.trend?'<b class="pos">4H trend up</b>':'<b class="neg">4H trend down · counter-trend</b>')+' · '+esc(C.lvl.t)+'</div></div><div class="big">'+f(C.px)+'</div></div>'+
    '<div class="row2"><div>Entry<b>'+f(C.px)+'</b></div><div>Leverage<b>'+C.lev+'x</b></div><div>Stop (just above liq)<b>'+f(C.stop)+'</b></div><div>Liquidation<b>'+f(C.liq)+'</b></div>'+
    '<div>Support<b>'+f(C.lvl.p)+'</b></div><div>Resistance (40-bar high)<b>'+f(C.T.hi)+'</b></div><div>TP1 / TP2<b>'+f(C.tps[0])+' / '+f(C.tps[1])+'</b></div><div>TP3 / TP4<b>'+f(C.tps[2])+' / '+f(C.tps[3])+'</b></div></div>'+
-   '<div class="amt">'+[3,5,10].map(function(a){return '<button data-amt="'+a+'" class="'+(a===AMT?'on':'')+'">$'+a+'</button>'}).join('')+'</div>'+
-   '<button class="bigbuy" data-buy="'+esc(JSON.stringify({c:C.c,lev:C.lev,stop:C.stop,lvl:C.lvl.t+' '+f(C.lvl.p)}))+'">BUY $'+AMT+' · '+esc(C.c)+' '+C.lev+'x</button>'+
+   '<div class="amt">'+[1,3,5,10].map(function(a){return '<button data-amt="'+a+'" class="'+(a===AMT?'on':'')+'">$'+a+'</button>'}).join('')+'</div>'+
+   '<button class="bigbuy" data-buy="'+esc(JSON.stringify({c:C.c,lev:C.lev,stop:C.stop,lvl:(C.trend?'uptrend ':'COUNTER-TREND ')+C.lvl.t+' '+f(C.lvl.p)}))+'">BUY $'+AMT+' · '+esc(C.c)+' '+C.lev+'x</button>'+
    '<div class="why" style="margin-top:8px">Max loss ≈ $'+Math.min(AMT,risk).toFixed(2)+' if the stop hits. '+esc(re)+(C.lvl.tested?'':' Order-block levels are not backtested yet.')+'</div></div>'}
 var CARDS=[];function cardsrender(){var G=CARDS.filter(function(c){return c.ok}).sort(function(a,b){return (b.trend-a.trend)||((a.px-a.lvl.p)/a.px-(b.px-b.lvl.p)/b.px)}).slice(0,3);
   $('tcards').innerHTML=G.length?G.map(cardhtml).join(''):'<div class="card"><div class="why">No coin has support 2-6% below price right now. Type a ticker below for its own card.</div></div>';$('tcat').textContent=new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}
