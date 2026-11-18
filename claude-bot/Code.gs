@@ -44,12 +44,20 @@ var DEFAULTS = [
   ['M_BOTTOM', 'OFF', 'Watch list: on a bottom alert, go long the coin for 72h (2024-26 only: 17 of 27 episodes green)'],
   ['ntfy topic', '', 'Optional: private ntfy.sh topic for phone pushes'],
   ['Web app URL', '', 'Paste after Deploy > Web app (needed for Approve links and the phone app)'],
+  ['Bot slice $', 16, 'Money the bot may trade BY ITSELF on BOT-category coins (Coins tab) while Mode is APPROVE. 0 = off'],
+  ['Bot $ per trade', 2, 'Margin per bot-slice trade'],
+  ['Bot max open', 3, 'Max bot-slice trades open at once'],
+  ['Missed-trade $', 1, 'If you do not tap an Approve trade in time, the bot takes it at this margin (tag MISSED-AUTO). 0 = off'],
+  ['Missed max open', 6, 'Max missed-trade fills open at once'],
+  ['Missed cap $', 15, 'Max total margin in missed-trade fills'],
+  ['Auto leverage', 10, 'Leverage for bot-slice + missed trades (small $ needs leverage to clear WEEX minimum size)'],
+  ['Event pause (min)', 60, 'Bot opens no new trades this many minutes before/after a HIGH-impact US report (FOMC, CPI, jobs). 0 = off'],
 ];
 var STRAT_NAMES = { L_TPI: 'TPI breakout long', L_ST: 'SuperTrend long', S_FUND: 'Funding-extreme short', S_BBRSI: 'BB + RSI short', L_FUND: 'Funding-extreme long', S_BTCFLIP: 'BTC-breakdown short', M_BOTTOM: 'Market-bottom long', L_RSI20: 'Washout bounce long', CHAT: 'Atlas chat plan', CARD: 'Jacob trade card' };
 var TABS = {
   Signals: ['Time (CT)', 'Coin', 'Strategy', 'Side', 'Price', 'Why', 'Action', 'Claude notes'],
   Orders: ['ID', 'Time (CT)', 'Coin', 'Strategy', 'Side', 'Qty', 'Ref price', 'Protective stop', 'Margin $', 'Leverage', 'Status', 'Token', 'Result', 'Claude notes'],
-  Positions: ['ID', 'Coin', 'Strategy', 'Side', 'Opened (CT)', 'Entry', 'Qty', 'Margin $', 'Leverage', 'Stop', 'Mode', 'Status', 'Closed (CT)', 'Exit', 'P&L $', 'P&L %', 'Exit reason', 'Bars held', 'Claude notes'],
+  Positions: ['ID', 'Coin', 'Strategy', 'Side', 'Opened (CT)', 'Entry', 'Qty', 'Margin $', 'Leverage', 'Stop', 'Mode', 'Status', 'Closed (CT)', 'Exit', 'P&L $', 'P&L %', 'Exit reason', 'Bars held', 'Claude notes', 'Tag'],
   Log: ['Time (CT)', 'Type', 'Message']
 };
 
@@ -248,7 +256,8 @@ function parseTime_(s) { if (s instanceof Date) return s.getTime(); var t = Date
 function act_(coin, sig, x) {
   var mode = String(set_('Mode')).toUpperCase(), kill = on_('Kill switch');
   var openN = rows_('Positions').filter(function (r) { return r[11] == 'OPEN'; }).length + rows_('Orders').filter(function (r) { return r[10] == 'PENDING'; }).length;
-  var action = kill ? 'Skipped: kill switch ON' : openN >= num_('Max open trades', 1, 20) ? 'Skipped: max open trades' : mode;
+  var ev = eventPause_(), action = kill ? 'Skipped: kill switch ON' : ev ? 'Skipped: event pause (' + ev + ')' : openN >= num_('Max open trades', 1, 20) ? 'Skipped: max open trades' : mode;
+  if (action == 'APPROVE' && sig.strategy != 'CHAT' && slice_('BOT-AUTO', coin)) action = 'BOT-AUTO';
   ss_().getSheetByName('Signals').appendRow([ct_(), coin, STRAT_NAMES[sig.strategy], sig.side, x.c, sig.why, action, '']);
   if (action.indexOf('Skipped') === 0) return;
   var lev = num_('Leverage', 1, 5), margin = equity_() * num_('Margin per trade %', 1, 50) / 100;
@@ -256,6 +265,7 @@ function act_(coin, sig, x) {
   var o = { id: 'CB' + Date.now().toString(36).toUpperCase() + coin, coin: coin, strategy: sig.strategy, side: sig.side, ref: x.c, stop: stop, margin: margin, lev: lev, why: sig.why };
   o.qty = qty_(coin, margin * lev / x.c);
   if (!(o.qty > 0)) { log_('SKIP', coin + ' size below the exchange minimum'); return; }
+  if (action == 'BOT-AUTO') { var bo = autoOrder_(o, num_('Bot $ per trade', 0, 50), 'BOT-AUTO'); if (bo) sendLive_(bo, 'AUTO'); return; }
   if (mode == 'PAPER') return openPos_(o, priceNow_(coin), 'PAPER', 'Paper fill');
   if (mode == 'AUTO') return sendLive_(o, 'AUTO');
   if (mode == 'APPROVE') {
@@ -379,7 +389,50 @@ function approve_(id, token, yes) {
 }
 function expireApprovals_() {
   var mins = num_('Approve window (min)', 5, 1440), now = Date.now();
-  rows_('Orders').forEach(function (r, i) { if (r[10] == 'PENDING') { var ts = parseInt(String(r[0]).slice(2, -String(r[2]).length), 36); if (isFinite(ts) && now - ts > mins * 60e3) setOrder_(i + 2, 'EXPIRED', 'Not approved in time'); } });
+  rows_('Orders').forEach(function (r, i) { if (r[10] == 'PENDING') { var ts = parseInt(String(r[0]).slice(2, -String(r[2]).length), 36); if (isFinite(ts) && now - ts > mins * 60e3) {
+    var miss = null; try { miss = missedFill_(r); } catch (e) { log_('ERROR', 'missed fill ' + r[2] + ': ' + e.message); }
+    setOrder_(i + 2, 'EXPIRED', 'Not approved in time' + (miss ? ' - ' + miss : '')); } } });
+}
+// ---------------- bot slice, missed-trade fallback, event pause ----------------
+function coinCat_(coin) {
+  var c = CacheService.getScriptCache(), v = c.get('CAT_' + coin); if (v) return v;
+  var sh = ss_().getSheetByName('Coins'); if (!sh || sh.getLastRow() < 2) return 'UNKNOWN';
+  var rows = sh.getRange(2, 1, sh.getLastRow() - 1, 10).getValues(), out = 'SKIP', put = {};
+  rows.forEach(function (r) { put['CAT_' + r[0]] = String(r[9]); if (r[0] == coin) out = String(r[9]); });
+  try { c.putAll(put, 21600); } catch (e) { }
+  return out;
+}
+function tagOpen_(tag) { return rows_('Positions').filter(function (r) { return r[11] == 'OPEN' && r[19] == tag; }); }
+function slice_(tag, coin) {   // room left in the bot's own slice?
+  if (!keys_()) return false;
+  if (tag == 'BOT-AUTO') { var cap = num_('Bot slice $', 0, 1000), per = num_('Bot $ per trade', 0, 50), o = tagOpen_(tag);
+    if (!(cap > 0 && per > 0) || coinCat_(coin) != 'BOT') return false;
+    return o.length < num_('Bot max open', 0, 20) && o.reduce(function (s, r) { return s + Number(r[7]); }, 0) + per <= cap; }
+  var mc = num_('Missed cap $', 0, 1000), mp = num_('Missed-trade $', 0, 50), m = tagOpen_('MISSED-AUTO');
+  return mc > 0 && mp > 0 && m.length < num_('Missed max open', 0, 20) && m.reduce(function (s, r) { return s + Number(r[7]); }, 0) + mp <= mc;
+}
+function autoOrder_(o, margin, tag) {   // re-size a signal to the small auto margin at Auto leverage
+  var lev = num_('Auto leverage', 1, 50), px = priceNow_(o.coin);
+  var a = { id: (tag == 'BOT-AUTO' ? 'BA' : 'MA') + Date.now().toString(36).toUpperCase() + o.coin, coin: o.coin, strategy: o.strategy, side: o.side, ref: px, stop: o.stop, margin: margin, lev: lev, why: tag + ': ' + (o.why || ''), tag: tag };
+  if (o.side == 'LONG' ? o.stop >= px : o.stop <= px) { log_('SKIP', tag + ' ' + o.coin + ': price already past the stop'); return null; }
+  var liqDist = 1 / lev - 0.005, stopDist = Math.abs(px - o.stop) / px;
+  if (stopDist >= liqDist) { log_('SKIP', tag + ' ' + o.coin + ': stop ' + (stopDist * 100).toFixed(1) + '% away is past liquidation at ' + lev + 'x'); return null; }
+  a.qty = qty_(o.coin, margin * lev / px);
+  if (!(a.qty > 0)) { log_('SKIP', tag + ' ' + o.coin + ': $' + margin + ' at ' + lev + 'x is below the WEEX minimum size'); return null; }
+  return a;
+}
+function missedFill_(r) {   // Orders row -> small auto trade if the missed-trade fallback has room
+  if (r[3] == STRAT_NAMES.CHAT || !slice_('MISSED-AUTO', r[2])) return '';
+  if (eventPause_()) return 'missed-trade fill skipped (event pause)';
+  var strat = Object.keys(STRAT_NAMES).filter(function (k) { return STRAT_NAMES[k] == r[3]; })[0];
+  var px = priceNow_(r[2]); if (Math.abs(px / Number(r[6]) - 1) > 0.03) return 'missed-trade fill skipped (price moved 3%+)';
+  var a = autoOrder_({ coin: r[2], strategy: strat, side: r[4], stop: Number(r[7]), why: 'missed approve ' + r[0] }, num_('Missed-trade $', 0, 50), 'MISSED-AUTO');
+  if (!a) return 'missed-trade fill skipped (size/stop)';
+  var res = sendLive_(a, 'AUTO'); return res.ok ? 'bot took it at $' + a.margin + ' (MISSED-AUTO)' : 'missed-trade fill failed: ' + res.msg;
+}
+function eventPause_() {   // name of a HIGH-impact US report within +-N minutes, else ''
+  var mins = num_('Event pause (min)', 0, 600); if (!mins) return '';
+  try { var n = news_(), now = Date.now(), hit = (n.cal || []).filter(function (e) { return e.imp == 'High' && Math.abs(new Date(e.when).getTime() - now) <= mins * 60e3; })[0]; return hit ? hit.t : ''; } catch (e) { return ''; }
 }
 
 // ---------------- notifications ----------------
