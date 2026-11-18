@@ -1,6 +1,7 @@
 // NBA set builder on the server (no Chrome, no Google time, no Claude usage).
 // Live Kalshi prices -> fresh search with Jacob's rules -> posts the best set to the bot -> bot writes it to the NBA sheet
 // (Claude_Blend tab + Order_Desk rows, UNTICKED) -> phone push. It never places a bet.
+// Win chances: sportsbook fair % from the Implied_Odds tab when the bot has it, else Kalshi mid. Lotto <= 15% of the set.
 // Rules (11/18): all favorites win >= +$20 | exactly 1 hedge (underdog of a game we hold), <= 10% | 1 lotto (favorite + underdog)
 // | lose-all <= 2% | no team > 40% | no 2-team combo > 25% | legs >= 10c | tickets >= $3 | favorite that fell 15c+ since morning is out
 // | best night >= $100 (Claude_Blend B5, relaxed to 70/40 if nothing passes)
@@ -35,7 +36,8 @@ async function main() {
     if ((cfg.exclude || []).includes(fav) || (cfg.exclude || []).includes(dog)) { skipped.push(fav + ' (skip list)'); continue; }
     if (morning[fav] - F.a >= 0.15) { skipped.push(fav + ' (fell ' + Math.round((morning[fav] - F.a) * 100) + 'c since morning)'); continue; }
     if (D.a < 0.10) continue;
-    G.push({ fav, dog, fa: F.a, da: D.a, pm: F.b > 0 ? (F.a + F.b) / 2 : F.a - 0.005, ft: F.t, dt: D.t });
+    const fair = cfg.fair || {}, pf = fair[fav] != null ? fair[fav] : (fair[dog] != null ? 1 - fair[dog] : null);   // sportsbook fair % (Implied_Odds tab) when we have it
+    G.push({ fav, dog, fa: F.a, da: D.a, pm: pf != null ? pf : (F.b > 0 ? (F.a + F.b) / 2 : F.a - 0.005), src: pf != null ? 'books' : 'kalshi', ft: F.t, dt: D.t });
   }
   fs.writeFileSync(mf, JSON.stringify(morning));
   if (G.length < 3) { await post({ rb: 'nbablend', tickets: [], summary: 'Not enough favorite games (' + G.length + ')', math: skipped.join(', ') }); return; }
@@ -57,7 +59,7 @@ async function main() {
   function ok(T, e) {
     const h = T.filter((t) => t.k == 'hedge'); if (h.length != 1) return false;
     const held = new Set(T.filter((t) => t.k == 'straight' || t.k == 'main').flatMap((t) => t.legs.map(([g]) => g)));
-    return held.has(h[0].legs[0][0]) && h[0].st <= 0.10 * TOT && T.every((t) => t.st >= 3) && e.allfav >= 20 && e.lose <= 0.02 && e.maxteam <= 0.40 && e.max2 <= 0.25 && e.tot == TOT && e.best >= MINBEST;
+    return held.has(h[0].legs[0][0]) && h[0].st <= 0.10 * TOT && T.filter((t) => t.k == 'lotto').every((t) => t.st <= 0.15 * TOT) && T.every((t) => t.st >= 3) && e.allfav >= 20 && e.lose <= 0.02 && e.maxteam <= 0.40 && e.max2 <= 0.25 && e.tot == TOT && e.best >= MINBEST;
   }
   const better = (a, b) => !b || a.avg > b.avg + 1e-9 || (Math.abs(a.avg - b.avg) < 1e-9 && a.win > b.win);
   function randSet() {
@@ -115,7 +117,7 @@ async function main() {
   const tickets = best.map((t, i) => ({ name: KIND[t.k] + ': ' + nm(t.legs), stake: t.st, pays: Math.round(bestE.pays[i] * 100) / 100, legs: t.legs.map(([g, s]) => (s ? G[g].ft : G[g].dt) + ':yes').join(';') }));
   const f = (x) => (x >= 0 ? '+$' : '-$') + Math.abs(x).toFixed(2);
   const summary = 'avg ' + f(bestE.avg) + ' | lose all ' + (bestE.lose * 100).toFixed(1) + '% | all favs win ' + f(bestE.allfav) + ' | best ' + f(bestE.best) + ' | profit nights ' + Math.round(bestE.win * 100) + '% | top team ' + Math.round(bestE.maxteam * 100) + '%';
-  const math = N + ' favorite games, ' + sets + ' sets scored, ' + calc + ' calculations, ' + rounds + ' improve rounds, best-night target $' + MINBEST + (skipped.length ? ' | skipped: ' + skipped.join(', ') : '');
+  const math = N + ' favorite games (win chances: ' + G.filter((g) => g.src == 'books').length + ' from sportsbook fair %, rest from Kalshi), ' + sets + ' sets scored, ' + calc + ' calculations, ' + rounds + ' improve rounds, best-night target $' + MINBEST + (skipped.length ? ' | skipped: ' + skipped.join(', ') : '');
   const r = await post({ rb: 'nbablend', tickets, summary, math });
   await push('NBA set ready ($' + TOT + ')', tickets.map((t) => 'put $' + t.stake + ' ' + t.name.replace(/^\w+: /, '') + ', pays $' + t.pays.toFixed(2)).join('\n') + '\n' + summary + '\n' + (r.loaded ? 'On Order_Desk, unticked.' : (r.note || 'Not loaded (Server blend OFF)')));
   console.log(summary, '|', math, '|', JSON.stringify(r));

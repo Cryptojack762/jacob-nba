@@ -887,7 +887,10 @@ function nbaTab_() {
 }
 function nbaCfg_() {
   var v = nbaTab_().getRange(1, 2, 5, 1).getValues();
-  return { ok: true, best: Number(v[4][0]) || 100, total: Number(v[0][0]) || 72, exclude: String(v[1][0] || '').toUpperCase().split(/[ ,]+/).filter(String), on: String(v[2][0]).toUpperCase() != 'OFF' };
+  var fair = {};   // sportsbook fair % per team from the NBA bot's Implied_Odds tab (col E fair %, col I Kalshi ticker)
+  try { var io = SpreadsheetApp.openById(NBA_SHEET).getSheetByName('Implied_Odds'); if (io && io.getLastRow() > 1) io.getRange(2, 1, io.getLastRow() - 1, 9).getValues().forEach(function (r) {
+    var f = Number(r[4]), t = String(r[8]); if (f > 0 && f < 100 && /KXNBAGAME-/.test(t)) fair[t.split('-').pop()] = f / 100; }); } catch (e) { }
+  return { ok: true, fair: fair, best: Number(v[4][0]) || 100, total: Number(v[0][0]) || 72, exclude: String(v[1][0] || '').toUpperCase().split(/[ ,]+/).filter(String), on: String(v[2][0]).toUpperCase() != 'OFF' };
 }
 function nbaBlend_(b) {
   var sh = nbaTab_(), cfg = nbaCfg_(), now = ct_(), T = b.tickets || [];
