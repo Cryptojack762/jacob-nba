@@ -457,6 +457,7 @@ function doGet(e) {
     var pin = PropertiesService.getScriptProperties().getProperty('APP_PIN');
     if (String(q.pin || '') != String(pin)) return json_({ ok: false, err: 'PIN' });
     if (q.news) return json_(news_());
+    if (q.liq) return json_(liq_());
     if (q.bets) return json_(bets_());
     if (q.coins) return json_(buildCoins());
     if (q.chat) { var hist = []; try { hist = JSON.parse(q.h || '[]').slice(-4); } catch (e) { } return json_(chat_(String(q.chat).slice(0, 600), hist)); }
@@ -753,4 +754,11 @@ function bets_() {
   } catch (e) { out.ok = false; out.err = e.message; }
   try { c.put('BETS2', JSON.stringify(out), 300); } catch (e) { }
   return out;
+}
+
+// Liquid coins for the app's scanners: BOT + JACOB category coins that trade on BloFin (scanners read BloFin candles)
+function liq_() {
+  var sh = ss_().getSheetByName('Coins'); if (!sh || sh.getLastRow() < 2) return { ok: false };
+  var rows = sh.getRange(2, 1, sh.getLastRow() - 1, 10).getValues();
+  return { ok: true, coins: rows.filter(function (r) { return r[1] == 'Y' && (r[9] == 'BOT' || r[9] == 'JACOB'); }).map(function (r) { return { c: r[0], cat: r[9] }; }) };
 }

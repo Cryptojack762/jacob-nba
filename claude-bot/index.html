@@ -434,6 +434,12 @@ function qask(text){go('chat');csend(text);return;if(!WAPI||!WPIN){$('askout').t
   $('askout').textContent='Thinking… (about 20 seconds)';fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+'&chat='+encodeURIComponent(text.slice(0,590)),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){$('askout').textContent=j.ok?(j.reply||'No answer'):'Error: '+(j.err||'unknown')}).catch(function(e){$('askout').textContent='Could not reach Claude: '+e.message})}
 document.addEventListener('click',function(e){var b=e.target.closest('[data-q]');if(!b)return;var t=$('qtk').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');if(!t){toast('Type a ticker first');return}qask(QP[b.dataset.q].replace('{T}',t))});
 $('qgo').onclick=function(){var t=$('qfree').value.trim();if(t)qask(t)};$('qfree').addEventListener('keydown',function(e){if(e.key==='Enter')$('qgo').click()});
+// ---------- liquid coin list (Coins tab: BOT + JACOB on BloFin) + batched fetch ----------
+var LIQ=['BTC','ETH','SOL','XRP','DOGE','BNB','ADA','AVAX','LINK','SUI','LTC','DOT','NEAR','APT','ARB','OP','INJ','HBAR','UNI','TRX'],LIQCAT={};
+try{var lq=JSON.parse(localStorage.getItem('liq')||'null');if(lq&&lq.length>5){LIQ=lq.map(function(x){return x.c});lq.forEach(function(x){LIQCAT[x.c]=x.cat})}}catch(e){}
+function liqload(){if(!WAPI||!WPIN)return;fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+'&liq=1',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){if(j.ok&&j.coins&&j.coins.length>5){try{localStorage.setItem('liq',JSON.stringify(j.coins))}catch(e){}}}).catch(function(){})}
+setTimeout(liqload,4000);
+function pmap(list,fn){var out=[],i=0;return (function nx(){if(i>=list.length)return Promise.resolve(out.filter(Boolean));var B=list.slice(i,i+5);i+=5;return Promise.all(B.map(function(c){return fn(c).catch(function(){return null})})).then(function(r){out=out.concat(r);return new Promise(function(z){setTimeout(z,150)})}).then(nx)})()}
 // ---------- Trade tickets + setups board (4H, tested rules) ----------
 function tkcalc(c,k,minN){var n=k.length;if(n<(minN||220))return null;var C=k.map(function(x){return x[4]});
   var e=C[0],E=[];C.forEach(function(v){e=v*2/201+e*(1-2/201);E.push(e)});
@@ -454,7 +460,7 @@ function tkhtml(T){if(!T)return '<div class="why">Not enough 4H data for that co
   '<div class="hl"><i class="chip s-'+(T.bb.ok?'ALMOST':'WAIT')+'">'+(T.bb.ok?'NEAR':'WAIT')+'</i><span><b>'+esc(T.bb.name)+'</b> · '+esc(T.bb.why)+'<br>If it fires: stop '+tkfmt(T.bb.stop)+', target '+tkfmt(T.bb.tp[1])+' (2 ATR), out within 2 days</span></div>'}
 function tkget(c){return bfget('candles?instId='+c+'-USDT&bar=4H&limit=300').then(function(d){var k=(d||[]).filter(function(x){return x[8]==='1'}).map(function(x){return [+x[0],+x[1],+x[2],+x[3],+x[4]]}).reverse();var T=tkcalc(c,k);if(T)T.k=k;return T})}
 $('tkbtn').onclick=function(){var t=$('qtk').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');if(!t){toast('Type a ticker first');return}$('tkout').innerHTML='<div class="why" style="margin-top:8px">Building ticket…</div>';tkget(t).then(function(T){var C=T?mkcard(T,T.k):null;$('tkout')._C=C;$('tkout').innerHTML=(C&&C.ok?cardhtml(C):(C?'<div class="why" style="margin-top:8px">No card: '+esc(C.why)+'</div>':''))+tkhtml(T)}).catch(function(){$('tkout').innerHTML='<div class="why">Could not load '+esc(t)+' from BloFin.</div>'})};
-function sbload(){var L=['BTC','ETH','SOL','XRP','DOGE','BNB','ADA','AVAX','LINK','SUI','LTC','DOT','NEAR','APT','ARB','OP','INJ','HBAR','UNI','TRX'];
+function sbload(){var L=LIQ.slice(0,45);
   var R=[],i=0;(function nx(){if(i>=L.length)return Promise.resolve(R);var B=L.slice(i,i+5);i+=5;return Promise.all(B.map(function(c){return tkget(c).then(function(T){R.push(T)},function(){})})).then(function(){return new Promise(function(r){setTimeout(r,150)})}).then(nx)})().then(function(R){R=R.filter(Boolean);
     if(CTF==='4H'){CARDS=R.map(function(T){return mkcard(T,T.k)});cardsrender()}
     R.sort(function(a,b){return (b.bo.ok-a.bo.ok)||(a.bo.dist-b.bo.dist)});
@@ -483,7 +489,7 @@ function cardhtml(C){if(!C.ok)return '';var f=tkfmt,risk=AMT*(C.px-C.stop)/C.px*
    '<div class="amt">'+[1,3,5,10].map(function(a){return '<button data-amt="'+a+'" class="'+(a===AMT?'on':'')+'">$'+a+'</button>'}).join('')+'</div>'+
    '<button class="bigbuy" data-buy="'+esc(JSON.stringify({c:C.c,lev:C.lev,stop:C.stop,lvl:(C.trend?'uptrend ':'COUNTER-TREND ')+C.lvl.t+' '+f(C.lvl.p)}))+'">BUY $'+AMT+' · '+esc(C.c)+' '+C.lev+'x</button>'+
    '<div class="why" style="margin-top:8px">Max loss ≈ $'+Math.min(AMT,risk).toFixed(2)+' if the stop hits. '+esc(re)+(C.lvl.tested?'':' Order-block levels are not backtested yet.')+'</div></div>'}
-function cardsload(){var L=['BTC','ETH','SOL','XRP','DOGE','BNB','ADA','AVAX','LINK','SUI','LTC','DOT','NEAR','APT','ARB','OP','INJ','HBAR','UNI','TRX'],tf=CTF,R=[],i=0;
+function cardsload(){var L=LIQ.slice(0,45),tf=CTF,R=[],i=0;
   document.querySelectorAll('[data-tf]').forEach(function(b){b.classList.toggle('on',b.dataset.tf===CTF)});
   $('tfnote').textContent=CTF==='4H'?'4H: the timeframe our breakout rules passed backtests on. Support must be 2-6% below price.':CTF+': not backtested yet. Support must be '+TFR[CTF][0]*100+'-'+TFR[CTF][1]*100+'% below price, so leverage is '+(CTF==='1H'?'higher':'lower')+'.';
   (function nx(){if(i>=L.length)return Promise.resolve();var B=L.slice(i,i+5);i+=5;return Promise.all(B.map(function(c){return bfget('candles?instId='+c+'-USDT&bar='+tf+'&limit=300').then(function(d){var k=(d||[]).filter(function(x){return x[8]==='1'}).map(function(x){return [+x[0],+x[1],+x[2],+x[3],+x[4]]}).reverse();var T=tkcalc(c,k,70);if(T){T.k=k;R.push(T)}},function(){})})).then(function(){return new Promise(function(r){setTimeout(r,150)})}).then(nx)})().then(function(){if(tf!==CTF)return;CARDS=R.map(function(T){return mkcard(T,T.k)});cardsrender()})}
@@ -595,9 +601,9 @@ function bfload(){
 }
 bfload();setInterval(function(){if(!document.hidden)bfload()},60000);
 // ---------- WEEX day-trade scanner: L_VOL1H (backtest PF 1.43 out-of-sample, paper idea) ----------
-var DTC=['BTC','ETH','SOL','XRP','DOGE','BNB','ADA','AVAX','LINK','SUI','LTC','DOT'];
+var DTC=LIQ;
 function dtscan(){
-  Promise.all(DTC.map(function(c){return bfget('candles?instId='+c+'-USDT&bar=1H&limit=300').then(function(d){return {c:c,k:d.filter(function(x){return x[8]==='1'}).map(function(x){return [+x[0],+x[1],+x[2],+x[3],+x[4],+x[6]||+x[5]]}).reverse()}})}))
+  pmap(DTC,function(c){return bfget('candles?instId='+c+'-USDT&bar=1H&limit=300').then(function(d){return {c:c,k:d.filter(function(x){return x[8]==='1'}).map(function(x){return [+x[0],+x[1],+x[2],+x[3],+x[4],+x[6]||+x[5]]}).reverse()}})})
   .then(function(R){var hits=[];
     R.forEach(function(r){var k=r.k,n=k.length;if(n<230)return;var c=k.map(function(x){return x[4]});
       var e=c[0],a=2/201,E=[];c.forEach(function(v){e=v*a+e*(1-a);E.push(e)});
@@ -611,7 +617,7 @@ dtscan();setInterval(function(){if(!document.hidden)dtscan()},300000);
 // 4H version (L_VOL4H): 4H candle up 3%+ on 2x its 20-candle avg volume, closed above 4H EMA200 -> long next candle, stop 1.5 ATR, exit after 24h.
 // Backtest 11/18: 12 coins, ~2 yrs of 4H, 18 setting combos: out-of-sample 97 trades, PF 1.27, 38% win, +0.46%/trade after fees. WEAK pass.
 function dtscan4(){
-  Promise.all(DTC.map(function(c){return bfget('candles?instId='+c+'-USDT&bar=4H&limit=300').then(function(d){return {c:c,k:d.filter(function(x){return x[8]==='1'}).map(function(x){return [+x[0],+x[1],+x[2],+x[3],+x[4],+x[6]||+x[5]]}).reverse()}})}))
+  pmap(DTC,function(c){return bfget('candles?instId='+c+'-USDT&bar=4H&limit=300').then(function(d){return {c:c,k:d.filter(function(x){return x[8]==='1'}).map(function(x){return [+x[0],+x[1],+x[2],+x[3],+x[4],+x[6]||+x[5]]}).reverse()}})})
   .then(function(R){var hits=[];
     R.forEach(function(r){var k=r.k,n=k.length;if(n<230)return;var c=k.map(function(x){return x[4]});
       var e=c[0],E=[];c.forEach(function(v){e=v*2/201+e*(1-2/201);E.push(e)});
