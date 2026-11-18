@@ -480,7 +480,7 @@ function chat_(text) {
   if (!coin && /SOLANA/.test(up)) coin = 'SOL'; if (!coin && /BITCOIN/.test(up)) coin = 'BTC'; if (!coin && /ETHEREUM/.test(up)) coin = 'ETH'; if (!coin && /DOGECOIN/.test(up)) coin = 'DOGE'; if (!coin && /ARBITRUM/.test(up)) coin = 'ARB';
   var swing = /SWING|4 ?H|DAILY|1 ?D\b|DAYS|WEEK/.test(up), tfs = /15 ?M/.test(up) ? ['15m', '1H', '4H'] : swing ? ['1H', '4H', '1D'] : ['15m', '1H', '4H'];
   var data = null;
-  if (coin) { data = { coin: coin, style: swing ? 'swing' : 'day trade', frames: tfs.map(function (b) { try { return tfSummary_(coin, b); } catch (e) { return null; } }).filter(Boolean) };
+  if (coin) { data = { coin: coin, style: swing ? 'swing' : 'day trade', frames: tfs.map(function (b) { try { return tfSummary_(coin, b) || { tf: b, err: 'not enough candles' }; } catch (e) { return { tf: b, err: e.message }; } }) };
     try { var f = JSON.parse(UrlFetchApp.fetch('https://openapi.blofin.com/api/v1/market/funding-rate?instId=' + coin + '-USDT', { muteHttpExceptions: true }).getContentText()).data; if (f && f[0]) data.funding = f[0].fundingRate; } catch (e) { } }
   var wash = []; try { wash = JSON.parse(PropertiesService.getScriptProperties().getProperty('WASH') || '[]'); } catch (e) { }
   var sys = "You are Atlas, Jacob's trading assistant inside his phone app. Answer in plain short English, vertical lists, plain dollars, no tables. " +
@@ -516,7 +516,7 @@ function queuePlan_(q) {
     return { ok: true, msg: 'Queued ' + q.side + ' ' + coin + ' (mode ' + set_('Mode') + ')' };
   } catch (e) { return { ok: false, err: e.message }; } finally { lk.releaseLock(); }
 }
-function testChat() { Logger.log(JSON.stringify(chat_('day trade XRP on the 15m')).slice(0, 1500)); }
+function testChat() { var up='XRP'; Logger.log(JSON.stringify(['15m','1H','4H'].map(function (b) { try { return tfSummary_(up, b) ? b + ' ok' : b + ' null'; } catch (e) { return b + ' ' + e.message; } }))); Logger.log(JSON.stringify(chat_('day trade XRP on the 15m')).slice(0, 1500)); }
 function testFrames() {
   try { var r = UrlFetchApp.fetch('https://openapi.blofin.com/api/v1/market/candles?instId=XRP-USDT&bar=1H&limit=300', { muteHttpExceptions: true }); Logger.log('HTTP ' + r.getResponseCode() + ' ' + r.getContentText().slice(0, 200)); } catch (e) { Logger.log('fetch err ' + e.message); }
   try { Logger.log(JSON.stringify(tfSummary_('XRP', '1H'))); } catch (e) { Logger.log('tf err ' + e.message + ' ' + e.stack); }
