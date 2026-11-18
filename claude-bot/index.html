@@ -61,7 +61,7 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
 .hl i{font-style:normal;flex:none}
 .foot{font-size:11px;color:var(--dim);text-align:center;line-height:1.5;margin:20px 8px}
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;justify-content:center;gap:4px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:#0e0c13f2;backdrop-filter:blur(12px);border-top:1px solid #1d1824}
-.tab{flex:1;max-width:160px;position:relative;background:none;border:0;color:var(--dim);display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border-radius:12px;font:600 11px Inter,sans-serif;cursor:pointer}
+.tab{flex:1;max-width:160px;position:relative;white-space:nowrap;background:none;border:0;color:var(--dim);display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border-radius:12px;font:600 11px Inter,sans-serif;cursor:pointer}
 .tab svg{width:22px;height:22px}.tab.on{color:var(--fire2)}
 .view{display:none}.view.on{display:block;animation:fi .25s ease}@keyframes fi{from{opacity:0;transform:translateY(4px)}}
 .sk{background:linear-gradient(90deg,#1a1620,#241e2c,#1a1620);background-size:200% 100%;animation:sh 1.2s infinite;border-radius:12px;height:64px;margin-bottom:10px}@keyframes sh{to{background-position:-200% 0}}
@@ -83,6 +83,7 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
 .big{font-size:28px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .two{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
 .inp{width:100%;background:var(--card2);border:1px solid var(--line);color:var(--tx);border-radius:12px;padding:13px;font:16px Inter,sans-serif;margin-top:8px}
+.seg2{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:4px;margin:4px 0 14px}.seg2 button{font:700 14px Inter,sans-serif;border:0;border-radius:10px;padding:10px;background:none;color:var(--dim);cursor:pointer}.seg2 button.on{background:#2a1206;color:var(--fire2)}
 .symL{color:var(--up);border-color:#164a2b}.symS{color:var(--dn);border-color:#4a1d20}
 </style>
 </head>
@@ -111,6 +112,7 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
   </section>
 
   <section class="view" id="v-weex">
+    <div class="seg2"><button data-go="bf" class="">BloFin · long trades</button><button data-go="weex" class="on">WEEX · day trades</button></div>
     <div class="card" id="wsetup" style="display:none">
       <div class="k" style="margin-top:0">Connect the trading bot</div>
       <input class="inp" id="wapi" placeholder="Bot web app URL (ends in /exec)" autocomplete="off">
@@ -146,6 +148,7 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
     </div>
   </section>
   <section class="view" id="v-bf">
+    <div class="seg2"><button data-go="bf" class="on">BloFin · long trades</button><button data-go="weex" class="">WEEX · day trades</button></div>
     <div class="card">
       <div class="k" style="margin-top:0">BloFin · long trades</div>
       <div class="why">Your hand-placed long trades. Live BloFin prices, no API key. Refreshes every minute.</div>
@@ -193,8 +196,7 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
 
 <nav class="tabs">
   <button class="tab on" data-v="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Home</button>
-  <button class="tab" data-v="bf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>BloFin</button>
-  <button class="tab" data-v="weex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M7 4l-3 3M7 4l3 3"/><path d="M17 20V4M17 20l-3-3M17 20l3-3"/></svg>WEEX<span id="wbdg" style="position:absolute;top:2px;margin-left:30px;background:var(--dn);color:#fff;font-size:10px;font-weight:800;border-radius:999px;padding:1px 5px;display:none"></span></button>
+  <button class="tab" data-v="bf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>Trade<span id="wbdg" style="position:absolute;top:2px;margin-left:30px;background:var(--dn);color:#fff;font-size:10px;font-weight:800;border-radius:999px;padding:1px 5px;display:none"></span></button>
   <button class="tab" data-v="sig"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>Triggers</button>
   <button class="tab" data-v="day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Day</button>
   <button class="tab" data-v="picks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>Top picks</button>
@@ -288,7 +290,7 @@ function load(manual){
 }
 function go(v){
   document.querySelectorAll('.view').forEach(function(x){x.classList.toggle('on',x.id=='v-'+v)});
-  document.querySelectorAll('.tab').forEach(function(x){x.classList.toggle('on',x.dataset.v==v)});
+  document.querySelectorAll('.tab').forEach(function(x){x.classList.toggle('on',x.dataset.v==v||(x.dataset.v=='bf'&&v=='weex'))});
   window.scrollTo(0,0); try{localStorage.setItem('pxv',v)}catch(e){}
 }
 document.addEventListener('click',function(e){
