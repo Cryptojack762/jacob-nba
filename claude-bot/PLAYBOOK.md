@@ -170,3 +170,14 @@ App: BloFin tab now has a live L_RSI20 scanner for 20 coins; failing rules are l
 - 11/18 12:28 AM: L_RSI20 added to the bot (Code.gs, deployment v6). ON by default, Paper mode. Needs 3+ coins in the
   WASH property (24h window). Stop 2 ATR, target 2 ATR (entry*2 - stop), exit after 12 bars. Logs a WASHOUT row when breadth >= 3.
 - TPI exit check (20 coins 4H): EMA50 exit 1.30/1.41, EMA20 1.16/1.33, RSI<45 1.29/1.40, 30-bar time 1.29/1.44 — keep current exits.
+
+## LESSONS LOG 11/18 (numbered, keep adding)
+1. EMAs are a filter, not a trigger. Breakouts only on 4H. Washout bounce needs 3+ coins firing in 24h. No day trades under 30 min.
+2. BloFin Grid and DCA bots skipped (no tested edge). Signal Bot is the only fit: needs paid TradingView + a Pine strategy, $50 minimum.
+3. Server runs 24/7 on DigitalOcean, now 2 GB / $12 a month. Exchange keys are IP-locked to 157.230.148.63.
+4. Going live: reset PEAK and DAY_START to the real balance first (or the kill switch fires). Money must sit in Futures, not Spot.
+5. Atlas: Trades tab scores by tag (You tapped / Bot / Missed / Practice). Ask Claude uses the bot chat (Phoenix script has no key).
+6. 4H volume spike (3% candle, 2x volume, exit 24h): out-of-sample PF 1.27, 97 trades, 38% win. Weak pass, scanner only.
+7. WEEX leverage call needs both isolatedLongLeverage and isolatedShortLeverage; allPosition returns an array (empty when flat).
+8. ForexFactory XML times are GMT. Don't add 5 hours (FOMC minutes = Wed 1:00 PM CT).
+9. NBA 11/17 +$103.45: favorite that dropped 23c during the day (SAS) lost; hedge on its game paid. Lean shape beat NBA Math by $109.
