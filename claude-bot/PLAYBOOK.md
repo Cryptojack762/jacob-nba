@@ -146,3 +146,15 @@ Verdict per idea (IS PF / OOS PF):
 Lesson: on 1H with real fees most classic day-trade setups lose. The 0.15% cost eats any
 edge under ~0.3% per trade. Only big, volume-confirmed moves are worth chasing.
 Next: add L_VOL1H to the bot as PAPER-only (1H scan), compare 4 weeks vs backtest.
+
+## ROUND 4b — 4H long-trade rules for BloFin (20 coins, 4H, 2023-08 → 2026-11; OOS from 2025-06-01; 0.12% costs)
+- **L_RSI20 bottom bounce — BEST FIND.** Coin below 4H EMA200, 4H RSI14 under 20 then closes back ≥20 →
+  long next bar, stop 2 ATR, target 2 ATR, max 12 bars. IS PF 2.64 (149t, 67% win) / OOS PF 2.22 (124t, 61% win).
+  All 4 stop/target combos PF 1.74–2.86 OOS. 17 of 20 coins positive OOS. RSI threshold 25 still works (1.48), 30 fails (0.92).
+  Holding past 2 days kills it (24 bars: OOS 1.00). Rare: ~1 signal per coin per 4 months.
+- TPI (40-bar high, >EMA200, RSI>55, exit <EMA50): 1.46 / 1.41 — confirmed again.
+- EMA50 reclaim: only works ABOVE EMA200 (1.27/1.17); below EMA200 it fails (0.94). SOL is below → do not use for SOL now.
+- EMA20 dip-bounce ("pullback reload"): 1.06/0.79 — FAILS. Removed from trust.
+- Short breakout above 24h high (like BloFin AI's "1H close above X" trigger): 0.90 / 0.90 — FAILS.
+- 4H volume spike long: 1.31 / 1.18 with EMA200 filter — weak pass.
+App: BloFin tab now has a live L_RSI20 scanner for 20 coins; failing rules are labelled "backtest FAILS".
