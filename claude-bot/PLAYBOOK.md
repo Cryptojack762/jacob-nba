@@ -190,6 +190,7 @@ App: BloFin tab now has a live L_RSI20 scanner for 20 coins; failing rules are l
 - BEFORE line: a hike is already priced. More hawkish talk (2+ hikes, more dissents) = likely another leg down toward $62k; any "pause after December" hint = relief bounce.
 - Past reactions (inferred from headlines, not measured): Nov 2025 minutes -> BTC extended losses; hawkish minutes usually = small dip in the hour after.
 - Bot: event pause blocks new entries 12:00-2:00 PM CT (60 min each side).
+- AFTER (1:25 PM CT): minutes hawkish - officials signal more hikes likely, AI flagged as an inflation risk, Waller floated a 50 bp December hike (per BloFin AI citing CNBC; not checked myself). BTC 1 PM -> 1:20 PM: about -0.5% ($63.1k -> $62.8k), alts -0.3 to -0.6%, ZEC -1.3%. Small move, as the backtest said (no direction, slightly bigger range). BTC holding the $62-66k zone; below $62,250 next is $58.5k. Bot: no trades 12-2 PM (pause worked).
 
 ## ROUND 5 (11/18 9:50 AM) - checks on the 4H BTC-side breakout (12 coins, BloFin 4H, Apr 2024 - Nov 2026, 0.16% round-trip fees)
 Rule: LONG 4H close above 48-candle high while BTC > 20-day avg, stop 2 ATR, exit close under 24-candle low. SHORT close under 48-candle low while BTC < 20-day avg, stop 2 ATR, target 3R.
