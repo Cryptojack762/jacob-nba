@@ -155,6 +155,7 @@ function scan() {
     var btcFlipDown = !btcUp && btcD[nB - 2].c > be[nB - 2];
     expireApprovals_();
     try { reconcile_(); } catch (e) { log_('ERROR', 'reconcile: ' + e.message); }
+    try { manageTP_(); } catch (e) { log_('ERROR', 'take-profit check: ' + e.message); }
     var eq = equity_(); killCheck_(eq);
     if (!newBar) { status_('Waiting for the next 4H candle. BTC ' + (btcUp ? 'UP' : 'DOWN') + '. Equity $' + eq.toFixed(2) + '. Mode ' + set_('Mode') + (on_('Kill switch') ? ' | KILL SWITCH ON' : '')); return; }
     var open = rows_('Positions').filter(function (r) { return r[11] == 'OPEN'; });
@@ -306,7 +307,8 @@ function closePos_(r, exitPrice, reason, bars) {
   if (row < 0) return;
   var side = r[3] == 'LONG' ? 1 : -1, px = exitPrice || priceNow_(r[1]);
   if (r[10] == 'LIVE' && !exitPrice) { var res = weexClose_(r); if (!res.ok) { log_('ERROR', 'Close ' + r[1] + ' failed: ' + res.msg + ' - close it by hand on WEEX'); notify_('CLOSE FAILED ' + r[1], 'The bot could not close ' + r[1] + ': ' + res.msg + '. Close it by hand on WEEX.'); return; } }
-  var pct = side * (px / Number(r[5]) - 1) - BOT.fee, pnl = Number(r[7]) * Number(r[8]) * pct;
+  var pct = side * (px / Number(r[5]) - 1) - BOT.fee, pnl = Number(r[7]) * Number(r[8]) * pct, tpn = tpNote_(r);
+  if (tpn.real) { pnl += tpn.real; reason += ' (incl. $' + tpn.real.toFixed(2) + ' from take-profits)'; }
   sh.getRange(row, 12, 1, 7).setValues([['CLOSED', ct_(), px, Math.round(pnl * 100) / 100, Math.round(pct * 10000) / 100 + '%', reason, bars]]);
   log_(r[10], 'Closed ' + r[3] + ' ' + r[1] + ' @ ' + px + ': ' + reason + ', P&L $' + pnl.toFixed(2));
   notify_(r[10] + ': ' + r[1] + ' closed ' + (pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(2), r[3] + ' ' + r[1] + ' closed at $' + px + ' (' + reason + '). P&L ' + (pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(2) + ' (' + (pct * 100).toFixed(2) + '% of position).');
@@ -366,7 +368,7 @@ function sendLive_(o, how) {
 }
 function weexClose_(r) {
   try {
-    var body = { symbol: r[1] + 'USDT', side: r[3] == 'LONG' ? 'SELL' : 'BUY', positionSide: r[3], type: 'MARKET', quantity: String(r[6]), newClientOrderId: 'X' + r[0].slice(0, 30), reduceOnly: true };
+    var body = { symbol: r[1] + 'USDT', side: r[3] == 'LONG' ? 'SELL' : 'BUY', positionSide: r[3], type: 'MARKET', quantity: String(r[6]), newClientOrderId: 'X' + (r._tag || '') + r[0].slice(0, 26), reduceOnly: true };
     var res = weex_('POST', '/capi/v3/order', '', JSON.stringify(body));
     return res.success ? { ok: true } : { ok: false, msg: res.errorCode + ' ' + res.errorMessage };
   } catch (e) { return { ok: false, msg: e.message }; }
@@ -698,3 +700,37 @@ function setTrigger15() {
   log_('SETUP', 'scan trigger now every 15 minutes');
 }
 function testReconcile() { Logger.log('closed ' + reconcile_()); }
+
+// ---------------- take-profit ladder + trailing stop for Jacob's own trades (CARD / CHAT) ----------------
+// Bot strategies keep their backtested exits. Jacob's trades: R = entry-to-stop distance.
+// +1R: sell 25%, stop moves to breakeven (bot-side) | +2R: sell 25%, trail = high - 1R | +3R: sell 25% | last 25% rides the trail.
+// The original exchange stop stays on WEEX as the backstop. Checked every 15 minutes.
+function tpNote_(r) { try { var j = JSON.parse(String(r[18] || '{}')); return j && typeof j == 'object' ? j : {}; } catch (e) { return {}; } }
+function manageTP_() {
+  var sh = ss_().getSheetByName('Positions'), all = rows_('Positions');
+  all.forEach(function (r, i) {
+    if (r[10] != 'LIVE' || r[11] != 'OPEN' || (r[2] != 'CARD' && r[2] != 'CHAT')) return;
+    var row = i + 2, side = r[3] == 'LONG' ? 1 : -1, entry = Number(r[5]), R = Math.abs(entry - Number(r[9])); if (!(R > 0)) return;
+    var n = tpNote_(r), px = priceNow_(r[1]); n.s = n.s || 0; n.q0 = n.q0 || Number(r[6]); n.m0 = n.m0 || Number(r[7]); n.real = n.real || 0;
+    n.hi = side > 0 ? Math.max(n.hi || entry, px) : Math.min(n.hi || entry, px);
+    var gain = side * (px - entry) / R;
+    var softStop = n.s >= 2 ? n.hi - side * R : n.s >= 1 ? entry : null;
+    if (softStop != null && side * (px - softStop) <= 0) {   // trail / breakeven hit -> close the rest
+      sh.getRange(row, 19).setValue(JSON.stringify(n)); r[18] = JSON.stringify(n);
+      closePos_(r, null, n.s >= 2 ? 'Trailing stop (TP ladder)' : 'Breakeven stop after TP1', ''); return;
+    }
+    if (n.s < 3 && gain >= n.s + 1) {   // next take-profit reached: sell 25% of the original size
+      var part = qty_(r[1], n.q0 * 0.25), left = Number(r[6]);
+      if (part > 0 && part < left) {
+        var res = weexClose_({ 0: r[0], 1: r[1], 3: r[3], 6: part, length: 7, _tag: 'T' + (n.s + 1) });
+        if (!res.ok) { log_('ERROR', 'TP' + (n.s + 1) + ' ' + r[1] + ' failed: ' + res.msg); return; }
+        var pct = side * (px / entry - 1) - BOT.fee, mPart = n.m0 * 0.25; n.real += mPart * Number(r[8]) * pct;
+        sh.getRange(row, 7, 1, 2).setValues([[Math.round((left - part) * 1e8) / 1e8, Math.round((Number(r[7]) - mPart) * 1e4) / 1e4]]);
+        log_('LIVE', 'TP' + (n.s + 1) + ' ' + r[1] + ': sold ' + part + ' @ ' + px + ' (+$' + (mPart * Number(r[8]) * pct).toFixed(2) + ')');
+        notify_('TP' + (n.s + 1) + ' hit: ' + r[1], 'Sold 25% of ' + r[1] + ' at $' + px + '. ' + (n.s == 0 ? 'Stop now at breakeven.' : 'Trailing the rest 1R below the high.'));
+      }
+      n.s++;
+    }
+    sh.getRange(row, 19).setValue(JSON.stringify(n));
+  });
+}
