@@ -256,3 +256,13 @@ Data: BloFin. 4H 20 coins Aug 2023-Nov 2026 | 1H 8 coins 2 yrs | 15m 6 coins 1 y
 - Jacob-style rules: 20>50>200 stack + pullback to EMA20 fails on every timeframe (15m 0.73, 1H 0.63, 4H ~0.7 OOS). The CROSS of 20 over 50 (with price above 200) on 4H is the version that works.
 - Shorts: none passed. Best: 4H inside-bar breakdown below EMA200 (0.92 / 1.38) and rally-to-EMA20 rejection in a down stack (0.88 / 1.22) - good lately only.
 - Right now (11/18): every coin is below its 4H EMA200, so S65 and the breakouts can't fire. Washout bounce (S03) is the only long that can trigger in this market.
+
+## ROUND 7 (11/18 2:00 PM) - strategies from Reddit / YouTube / backtest write-ups: 23 rules x 1H / 4H / Daily = 69 tests, 165,263 trades
+Sources: r/algotrading "best backtested bitcoin strategy" (RSI5>70), dev.to "I backtested 49 crypto strategies" (EMA 12/26 daily etc.), standard YouTube set (Parabolic SAR, Ichimoku, Heikin Ashi, Stoch RSI, ADX/DI, Keltner, OBV, triple MA, golden cross, ROC momentum). vidIQ YouTube search was out of credits.
+- PASS NEW S66: DAILY RSI(5) crosses above 70 -> buy; sell when it closes back under 70. IS PF 2.49 (562t) / OOS 1.47 (430t). 992 trades, avg hold 2.9 days, win 32%.
+  Every year up (2024 3.21, 2025 1.19, 2026 1.86), 17/20 coins, last 6 mo 2.47, double fees 1.90, RSI(4) 1.57, RSI(7) 2.05, thresholds 65/75 1.76/1.74, BTC alone 1.45.
+  Do NOT add an EMA200 filter (drops to 1.17). 4H version fails (1.05). Top 5 trades = 65% of profit (it catches pumps), so never skip signals.
+  $50: 0.5% risk -> $95 (worst drop 9%); 1% risk -> $172 (drop 17%).
+- Famous ones that FAILED out-of-sample on daily: EMA 12/26 cross (IS 2.68 -> OOS 0.69), Ichimoku cloud (3.05 -> 0.85), Parabolic SAR (1.70 -> 0.92), Golden cross (1.61 -> 0.30). Great on old data, broke lately = curve-fit / regime.
+- Near misses: Keltner breakout up on 1H (1.12 / 1.30) and 4H (2.06 / 1.18). Every short version failed.
+- Live 11/18 2 PM: nothing close. Closest TRX (daily close above $0.3187, +3.2%); BTC needs ~$74.3k in one day. Market is oversold (BTC daily RSI5 12), not in momentum.
