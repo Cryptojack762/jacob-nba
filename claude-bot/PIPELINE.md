@@ -26,3 +26,9 @@
 3. autoJobs: skip during 2-9 AM quiet hours.
 4. Server-browser worker polls the bot every ~20 s all day (~4,000 web-app calls/day). Change idle poll to 60 s (needs one command in the DigitalOcean console).
 5. Claude scheduled tasks: Daily YouTuber scan depends on vidIQ (out of credits) - pause until credits return. Heartbeat runs 5x/day.
+
+## Server NBA set builder (11/18 3:40 PM)
+- vps/nba/blend.js on the droplet, systemd timer 9:00 AM (morning prices), 11:05 AM, 4:35 PM, 5:30 PM CT. Pulls the newest blend.js from GitHub before each run.
+- Live Kalshi KXNBAGAME prices -> favorites >= 60c, skip list + 15c-drop rule -> random search + improve loop with the 11/18 rules + best night >= $100 (relaxed 70/40) -> bot v32 rb 'nbablend' -> NBA sheet Claude_Blend tab + Order_Desk rows (UNTICKED, replaces older AWAITING Claude picks, never touches a ticked/sent one) -> ntfy push.
+- Settings: NBA sheet Claude_Blend B1 total $, B2 skip teams, B3 ON/OFF, B5 best-night target. Test run on 11/18 prices: 0.8 s, ~29M calculations.
+- Install (DigitalOcean console): bash <(curl -fsSL https://raw.githubusercontent.com/Cryptojack762/jacob-nba/claude-bot/claude-bot/vps/nba/setup_nba.sh)
