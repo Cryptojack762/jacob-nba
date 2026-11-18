@@ -212,3 +212,11 @@ Rule: LONG 4H close above 48-candle high while BTC > 20-day avg, stop 2 ATR, exi
   - Verdict: bigger swings, no reliable direction -> keep the event pause (no new entries 1h before/after), don't bet on a direction.
 - #45 Paper shorts opened 11/17 8 PM CT, graded 11/18 ~10 AM CT (BloFin last price, still open, stops not touched):
   SOL S_BBRSI 74.13 -> 73.40 = +$0.73 | NEAR S_BBRSI 3.351 -> 3.215 = +$3.13 | HYPE S_FUND 68.646 -> 65.953 = +$2.96. All 3 green, +$6.82 paper so far.
+
+## KALSHI BTC (#83-86) - mapped 11/18 10:00 AM CT
+- Markets (series KXBTCD, "BTC price at time X"): hourly events (strikes every $100, close on the hour ET), a daily 5 PM ET event (strikes every $250), and a Friday 5 PM ET weekly (strikes every $500). Each strike = "$K or above" YES/NO. Big volume (50k-150k contracts near the money). Fee = Kalshi's normal taker fee (~7% x p x (1-p)).
+- Our method: chance BTC ends above K = empirical 6h move distribution from 838 past days (same 4-10 PM CT window, BloFin 1H), scaled by the last 24h volatility. Past moves run 23% bigger than trailing vol says (built in). FOMC day: vol x1.25.
+- 11/18 5 PM ET read (BTC $63,142, 6.1h left): Kalshi vs ours (FOMC-adjusted)
+  $62,000 88 vs 93 | $62,500 76 vs 84 | $62,750 67 vs 74 | $63,000 56 vs 61 | $63,250 45 vs 45 | $63,500 34 vs 30 | $63,750 24 vs 18 | $64,000 17 vs 9 | $64,500 8 vs 4
+- PAPER PICKS (nothing sent, $10 each): YES $62,500+ at 76c (ours 84) | NO $64,000+ at 84c (ours 91 below) | NO $63,750+ at 77c (ours 82 below). Grade after 5 PM ET.
+- Caution: Kalshi's wider tails may be pricing the 1 PM CT minutes better than our trailing vol. Needs 30+ graded days before any money (#85). Same rules as NBA if it ever goes live: one hedge, plain dollars.
