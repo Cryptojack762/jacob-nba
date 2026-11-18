@@ -53,7 +53,7 @@ var TABS = {
 
 // ---------------- setup ----------------
 function setupBot() {
-  var ss = SpreadsheetApp.getActive();
+  var ss = ss_();
   var home = ss.getSheetByName('Home') || ss.insertSheet('Home', 0);
   if (home.getLastRow() < 3) {
     home.getRange(1, 1, 1, 3).setValues([["Claude's Auto Trading Bot " + BOT.version, '', 'Rules: claude-bot/PLAYBOOK.md']]).setFontWeight('bold');
@@ -76,7 +76,7 @@ function setupBot() {
 }
 
 // ---------------- helpers ----------------
-function ss_() { return SpreadsheetApp.getActive(); }
+function ss_() { return SpreadsheetApp.openById('1YvHcmaDC4NJ3S7EFRTVITrWtHdOANyhhwclxLhGbNk8'); }   // by ID: works from triggers and the web app too
 function ct_(d) { return Utilities.formatDate(d || new Date(), 'America/Chicago', 'M/d h:mm a'); }
 function log_(type, msg) { ss_().getSheetByName('Log').appendRow([ct_(), type, msg]); }
 function status_(msg) { ss_().getSheetByName('Home').getRange(2, 2).setValue(ct_() + ' - ' + msg); }
