@@ -367,7 +367,7 @@ function wrender(){
   $('wpaper').innerHTML='<div class="why">Fake money, for testing the bot. '+po.length+' open ('+wsm(pu)+') · '+pc.length+' closed ('+wsm(pt)+')</div>'+po.map(function(p){var lv=L[p[0]];return '<div class="hl"><i class="chip s-'+(lv&&lv.pnl<0?'AVOID':'ENTER')+'">'+(lv?wsm(lv.pnl):'-')+'</i><span>'+esc(p[3])+' '+esc(p[1])+' · '+esc(wnm(p[2]))+' · in $'+esc(p[5])+(lv?' · now $'+esc(lv.price):'')+'</span></div>'}).join('')+pc.slice(0,10).map(function(p){var v=Number(p[14])||0;return '<div class="hl"><i class="chip s-'+(v>=0?'ENTER':'AVOID')+'">'+wsm(v)+'</i><span>'+esc(p[3])+' '+esc(p[1])+' · closed · '+esc(p[16])+'</span></div>'}).join('');
 }
 document.addEventListener('click',function(e){
-  var t=e.target.closest('.mb,[data-close]');if(!t)return;
+  var t=e.target.closest('[data-m],[data-close]');if(!t)return;
   if(t.dataset.close){if(confirm('Close '+t.dataset.n+' now at market?'))wload('&set=close&id='+encodeURIComponent(t.dataset.close),true);return}
   if(t.dataset.m==='AUTO'&&!confirm('Auto mode sends real orders to WEEX without asking you. Turn it on?'))return;
   wload('&set=mode&v='+t.dataset.m,true);
