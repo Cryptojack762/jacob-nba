@@ -495,7 +495,7 @@ function chat_(text) {
   var msg = 'Jacob asked: ' + text + '\n\nLive data: ' + JSON.stringify(data || { note: 'no coin recognised - ask which coin' }) + '\nWashout bounces in last 24h: ' + JSON.stringify(wash) + '\nTime: ' + ct_();
   var r = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', { method: 'post', contentType: 'application/json', muteHttpExceptions: true,
     headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01' },
-    payload: JSON.stringify({ model: 'claude-haiku-5-5', max_tokens: 700, system: sys, messages: [{ role: 'user', content: msg }] }) });
+    payload: JSON.stringify({ model: 'claude-haiku-5-5', max_tokens: 4000, system: sys, messages: [{ role: 'user', content: msg }] }) });
   var j = JSON.parse(r.getContentText());
   if (r.getResponseCode() != 200) return { ok: true, reply: 'Claude API error: ' + ((j.error && j.error.message) || r.getResponseCode()) };
   var txt = (j.content || []).map(function (b) { return b.text || ''; }).join(''), plan = null, m = txt.match(/PLAN\s*(\{[^\n]*\})/);
