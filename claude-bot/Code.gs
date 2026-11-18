@@ -185,6 +185,7 @@ function scan() {
       } catch (e) { log_('ERROR', coin + ': ' + e.message); }
     });
     p.setProperty('WASH', JSON.stringify(wash));
+    try { readyBoard_(DX); } catch (e) { log_('ERROR', 'ready board: ' + e.message); }
     var breadth = wash.length;
     if (breadth >= 3) log_('WASHOUT', breadth + ' coins bounced off RSI 20 in 24h: ' + wash.map(function (w) { return w.c; }).join(', '));
     BOT.coins.forEach(function (coin) {
@@ -496,6 +497,7 @@ function doGet(e) {
     if (q.set == 'buynow' && q.coin) return json_(buyNow_(q));
     if (q.set == 'plan' && q.coin && /^(LONG|SHORT)$/.test(q.side)) return json_(queuePlan_(q));
     if (q.watch) return json_(watchApi_(q));
+    if (q.ready) return json_(readyGet_());
     if (q.fav) return json_(favApi_(q));
     if (q.set == 'kill') setVal_('Kill switch', q.v == 'ON' ? 'ON' : 'OFF');
     if (q.set == 'mode' && /^(PAPER|APPROVE|AUTO)$/.test(q.v)) setVal_('Mode', q.v);
@@ -505,7 +507,7 @@ function doGet(e) {
       CacheService.getScriptCache().remove('LIVE');
     }
     return json_({ ok: true, status: ss_().getSheetByName('Home').getRange(2, 2).getValue(), mode: set_('Mode'), kill: set_('Kill switch'), equity: equity_(), dayStart: Number(PropertiesService.getScriptProperties().getProperty('DAY_START')) || 0, killPct: num_('Daily loss % (kill)', 1, 90), peak: Number(PropertiesService.getScriptProperties().getProperty('PEAK')) || 0, ddPct: num_('Max drawdown % (kill)', 1, 90),
-      watch: watchJson_(), positions: rows_('Positions').slice(-60), orders: rows_('Orders').filter(function (r) { return r[10] == 'PENDING'; }).map(function (r) { return r.slice(0, 11).concat([r[11]]); }), signals: rows_('Signals').slice(-30), log: rows_('Log').slice(-25), phoenix: phoenix_(), keys: !!keys_(), live: livePnl_() });
+      watch: watchJson_(), slots: slots_(), positions: rows_('Positions').slice(-60), orders: rows_('Orders').filter(function (r) { return r[10] == 'PENDING'; }).map(function (r) { return r.slice(0, 11).concat([r[11]]); }), signals: rows_('Signals').slice(-30), log: rows_('Log').slice(-25), phoenix: phoenix_(), keys: !!keys_(), live: livePnl_() });
   }
   return json_({ ok: true, service: "Claude's Auto Trading Bot", version: BOT.version });
 }
@@ -1150,4 +1152,46 @@ function pickPush_() {
     notify_('PICK ENTER: ' + p.coin, p.coin + ' turned ENTER on the Phoenix pick board.\n' + (p.plan || p.why || '') + (onWeex_(p.coin) ? '' : '\nNot on WEEX: alert only, trade it on BloFin.') + '\nOpen Atlas > Triggers.');
   });
   P.setProperty('PICK_SENT', JSON.stringify(sent));
+}
+
+// ---------------- WEEX section: what the bot is about to trade + its health ----------------
+// Board of the bot's own coins: state (ENTER/ALMOST/WAIT/AVOID) from the tested rules, and how far each is from firing.
+function readyBoard_(DX) {
+  var out = [];
+  BOT.coins.forEach(function (coin) {
+    var d = DX && DX[coin] ? DX[coin].d : null;
+    if (!d) { try { d = candles_(coin); } catch (e) { return; } }
+    if (!d || d.length < 220) return;
+    var x = DX && DX[coin] ? DX[coin].x : ind_(d), up = x.c > x.e200, f = function (n) { return '$' + round_(n); };
+    var tpi = (x.hh40 / x.c - 1) * 100, st = 'WAIT', note, dist = null, rule = '';
+    if (up && x.c > x.hh40 && x.rsi > 55) { st = 'ENTER'; rule = 'L_TPI'; note = 'TPI breakout fired: closed above ' + f(x.hh40) + ', RSI ' + x.rsi.toFixed(0); dist = 0; }
+    else if (!up && x.rsiPrev < 20 && x.rsi >= 20) { st = 'ENTER'; rule = 'L_RSI20'; note = 'Washout bounce: RSI back above 20 (needs 3+ coins)'; dist = 0; }
+    else if (up && tpi <= 2 && x.rsi > 50) { st = 'ALMOST'; rule = 'L_TPI'; note = tpi.toFixed(1) + '% under the breakout ' + f(x.hh40) + ', RSI ' + x.rsi.toFixed(0) + ' (needs 55)'; dist = tpi; }
+    else if (!up && x.rsi < 25) { st = 'ALMOST'; rule = 'L_RSI20'; note = 'Washout zone: RSI ' + x.rsi.toFixed(0) + ', fires when it closes back above 20'; dist = 0.5; }
+    else if (up) { rule = 'L_TPI'; note = 'Uptrend. ' + tpi.toFixed(1) + '% under the breakout ' + f(x.hh40); dist = tpi; }
+    else if (x.st === -1) { st = 'AVOID'; note = 'Below EMA200 ' + f(x.e200) + ' and SuperTrend down'; dist = 99; }
+    else { note = 'Below EMA200 ' + f(x.e200) + ', RSI ' + x.rsi.toFixed(0); dist = 50; }
+    out.push({ c: coin, px: x.c, st: st, note: note, d: dist, rule: rule, on: rule ? on_(rule) : true });
+  });
+  var o = { at: ct_(), coins: out };
+  PropertiesService.getScriptProperties().setProperty('READY', JSON.stringify(o));
+  return o;
+}
+function readyGet_() {
+  var v = PropertiesService.getScriptProperties().getProperty('READY');
+  if (v) return { ok: true, board: JSON.parse(v) };
+  var lk = LockService.getScriptLock(); if (!lk.tryLock(5000)) return { ok: false, err: 'Bot busy, try again in a minute' };
+  try { return { ok: true, board: readyBoard_(null) }; } finally { lk.releaseLock(); }
+}
+// How full each money bucket is (for the health card)
+function slots_() {
+  try {
+    var open = rowsRaw_('Positions').filter(function (r) { return r[11] == 'OPEN'; }), sum = function (t) { return open.filter(function (r) { return r[19] == t; }).reduce(function (s, r) { return s + Number(r[7]); }, 0); };
+    var cnt = function (t) { return open.filter(function (r) { return r[19] == t; }).length; };
+    var a = ACCT; ACCT = '2'; var k2 = !!keys_(); ACCT = a;
+    return { bot: [cnt('BOT-AUTO'), num_('Bot max open', 0, 20), round_(sum('BOT-AUTO')), num_('Bot slice $', 0, 1000)],
+      missed: [cnt('MISSED-AUTO'), num_('Missed max open', 0, 20), round_(sum('MISSED-AUTO')), num_('Missed cap $', 0, 1000)],
+      watch: [cnt('MISSED-WATCH'), num_('Watch max open', 0, 20), round_(sum('MISSED-WATCH')), num_('Watch $ per missed trade', 0, 50)],
+      keys: !!keys_(), keys2: k2, relay: !!String(set_('Relay URL') || '').trim(), event: eventPause_() };
+  } catch (e) { return { err: e.message }; }
 }

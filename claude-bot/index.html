@@ -158,6 +158,10 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
         <div style="text-align:right"><div class="k" style="margin:0 0 6px;justify-content:flex-end">Open P&amp;L</div><div class="big" id="wun">-</div></div></div>
         <div class="why" id="wstat" style="margin-top:8px"></div>
       </div>
+      <div class="k"><span>Bot health</span><span id="wnext"></span></div>
+      <div class="card" id="whealth"><div class="why">Loading…</div></div>
+      <div class="k"><span>What the bot will trade next · 4H rules</span><span id="wrdat"></span></div>
+      <div class="card" id="wready"><div class="why">Loading…</div></div>
       <div class="k">Mode</div>
       <div class="card">
         <div class="seg"><button class="mb" data-m="PAPER">Paper</button><button class="mb" data-m="APPROVE">Approve</button><button class="mb" data-m="AUTO">Auto</button></div>
@@ -405,7 +409,21 @@ function wwatchR(W){var F=W.favs||[],L=W.list||[];
   var act=L.filter(function(w){return /WATCHING|QUEUED/.test(w.status)}).length;$('wwatchN').textContent=act?act+' active':'';
   $('wwatch').innerHTML=(L.length?L.map(function(w){var lg=w.side==='LONG',st=String(w.status),on=/WATCHING|QUEUED/.test(st);return '<div class="row"><div class="sym '+(lg?'symL':'symS')+'">'+esc(String(w.coin).slice(0,5))+'</div><div class="mid"><div class="l1"><b>'+esc(w.side)+' '+esc(w.coin)+'</b><span>'+(w.entry?'entry $'+esc(w.entry):'condition')+'</span></div><div class="why">'+esc(w.note||'')+'</div><div class="plan">stop $'+esc(w.stop||'-')+' · TP1 $'+esc(w.tp1||'-')+' · '+esc(w.at||'')+(on?' · <a href="#" data-wrm="'+esc(w.id)+'">Remove</a>':'')+'</div></div><span class="chip s-'+(st==='QUEUED'?'APPROVE':st==='WATCHING'?'WAIT':st==='PLACED'||st==='TAKEN'?'OPEN':'EXPIRED')+'">'+esc(st)+'</span></div>'}).join(''):'<div class="why">Nothing on the watch list. Tap + Watch list under an Ask Claude trade.</div>')+
     '<div class="why" style="margin-top:8px">When price hits the entry: Claude rebuilds the trade, your phone buzzes, and it waits above for your ✔. No tap in 15 min: the bot puts $5 from your main WEEX account'+(W.main?'':' (paper until the main-account key is added)')+'. More than halfway to the target = skipped. Max 5 open, 2 ATR trailing stop.</div>'}
-function wload(extra,manual){
+function wslots(j){var S=j.slots||{},ok=function(b){return b?'✅':'⚠️'},bar=function(n,x){return x?Math.min(100,Math.round(n/x*100)):0},
+  b=function(nm,a,why){if(!a)return '';return '<div style="margin:8px 0"><div class="l1"><b>'+nm+'</b><span>'+a[0]+' of '+a[1]+' open · $'+a[2]+(nm==='Watch fallback'?' ($'+a[3]+' each)':' of $'+a[3])+'</span></div><div class="bar"><i style="left:0;width:'+Math.max(bar(a[0],a[1]),2)+'%;background:var(--fire2)"></i></div><div class="why">'+why+'</div></div>'};
+  var nx=4*3600e3,left=nx-Date.now()%nx,h=Math.floor(left/3600e3),m=Math.floor(left%3600e3/60e3);$('wnext').textContent='next 4H candle in '+h+'h '+m+'m';
+  $('whealth').innerHTML='<div class="hl"><i>'+(String(j.kill).toUpperCase()==='ON'?'🛑':'✅')+'</i><span>Kill switch '+esc(String(j.kill||'OFF'))+' · Mode '+esc(String(j.mode||''))+'</span></div>'+
+    '<div class="hl"><i>'+ok(S.keys)+'</i><span>Bot WEEX key '+(S.keys?'connected':'not set')+'</span></div>'+
+    '<div class="hl"><i>'+ok(S.keys2)+'</i><span>Main WEEX key '+(S.keys2?'connected: watch fallback trades are real':'not set: watch fallback trades are paper')+'</span></div>'+
+    '<div class="hl"><i>'+ok(S.relay)+'</i><span>Fixed-IP relay '+(S.relay?'on':'off')+'</span></div>'+
+    (S.event?'<div class="hl"><i>⏸️</i><span>Event pause: '+esc(S.event)+' (no new trades)</span></div>':'')+
+    b('Bot slice',S.bot,'Trades the bot takes by itself on BOT coins')+b('Missed-trade fallback',S.missed,'Approve trades you did not tap in time')+b('Watch fallback',S.watch,'Watch-list trades you did not tap in 15 min (main account)')}
+var WRD_AT=0;function wready(force){if(!WAPI||!WPIN||(!force&&Date.now()-WRD_AT<6e5))return;WRD_AT=Date.now();
+  fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+'&ready=1',{cache:'no-store'}).then(function(r){return r.json()}).then(function(k){if(!k.ok){$('wready').innerHTML='<div class="why">'+esc(k.err||'Not ready yet')+'</div>';WRD_AT=0;return}
+    var B=k.board,R={ENTER:0,ALMOST:1,WAIT:2,AVOID:3},L=(B.coins||[]).slice().sort(function(a,b){return R[a.st]-R[b.st]||(a.d==null?99:a.d)-(b.d==null?99:b.d)});$('wrdat').textContent=B.at||'';
+    $('wready').innerHTML=L.map(function(c,i){return '<div class="row"'+(i>=6?' data-rx style="display:none"':'')+'><div class="sym symL">'+esc(c.c)+'</div><div class="mid"><div class="l1"><b>'+esc(c.c)+'</b><span>$'+esc(c.px)+'</span></div><div class="why">'+esc(c.note)+'</div>'+(c.rule&&!c.on?'<div class="plan">Rule '+esc(c.rule)+' is OFF on the Home tab</div>':'')+'</div><span class="chip s-'+esc(c.st)+'">'+esc(c.st)+'</span></div>'}).join('')+(L.length>6?'<button class="more" onclick="document.querySelectorAll(\'[data-rx]\').forEach(function(e){e.style.display=\'\'});this.remove()">Show all '+L.length+' coins</button>':'')+
+      '<div class="why" style="margin-top:8px">Updates every 4H candle. ENTER = a tested rule fired. ALMOST = close. Closest first.</div>'}).catch(function(){WRD_AT=0})}
+function wload(extra,manual){wready(manual);
   if(!WAPI||!WPIN){wshow(false);return}
   fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+(extra||''),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
     if(!j.ok){if(j.err==='PIN'){wshow(false);toast('Wrong PIN')}return}
@@ -417,6 +435,7 @@ function wrender(){
   var P=j.positions||[],RL=P.filter(function(p){return p[10]!=='PAPER'}),PP=P.filter(function(p){return p[10]==='PAPER'}),open=RL.filter(function(p){return p[11]==='OPEN'}),closed=RL.filter(function(p){return p[11]==='CLOSED'}).reverse(),L=j.live||{},un=0;
   open.forEach(function(p){if(L[p[0]])un+=L[p[0]].pnl});
   $('weq').textContent=String(j.mode).toUpperCase()==='PAPER'?'Paper mode':wm(j.equity);$('wun').textContent=open.length?wsm(un):'$0.00';$('wun').className='big '+(un>=0?'pos':'neg');
+  try{wslots(j)}catch(e){}
   $('wstat').textContent=String(j.status||'')+' · WEEX key: '+(j.keys?'connected':'not set');
   document.querySelectorAll('[data-m]').forEach(function(b){var on=b.dataset.m===String(j.mode).toUpperCase();b.classList.toggle('on',on);b.textContent=(on?'● ':'')+b.dataset.m.charAt(0)+b.dataset.m.slice(1).toLowerCase()});
   var kill=String(j.kill).toUpperCase()==='ON',kb=$('wkill');kb.textContent=kill?'Kill switch is ON · tap to turn OFF':'Kill switch OFF · tap to stop new trades';kb.dataset.v=kill?'OFF':'ON';kb.classList.toggle('on',kill);
