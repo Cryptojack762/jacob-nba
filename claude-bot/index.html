@@ -120,7 +120,7 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
     </div>
     <div id="wapp" style="display:none">
       <div class="card">
-        <div class="two"><div><div class="k" style="margin:0 0 6px">Equity</div><div class="big" id="weq">-</div></div>
+        <div class="two"><div><div class="k" style="margin:0 0 6px">WEEX · day trades</div><div class="big" id="weq">-</div></div>
         <div style="text-align:right"><div class="k" style="margin:0 0 6px;justify-content:flex-end">Open P&amp;L</div><div class="big" id="wun">-</div></div></div>
         <div class="why" id="wstat" style="margin-top:8px"></div>
       </div>
@@ -132,14 +132,24 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
       </div>
       <div class="k">Waiting for your approval</div>
       <div class="card" id="word"></div>
-      <div class="k"><span>Open trades</span><span id="wopenN"></span></div>
+      <div class="k"><span>Real trades on WEEX</span><span id="wopenN"></span></div>
       <div class="card" id="wopen"></div>
       <div class="k">Bot signals · 4H</div>
       <div class="card" id="wsig"></div>
-      <div class="k">Track record</div>
+      <div class="k">Real track record</div>
       <div class="card" id="wrec"></div>
+      <div class="k">Practice trades · paper, no money</div>
+      <div class="card" id="wpaper"></div>
       <button class="more" id="wreset" style="margin-bottom:12px">Change bot link / PIN</button>
     </div>
+  </section>
+  <section class="view" id="v-bf">
+    <div class="card">
+      <div class="k" style="margin-top:0">BloFin · long trades</div>
+      <div class="why">Your hand-placed long trades. Live BloFin prices, no API key. Refreshes every minute.</div>
+    </div>
+    <div id="bfcoins"></div>
+    <div class="why" id="bfstamp" style="margin:6px 4px 14px"></div>
   </section>
   <section class="view" id="v-sig">
     <div class="k"><span>BloFin triggers</span><span id="fl"></span></div>
@@ -179,6 +189,7 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
 
 <nav class="tabs">
   <button class="tab on" data-v="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Home</button>
+  <button class="tab" data-v="bf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>BloFin</button>
   <button class="tab" data-v="weex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M7 4l-3 3M7 4l3 3"/><path d="M17 20V4M17 20l-3-3M17 20l3-3"/></svg>WEEX<span id="wbdg" style="position:absolute;top:2px;margin-left:30px;background:var(--dn);color:#fff;font-size:10px;font-weight:800;border-radius:999px;padding:1px 5px;display:none"></span></button>
   <button class="tab" data-v="sig"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>Triggers</button>
   <button class="tab" data-v="day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Day</button>
@@ -315,19 +326,21 @@ function wload(extra,manual){
 }
 function wrender(){
   var j=W;if(!j)return;wshow(!!(WAPI&&WPIN));
-  var P=j.positions||[],open=P.filter(function(p){return p[11]==='OPEN'}),closed=P.filter(function(p){return p[11]==='CLOSED'}).reverse(),L=j.live||{},un=0;
+  var P=j.positions||[],RL=P.filter(function(p){return p[10]!=='PAPER'}),PP=P.filter(function(p){return p[10]==='PAPER'}),open=RL.filter(function(p){return p[11]==='OPEN'}),closed=RL.filter(function(p){return p[11]==='CLOSED'}).reverse(),L=j.live||{},un=0;
   open.forEach(function(p){if(L[p[0]])un+=L[p[0]].pnl});
-  $('weq').textContent=wm(j.equity);$('wun').textContent=open.length?wsm(un):'$0.00';$('wun').className='big '+(un>=0?'pos':'neg');
+  $('weq').textContent=String(j.mode).toUpperCase()==='PAPER'?'Paper mode':wm(j.equity);$('wun').textContent=open.length?wsm(un):'$0.00';$('wun').className='big '+(un>=0?'pos':'neg');
   $('wstat').textContent=String(j.status||'')+' · WEEX key: '+(j.keys?'connected':'not set');
   document.querySelectorAll('.mb').forEach(function(b){b.classList.toggle('on',b.dataset.m===String(j.mode).toUpperCase())});
   var kill=String(j.kill).toUpperCase()==='ON',kb=$('wkill');kb.textContent=kill?'Kill switch is ON · tap to turn OFF':'Kill switch OFF · tap to stop new trades';kb.dataset.v=kill?'OFF':'ON';kb.classList.toggle('on',kill);
   var O=j.orders||[],bd=$('wbdg');bd.textContent=O.length;bd.style.display=O.length?'inline-block':'none';
   $('word').innerHTML=O.length?O.map(function(o){var lg=o[4]==='LONG';return '<div class="row"><div class="sym '+(lg?'symL':'symS')+'">'+esc(String(o[2]).slice(0,5))+'</div><div class="mid"><div class="l1"><b>'+(lg?'BUY':'SELL')+' '+esc(o[2])+'</b><span>~$'+esc(o[6])+'</span></div><div class="why">'+esc(wnm(o[3]))+' · '+esc(o[5])+' coins · margin '+wm(o[8])+' at '+esc(o[9])+'x · stop $'+esc(o[7])+'</div><div style="display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-top:10px"><a class="buy" href="'+esc(WAPI)+'?approve='+encodeURIComponent(o[0])+'&k='+encodeURIComponent(o[11])+'" target="_blank">✔ '+(lg?'Buy':'Sell')+' now</a><a class="more" style="margin:0" href="'+esc(WAPI)+'?reject='+encodeURIComponent(o[0])+'&k='+encodeURIComponent(o[11])+'" target="_blank">Skip</a></div></div></div>'}).join(''):'<div class="why">Nothing waiting. In Approve mode, every new bot trade shows up here with a Buy/Sell button.</div>';
   $('wopenN').textContent=open.length?open.length+' open':'';
-  $('wopen').innerHTML=open.length?open.map(function(p){var lv=L[p[0]],lg=p[3]==='LONG';return '<div class="row"><div class="sym '+(lg?'symL':'symS')+'">'+esc(String(p[1]).slice(0,5))+'</div><div class="mid"><div class="l1"><b>'+esc(p[3])+' '+esc(p[1])+'</b><span>'+(lv?'now $'+esc(lv.price):'')+'</span></div><div class="why">'+esc(wnm(p[2]))+' · '+esc(p[6])+' at $'+esc(p[5])+' · stop $'+esc(Number(p[9]).toPrecision(5))+' · '+esc(p[8])+'x · '+esc(p[10])+'</div><button class="sell" data-close="'+esc(p[0])+'" data-n="'+esc(p[3]+' '+p[1])+'">Close now</button></div><div class="sc"><b class="'+(lv&&lv.pnl<0?'neg':'pos')+'">'+(lv?wsm(lv.pnl):'-')+'</b><span>P&amp;L</span></div></div>'}).join(''):'<div class="why">No open trades. The bot checks every 4-hour candle.</div>';
+  $('wopen').innerHTML=open.length?open.map(function(p){var lv=L[p[0]],lg=p[3]==='LONG';return '<div class="row"><div class="sym '+(lg?'symL':'symS')+'">'+esc(String(p[1]).slice(0,5))+'</div><div class="mid"><div class="l1"><b>'+esc(p[3])+' '+esc(p[1])+'</b><span>'+(lv?'now $'+esc(lv.price):'')+'</span></div><div class="why">'+esc(wnm(p[2]))+' · '+esc(p[6])+' at $'+esc(p[5])+' · stop $'+esc(Number(p[9]).toPrecision(5))+' · '+esc(p[8])+'x · '+esc(p[10])+'</div><button class="sell" data-close="'+esc(p[0])+'" data-n="'+esc(p[3]+' '+p[1])+'">Close now</button></div><div class="sc"><b class="'+(lv&&lv.pnl<0?'neg':'pos')+'">'+(lv?wsm(lv.pnl):'-')+'</b><span>P&amp;L</span></div></div>'}).join(''):'<div class="why">No real trades open. Real trades start once WEEX is funded and the bot is in Approve or Auto.</div>';
   $('wsig').innerHTML=(j.signals||[]).slice(-10).reverse().map(function(s){var sh=s[3]==='SHORT';return '<div class="row"><div class="sym '+(sh?'symS':'symL')+'">'+esc(String(s[1]).slice(0,5))+'</div><div class="mid"><div class="l1"><b>'+esc(s[3])+' '+esc(s[1])+'</b><span>$'+esc(s[4])+'</span></div><div class="why">'+esc(s[5])+'</div><div class="plan">'+esc(wnm(s[2]))+' · '+esc(s[0])+'</div></div><span class="chip s-'+esc(String(s[6]).split(':')[0].toUpperCase())+'">'+esc(String(s[6]).split(':')[0])+'</span></div>'}).join('')||'<div class="why">No signals yet.</div>';
   var w=closed.filter(function(p){return Number(p[14])>0}).length,tot=closed.reduce(function(s,p){return s+(Number(p[14])||0)},0);
   $('wrec').innerHTML='<div class="why">'+closed.length+' closed · '+(closed.length?Math.round(100*w/closed.length)+'% won':'no wins yet')+' · total <b class="'+(tot>=0?'pos':'neg')+'">'+wsm(tot)+'</b></div>'+closed.slice(0,20).map(function(p){var v=Number(p[14])||0;return '<div class="hl"><i class="chip s-'+(v>=0?'ENTER':'AVOID')+'">'+wsm(v)+'</i><span>'+esc(p[3])+' '+esc(p[1])+' · $'+esc(p[5])+' → $'+esc(p[13])+' · '+esc(p[16])+' · '+esc(p[12])+'</span></div>'}).join('');
+  var po=PP.filter(function(p){return p[11]==='OPEN'}),pc=PP.filter(function(p){return p[11]==='CLOSED'}).reverse(),pt=pc.reduce(function(a,p){return a+(Number(p[14])||0)},0),pu=0;po.forEach(function(p){if(L[p[0]])pu+=L[p[0]].pnl});
+  $('wpaper').innerHTML='<div class="why">Fake money, for testing the bot. '+po.length+' open ('+wsm(pu)+') · '+pc.length+' closed ('+wsm(pt)+')</div>'+po.map(function(p){var lv=L[p[0]];return '<div class="hl"><i class="chip s-'+(lv&&lv.pnl<0?'AVOID':'ENTER')+'">'+(lv?wsm(lv.pnl):'-')+'</i><span>'+esc(p[3])+' '+esc(p[1])+' · '+esc(wnm(p[2]))+' · in $'+esc(p[5])+(lv?' · now $'+esc(lv.price):'')+'</span></div>'}).join('')+pc.slice(0,10).map(function(p){var v=Number(p[14])||0;return '<div class="hl"><i class="chip s-'+(v>=0?'ENTER':'AVOID')+'">'+wsm(v)+'</i><span>'+esc(p[3])+' '+esc(p[1])+' · closed · '+esc(p[16])+'</span></div>'}).join('');
 }
 document.addEventListener('click',function(e){
   var t=e.target.closest('.mb,[data-close]');if(!t)return;
@@ -341,6 +354,37 @@ $('wreset').onclick=function(){$('wapi').value=WAPI;$('wpin').value=WPIN;wshow(f
 if(W)wrender();else wshow(!!(WAPI&&WPIN));
 wload('',false);setInterval(function(){if(!document.hidden)wload('',false)},60000);
 document.addEventListener('visibilitychange',function(){if(!document.hidden)wload('',false)});
+// ---------- BloFin tab: long trades, public prices only ----------
+var BFC=[
+ {c:'SOL',d:2,lv:[
+   {n:'Entry: 1H close above',p:74.95,t:'h1up',stop:74.04},
+   {n:'Breakout: 4H close above',p:76,t:'h4up',stop:'4H EMA20'},
+   {n:'Reload zone',lo:73.96,hi:74.33,t:'zone',stop:72.61},
+   {n:'No long: 1H close below',p:73.61,t:'h1dn'}]},
+ {c:'DOGE',d:5,lv:[
+   {n:'Up level',p:0.0601,t:'h1up',stop:0.0580},
+   {n:'Danger: 1H close below',p:0.0580,t:'h1dn'}]}];
+function bfema(a,n){var k=2/(n+1),e=a[0];for(var i=1;i<a.length;i++)e=a[i]*k+e*(1-k);return e}
+function bfget(u){return fetch('https://openapi.blofin.com/api/v1/market/'+u,{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){return j.data})}
+function bfclosed(d){return d.filter(function(x){return x[8]==='1'}).map(function(x){return +x[4]})}
+function bfload(){
+  Promise.all(BFC.map(function(k){var id=k.c+'-USDT';return Promise.all([bfget('tickers?instId='+id),bfget('candles?instId='+id+'&bar=1H&limit=5'),bfget('candles?instId='+id+'&bar=4H&limit=120')])}))
+  .then(function(R){
+    $('bfcoins').innerHTML=R.map(function(r,i){
+      var k=BFC[i],px=+r[0][0].last,h1=bfclosed(r[1])[0],c4=bfclosed(r[2]),last4=c4[0],s4=c4.slice().reverse(),e20=bfema(s4,20),e50=bfema(s4,50),f=function(v){return '$'+Number(v).toFixed(k.d)};
+      var rows=k.lv.map(function(l){var on,txt;
+        if(l.t==='h1up'){on=h1>l.p;txt=on?'YES · last 1H closed '+f(h1):'not yet · last 1H '+f(h1)}
+        else if(l.t==='h4up'){on=last4>l.p;txt=on?'YES · 4H closed '+f(last4):'not yet · last 4H '+f(last4)}
+        else if(l.t==='zone'){on=px>=l.lo&&px<=l.hi;txt=on?'price is in the zone now':'price '+f(px)}
+        else {on=h1<l.p;txt=on?'HIT · stay out':'safe · last 1H '+f(h1)}
+        var cls=l.t==='h1dn'?(on?'AVOID':'WAIT'):(on?'ENTER':'WAIT');
+        return '<div class="hl"><i class="chip s-'+cls+'">'+(on&&l.t!=='h1dn'?'✔ GO':on?'STOP':'WAIT')+'</i><span><b>'+l.n+' '+(l.p?f(l.p):f(l.lo)+'–'+f(l.hi))+'</b><br>'+txt+(l.stop?' · stop '+(typeof l.stop==='number'?f(l.stop):l.stop+' '+f(e20)):'')+'</span></div>'}).join('');
+      var trend=last4>e50?'<b class="pos">4H trend up</b>':'<b class="neg">4H trend down</b>';
+      return '<div class="k">'+k.c+'</div><div class="card"><div class="two"><div class="big">'+f(px)+'</div><div class="why" style="text-align:right">'+trend+'<br>EMA20 '+f(e20)+' · EMA50 '+f(e50)+'</div></div>'+rows+'</div>'}).join('');
+    $('bfstamp').textContent='Updated '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})+' · ✔ GO = that entry rule is met. Plans only, you place the trade on BloFin.';
+  }).catch(function(){$('bfstamp').textContent='BloFin prices not reachable right now.'});
+}
+bfload();setInterval(function(){if(!document.hidden)bfload()},60000);
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 </script>
 </body>
