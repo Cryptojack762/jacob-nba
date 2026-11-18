@@ -159,6 +159,7 @@ function scan() {
     var be = ema_(btcD.map(function (x) { return x.c; }), 200), nB = btcD.length, btcUp = btcD[nB - 1].c > be[nB - 1];
     var btcFlipDown = !btcUp && btcD[nB - 2].c > be[nB - 2];
     try { health_(); } catch (e) { }
+    try { reportLog_(); } catch (e) { log_('ERROR', 'report log: ' + e.message); }
     expireApprovals_();
     try { reconcile_(); } catch (e) { log_('ERROR', 'reconcile: ' + e.message); }
     try { manageTP_(); } catch (e) { log_('ERROR', 'take-profit check: ' + e.message); }
@@ -640,6 +641,31 @@ function news_() {
   out.head.sort(function (a, b) { return new Date(b.when) - new Date(a.when); }); out.head = out.head.slice(0, 12);
   try { if (out.cal.length) c.put('NEWS3', JSON.stringify(out), 1800); } catch (e) { }
   return out;
+}
+// Report log (Reports tab): every USD High-impact release this week - forecast vs actual + BTC move 1h/4h/24h after.
+// Builds our own reaction history (#81). Runs hourly from scan; reads ForexFactory weekly feed + BloFin 1H candles.
+function reportLog_() {
+  var p = PropertiesService.getScriptProperties(), now = Date.now();
+  if (now - Number(p.getProperty('REPORTS_AT') || 0) < 55 * 60e3) return;
+  p.setProperty('REPORTS_AT', String(now));
+  var ss = ss_(), sh = ss.getSheetByName('Reports');
+  if (!sh) { sh = ss.insertSheet('Reports'); sh.getRange(1, 1, 1, 12).setValues([['Release (CT)', 'Event', 'Impact', 'Forecast', 'Previous', 'Actual', 'vs forecast', 'BTC at release', 'BTC +1h %', 'BTC +4h %', 'BTC +24h %', 'Key']]).setFontWeight('bold'); sh.setFrozenRows(1); }
+  var cal = (news_().cal || []).filter(function (e) { return e.imp == 'High' && new Date(e.when).getTime() < now; });
+  if (!cal.length) return;
+  var k1 = JSON.parse(UrlFetchApp.fetch('https://openapi.blofin.com/api/v1/market/candles?instId=BTC-USDT&bar=1H&limit=300', { muteHttpExceptions: true }).getContentText()).data || [], H = {};
+  k1.forEach(function (x) { H[Number(x[0])] = { o: +x[1], c: +x[4], done: x[8] == '1' }; });
+  function hr(t) { return Math.floor(t / 3600e3) * 3600e3; }
+  function mv(t0, hrs) { var a = H[hr(t0)], b = H[hr(t0) + (hrs - 1) * 3600e3]; return a && b && b.done ? Math.round((b.c / a.o - 1) * 10000) / 100 : ''; }
+  var last = sh.getLastRow(), rows = last > 1 ? sh.getRange(2, 1, last - 1, 12).getValues() : [], idx = {};
+  rows.forEach(function (r, i) { idx[r[11]] = i; });
+  cal.forEach(function (e) {
+    var t = new Date(e.when).getTime(), key = e.t + '|' + e.when, a = H[hr(t)];
+    var num = function (v) { var m = String(v).replace(/[,%KMB]/g, '').match(/-?[\d.]+/); return m ? Number(m[0]) : NaN; };
+    var vs = e.act && e.fc && isFinite(num(e.act)) && isFinite(num(e.fc)) ? (num(e.act) > num(e.fc) ? 'ABOVE' : num(e.act) < num(e.fc) ? 'BELOW' : 'IN LINE') : '';
+    var row = [Utilities.formatDate(new Date(t), 'America/Chicago', 'MM/dd h:mm a'), e.t, e.imp, e.fc, e.prev, e.act, vs, a ? a.o : '', mv(t, 1), mv(t, 4), mv(t, 24), key];
+    if (idx[key] == null) { sh.appendRow(row); idx[key] = -1; }
+    else if (idx[key] >= 0) { var r = rows[idx[key]]; for (var j = 3; j < 11; j++) if (r[j] === '' && row[j] !== '') sh.getRange(idx[key] + 2, j + 1).setValue(row[j]); }
+  });
 }
 function testNews() { Logger.log(JSON.stringify(news_()).slice(0, 2000)); }
 
