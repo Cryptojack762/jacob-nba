@@ -461,8 +461,9 @@ function testRelay() {
 // Needs Script Property CLAUDE_API_KEY. Uses the cheap fast model. Plans only; a trade is only queued when Jacob taps the button.
 var CHAT_COINS = ['BTC','ETH','SOL','XRP','DOGE','ADA','AVAX','LINK','LTC','BCH','BNB','TRX','XLM','NEAR','UNI','SUI','HYPE','XMR','ZEC','ARB','OP','APT','INJ','HBAR','DOT','PEPE','WIF','SEI','TIA','ENA','ONDO','TON','FET','RENDER','JUP','KAS','POL','ATOM','FIL','AAVE'];
 function bfCandles_(coin, bar) {
-  var r = UrlFetchApp.fetch('https://openapi.blofin.com/api/v1/market/candles?instId=' + coin + '-USDT&bar=' + bar + '&limit=300', { muteHttpExceptions: true });
-  var d = (JSON.parse(r.getContentText()).data || []).filter(function (x) { return x[8] == '1'; });
+  var u = 'https://openapi.blofin.com/api/v1/market/candles?instId=' + coin + '-USDT&bar=' + bar + '&limit=300', j = null;
+  for (var k = 0; k < 3 && !j; k++) { try { j = JSON.parse(UrlFetchApp.fetch(u, { muteHttpExceptions: true }).getContentText()); } catch (e) { Utilities.sleep(1200); } }   // BloFin rate limit returns an HTML page
+  var d = ((j && j.data) || []).filter(function (x) { return x[8] == '1'; });
   return d.map(function (x) { return { t: +x[0], o: +x[1], h: +x[2], l: +x[3], c: +x[4], v: +x[6] || +x[5] }; }).reverse();
 }
 function tfSummary_(coin, bar) {
@@ -516,7 +517,7 @@ function queuePlan_(q) {
     return { ok: true, msg: 'Queued ' + q.side + ' ' + coin + ' (mode ' + set_('Mode') + ')' };
   } catch (e) { return { ok: false, err: e.message }; } finally { lk.releaseLock(); }
 }
-function testChat() { var up='XRP'; Logger.log(JSON.stringify(['15m','1H','4H'].map(function (b) { try { return tfSummary_(up, b) ? b + ' ok' : b + ' null'; } catch (e) { return b + ' ' + e.message; } }))); Logger.log(JSON.stringify(chat_('day trade XRP on the 15m')).slice(0, 1500)); }
+function testChat() { Logger.log(JSON.stringify(chat_('day trade XRP on the 15m')).slice(0, 1500)); }
 function testFrames() {
   try { var r = UrlFetchApp.fetch('https://openapi.blofin.com/api/v1/market/candles?instId=XRP-USDT&bar=1H&limit=300', { muteHttpExceptions: true }); Logger.log('HTTP ' + r.getResponseCode() + ' ' + r.getContentText().slice(0, 200)); } catch (e) { Logger.log('fetch err ' + e.message); }
   try { Logger.log(JSON.stringify(tfSummary_('XRP', '1H'))); } catch (e) { Logger.log('tf err ' + e.message + ' ' + e.stack); }
