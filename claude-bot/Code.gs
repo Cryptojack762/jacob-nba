@@ -669,7 +669,7 @@ function reportLog_() {
   var last = sh.getLastRow(), rows = last > 1 ? sh.getRange(2, 1, last - 1, 12).getValues() : [], idx = {};
   rows.forEach(function (r, i) { idx[r[11]] = i; });
   cal.forEach(function (e) {
-    var t = new Date(e.when).getTime(), key = e.t + '|' + e.when, a = H[hr(t)];
+    var t = new Date(e.when).getTime(), key = e.t + '|' + t, a = H[hr(t)];  // key uses ms (feed sends the same time as -05:00 or Z)
     var num = function (v) { var m = String(v).replace(/[,%KMB]/g, '').match(/-?[\d.]+/); return m ? Number(m[0]) : NaN; };
     var vs = e.act && e.fc && isFinite(num(e.act)) && isFinite(num(e.fc)) ? (num(e.act) > num(e.fc) ? 'ABOVE' : num(e.act) < num(e.fc) ? 'BELOW' : 'IN LINE') : '';
     var row = [Utilities.formatDate(new Date(t), 'America/Chicago', 'MM/dd h:mm a'), e.t, e.imp, e.fc, e.prev, e.act, vs, a ? a.o : '', mv(t, 1), mv(t, 4), mv(t, 24), key];
