@@ -381,7 +381,7 @@ function doGet(e) {
     if (q.set == 'kill') setVal_('Kill switch', q.v == 'ON' ? 'ON' : 'OFF');
     if (q.set == 'mode' && /^(PAPER|APPROVE|AUTO)$/.test(q.v)) setVal_('Mode', q.v);
     return json_({ ok: true, status: ss_().getSheetByName('Home').getRange(2, 2).getValue(), mode: set_('Mode'), kill: set_('Kill switch'), equity: equity_(),
-      positions: rows_('Positions').slice(-60), orders: rows_('Orders').filter(function (r) { return r[10] == 'PENDING'; }).map(function (r) { return r.slice(0, 11).concat([r[11]]); }), signals: rows_('Signals').slice(-30), log: rows_('Log').slice(-25), phoenix: phoenix_() });
+      positions: rows_('Positions').slice(-60), orders: rows_('Orders').filter(function (r) { return r[10] == 'PENDING'; }).map(function (r) { return r.slice(0, 11).concat([r[11]]); }), signals: rows_('Signals').slice(-30), log: rows_('Log').slice(-25), phoenix: phoenix_(), keys: !!keys_(), live: livePnl_() });
   }
   return json_({ ok: true, service: "Claude's Auto Trading Bot", version: BOT.version });
 }
@@ -402,6 +402,20 @@ function phoenix_() {
     c.put('PHX', JSON.stringify(o), 900);
     return o;
   } catch (e) { return { err: e.message }; }
+}
+// Unrealized P&L of open positions at the current WEEX price (for the phone app). Cached 60 s.
+function livePnl_() {
+  try {
+    var c = CacheService.getScriptCache(), hit = c.get('LIVE'); if (hit) return JSON.parse(hit);
+    var o = {}, px = {};
+    rows_('Positions').filter(function (r) { return r[11] == 'OPEN'; }).forEach(function (r) {
+      var coin = r[1]; if (!(coin in px)) px[coin] = priceNow_(coin);
+      var side = r[3] == 'LONG' ? 1 : -1, entry = Number(r[5]), qty = Number(r[6]);
+      o[r[0]] = { price: px[coin], pnl: Math.round(side * (px[coin] - entry) * qty * 100) / 100 };
+    });
+    c.put('LIVE', JSON.stringify(o), 60);
+    return o;
+  } catch (e) { return {}; }
 }
 function json_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
 
