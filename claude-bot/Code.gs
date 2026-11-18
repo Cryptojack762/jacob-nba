@@ -820,7 +820,7 @@ function doPost(e) {
   var b = {}; try { b = JSON.parse(e.postData.contents); } catch (x) { }
   var k = PropertiesService.getScriptProperties().getProperty('RB_KEY');
   if (!k || b.key !== k) return json_({ ok: false, err: 'key' });
-  var lk = LockService.getScriptLock(); lk.waitLock(15000);
+  var lk = LockService.getDocumentLock(); lk.waitLock(15000); // own lock: never blocks the 15-min scan
   try {
     var sh = rbSheet_();
     if (b.rb == 'poll') {
