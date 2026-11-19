@@ -212,6 +212,8 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
     <div class="amt" id="tfbar"><button data-tf="1H">1H</button><button data-tf="4H">4H</button><button data-tf="1D">Daily</button><button data-tf="1W">Weekly</button></div>
     <div class="why" id="tfnote" style="margin:0 4px 10px"></div>
     <div id="tcards"><div class="card"><div class="why">Finding setups…</div></div></div>
+    <div class="k" style="margin-top:14px"><span>👁 Watch list · waiting for the trigger</span><span id="wcN"></span></div>
+    <div id="wcards"><div class="card"><div class="why">Nothing on the watch list.</div></div></div>
   </section>
   <section class="view" id="v-chat">
     <div class="two" style="margin-bottom:10px"><div class="k" style="margin:0">Atlas chat</div><div style="display:flex;gap:8px"><button class="mb" id="chist" style="min-height:36px;padding:6px 12px">History</button><button class="mb" id="cnew" style="min-height:36px;padding:6px 12px">New chat</button></div></div>
@@ -307,11 +309,21 @@ function renderExtra(){
 // One trigger list: Phoenix BloFin triggers + Phoenix pick board (coins like XPIN that are not on the BloFin list) + bot signals (last 12h) + watch list + favorites
 try{window.NOAPI=JSON.parse(localStorage.getItem('noapi')||'["PROM"]')}catch(e){window.NOAPI=['PROM']}
 var BX=null;try{BX=JSON.parse(localStorage.getItem('bx')||'null')}catch(e){}
+function onW(c){c=String(c||'').toUpperCase();if((window.NOAPI||[]).indexOf(c)>=0)return false;var L=BX&&BX.weex;return L&&L.length?L.indexOf(c)>=0:null}
+// Remembers what was ENTER; when one drops off, it shows as EXPIRED (with the time) for 12h instead of vanishing
+function expTrack(tr){var M={},E={},now=Date.now();try{M=JSON.parse(localStorage.getItem('entOn')||'{}');E=JSON.parse(localStorage.getItem('entExp')||'{}')}catch(e){}
+  var cur={};tr.forEach(function(t){if(st(t.st)==='ENTER'&&!t.exp){var k=String(t.c).toUpperCase()+'|'+(t.src||'P');cur[k]=1;if(!M[k])M[k]={t:now,c:t.c,why:t.why};delete E[k]}});
+  Object.keys(M).forEach(function(k){if(!cur[k]){E[k]={at:now,since:M[k].t,c:M[k].c,why:M[k].why};delete M[k]}});
+  Object.keys(E).forEach(function(k){if(now-E[k].at>12*3600e3)delete E[k]});
+  try{localStorage.setItem('entOn',JSON.stringify(M));localStorage.setItem('entExp',JSON.stringify(E))}catch(e){}
+  var tm=function(x){return new Date(x).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})};
+  return Object.keys(E).map(function(k){var x=E[k];return {c:x.c,now:'',st:'AVOID',exp:true,why:'⌛ Expired '+tm(x.at)+' (was ENTER from '+tm(x.since)+') · '+String(x.why||'').slice(0,80),plan:''}})}
 function trigExtra(){var out=[],have={};(D&&D.trig||[]).forEach(function(t){have[String(t.c).toUpperCase()]=1});
   (D&&D.picks||[]).forEach(function(p){var S=String(p.st||'').toUpperCase(),c=String(p.t||'').toUpperCase();if(!c||have[c]||!/ENTER|ALMOST/.test(S))return;have[c]=1;out.push({c:p.t,now:'',st:S,why:'Phoenix pick board #'+p.r+(p.ty?' · '+p.ty:''),plan:p.plan,score:p.rd,src:'PICK'})});
   if(BX){var yr=new Date().getFullYear(),now=Date.now();
     (BX.sig||[]).forEach(function(r){var t=Date.parse(String(r[0]).replace(/^(\d+\/\d+) /,'$1/'+yr+' '))||0;if(now-t>4*3600e3||/^Skipped/.test(String(r[6]))||/Phoenix pick|trade card|chat plan|Watch list/i.test(String(r[2])))return;out.push({c:r[1],now:r[4],st:'ENTER',why:'🤖 Bot rule '+r[2]+' · '+r[0]+': '+r[3]+' · '+r[5],plan:'Bot action: '+r[6],src:'BOT'})});
     (BX.watch&&BX.watch.list||[]).forEach(function(w){if(!/WATCHING|QUEUED/.test(w.status))return;out.push({c:w.coin,now:'',st:w.status==='QUEUED'?'ENTER':'WAIT',why:'👁 Watch list '+w.side+(w.entry?' at $'+w.entry:'')+' · '+(w.note||''),plan:w.status==='QUEUED'?'HIT: waiting for your ✔ in Trades':'stop $'+(w.stop||'-')+' · TP1 $'+(w.tp1||'-'),src:'WATCH'})});
+    (BX.watch&&BX.watch.list||[]).filter(function(w){return w.status==='EXPIRED'}).slice(-3).forEach(function(w){out.push({c:w.coin,now:'',st:'AVOID',exp:true,why:'⌛ Watch list EXPIRED '+(w.at||'')+' · '+(w.note||''),plan:'',src:'WATCH'})});
     (BX.watch&&BX.watch.favs||[]).forEach(function(f){out.push({c:f.coin,now:f.price,st:f.state||'WAIT',why:'⭐ Favorite · '+(f.note||''),plan:'',src:'FAV'})})}
   return out}
 function trigRow(t){
@@ -323,21 +335,25 @@ function trigRow(t){
     bar='<div class="bar"><i style="left:0;width:'+Math.max(r,2)+'%;background:'+(r>=100?'#22c55e':'linear-gradient(90deg,#ff2d00,#ff8a00 40%,#ffd84d 75%,#22c55e);background-size:'+(10000/Math.max(r,2))+'% 100%')+'"></i></div>';
     right='<div class="sc"><b style="color:'+(r>=100?'#22c55e':'inherit')+'">'+Math.round(r)+'</b><span style="color:'+C+'">'+s+'</span></div>';
   } else { bar=meter(a); right='<span class="chip s-'+s+'">'+s+'</span>'; }
+  if(t.exp){bar='';right='<span class="chip s-EXPIRED">EXPIRED</span>'}
+  var w=onW(t.c),tk='';
+  if(s==='ENTER'&&!t.exp&&t.src!=='FAV')tk='<div style="display:flex;gap:8px;align-items:center;margin-top:6px"><button class="mb" style="min-height:0;padding:6px 12px" data-mk="'+esc(String(t.c).toUpperCase())+'">🎫 Make ticket</button><span class="chip '+(w===false?'s-AVOID':'s-ENTER')+'">'+(w===false?'BloFin only':w?'WEEX ✔':'WEEX ?')+'</span></div>';
   return '<div class="row"><div class="sym">'+esc(String(t.c).slice(0,5))+'</div><div class="mid"><div class="l1"><b>'+esc(t.c)+'</b><span>'+(t.now!==''&&t.now!=null?'$'+esc(num(t.now)):'')+'</span></div>'+
-    '<div class="why">'+esc(t.why)+'</div>'+(t.plan?'<div class="plan">'+esc(t.plan)+'</div>':'')+bar+'</div>'+right+'</div>';
+    '<div class="why">'+esc(t.why)+'</div>'+(t.plan?'<div class="plan">'+esc(t.plan)+'</div>':'')+bar+tk+'</div>'+right+'</div>';
 }
 function render(){
   if(!D)return;
   var g=String(D.gate||''), up=!!D.gateUp, tr=(D.trig||[]).concat(trigExtra()).sort(function(a,b){return ORDER[st(a.st)]-ORDER[st(b.st)]||(Number(b.score)||0)-(Number(a.score)||0)||Math.abs(atr(a.why)||9)-Math.abs(atr(b.why)||9)});
-  var cnt={ENTER:0,ALMOST:0,WAIT:0,AVOID:0}; tr.forEach(function(t){cnt[st(t.st)]++});
+  var cnt={ENTER:0,ALMOST:0,WAIT:0,AVOID:0}; tr.forEach(function(t){if(!t.exp)cnt[st(t.st)]++});
   var gm=g.match(/BTC gate:\s*([A-Z]+)\s*\(([^)]*)\)/i), when=(g.match(/refreshed ([^|]+)/i)||[])[1]||'';
   var note=gm?cap(gm[2]):(up?'Longs are allowed.':'');
   $('gate').innerHTML='<div class="card"><div class="gate"><div class="gico '+(up?'up':'dn')+'">'+(up?'▲':'▼')+'</div><div><div class="gt">Bitcoin gate is '+(up?'UP':'DOWN')+'</div><div class="gs">'+esc(note)+(when?'<br>Checked '+esc(when.trim()):'')+'</div></div></div>'+
     '<div class="stats">'+['ENTER','ALMOST','WAIT','AVOID'].map(function(k){return '<div class="st c-'+k+(FIL==k?' on':'')+'" data-f="'+k+'"><b>'+cnt[k]+'</b><span>'+k+'</span></div>'}).join('')+'</div></div>';
   var r=String(D.read||'').replace(/^TODAY'?S?\s*READ:?\s*/i,'');
   r=cap(r); var i=r.indexOf('.'); $('read').innerHTML=i>0&&i<80?'<b>'+esc(r.slice(0,i+1))+'</b>'+esc(r.slice(i+1)):esc(r||'No read yet today.');
-  var best=tr.slice(0,3);
+  var best=tr.filter(function(t){return !t.exp}).slice(0,3);
   $('best').innerHTML=best.length?best.map(trigRow).join('')+'<button class="more" data-go="sig">See all '+tr.length+' triggers</button>':'<div class="why">No triggers yet.</div>';
+  var ex=expTrack(tr); tr=tr.concat(ex);
   var list=FIL?tr.filter(function(t){return st(t.st)==FIL}):tr, show=SHOWALL||FIL?list:list.slice(0,10);
   $('fl').innerHTML=FIL?'<span class="chip s-'+FIL+'" data-f="">'+FIL+' ✕</span>':cnt.ENTER+' ready';
   $('sig').innerHTML=(show.length?show.map(trigRow).join(''):'<div class="why">Nothing in '+FIL+' right now.</div>')+(!FIL&&!SHOWALL&&list.length>10?'<button class="more" id="sa">Show all '+list.length+'</button>':'');
@@ -406,6 +422,11 @@ function wsm(n){n=Number(n)||0;return (n>=0?'+':'-')+'$'+Math.abs(n).toFixed(2)}
 function wshow(c){$('wsetup').style.display=c?'none':'block';$('wapp').style.display=c?'block':'none';$('tconn').style.display=c?'none':'block'}
 function wapi(qs,ok){if(!WAPI||!WPIN){toast('Connect the bot first');return}fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+qs,{cache:'no-store'}).then(function(r){return r.json()}).then(function(k){toast(k.ok?k.msg:(k.err||'Failed'));if(k.ok&&ok)ok(k);wload('',false)}).catch(function(){toast('Bot not reachable')})}
 function wwatchR(W){var F=W.favs||[],L=W.list||[];
+  try{var act=L.filter(function(w){return /WATCHING|QUEUED/.test(w.status)}),ex=L.filter(function(w){return w.status==='EXPIRED'}).slice(-3);$('wcN').textContent=act.length?act.length+' waiting':'';
+  $('wcards').innerHTML=(act.length||ex.length)?act.concat(ex).map(function(w){var lg=w.side==='LONG',x=w.status==='EXPIRED',q=w.status==='QUEUED',ow=onW(w.coin);
+    return '<div class="tcard" style="'+(x?'opacity:.6':'')+'"><div class="two"><div><b style="font-size:20px">'+esc(w.side+' '+w.coin)+'</b><div class="why">'+(x?'<b class="neg">⌛ EXPIRED '+esc(w.at||'')+'</b>':q?'<b class="pos">TRIGGERED · waiting for your ✔ in Trades</b>':'<b style="color:var(--al)">⏳ Waiting</b>')+' · '+(ow===false?'BloFin only (alert)':'bot buys $5 on WEEX when it goes green')+'</div></div><div class="big">'+(w.entry?'$'+esc(w.entry):'')+'</div></div>'+
+    '<div class="row2"><div>Entry<b>'+(w.entry?'$'+esc(w.entry):'condition')+'</b></div><div>Stop<b>$'+esc(w.stop||'-')+'</b></div><div>TP1<b>$'+esc(w.tp1||'-')+'</b></div><div>Added<b>'+esc(w.added||w.at||'')+'</b></div></div>'+
+    '<div class="why" style="margin-top:6px">'+esc(w.note||'')+(x?'':' · <a href="#" data-wrm="'+esc(w.id)+'">Remove</a>')+'</div></div>'}).join(''):'<div class="card"><div class="why">Nothing on the watch list. Ask Claude about a coin and tap + Watch list.</div></div>'}catch(e){}
   $('wfav').innerHTML=F.length?F.map(function(f){var st=String(f.state||'…');return '<div class="row"><div class="sym">'+esc(String(f.coin).slice(0,5))+'</div><div class="mid"><div class="l1"><b>'+esc(f.coin)+'</b><span>$'+esc(f.price)+'</span></div><div class="why">'+esc(f.note||'')+'</div><div class="plan">'+esc(f.at||'')+' · <a href="#" data-fq="'+esc(f.coin)+'">Ask Claude</a> · <a href="#" data-frm="'+esc(f.coin)+'">Remove</a></div></div><span class="chip s-'+esc(st)+'">'+esc(st)+'</span></div>'}).join(''):'<div class="why">No favorites yet. Tap ☆ Favorite under any Ask Claude answer.</div>';
   var act=L.filter(function(w){return /WATCHING|QUEUED/.test(w.status)}).length;$('wwatchN').textContent=act?act+' active':'';
   $('wwatch').innerHTML=(L.length?L.map(function(w){var lg=w.side==='LONG',st=String(w.status),on=/WATCHING|QUEUED/.test(st);return '<div class="row"><div class="sym '+(lg?'symL':'symS')+'">'+esc(String(w.coin).slice(0,5))+'</div><div class="mid"><div class="l1"><b>'+esc(w.side)+' '+esc(w.coin)+'</b><span>'+(w.entry?'entry $'+esc(w.entry):'condition')+'</span></div><div class="why">'+esc(w.note||'')+'</div><div class="plan">stop $'+esc(w.stop||'-')+' · TP1 $'+esc(w.tp1||'-')+' · '+esc(w.at||'')+(on?' · <a href="#" data-wrm="'+esc(w.id)+'">Remove</a>':'')+'</div></div><span class="chip s-'+(st==='QUEUED'?'APPROVE':st==='WATCHING'?'WAIT':st==='PLACED'||st==='TAKEN'?'OPEN':'EXPIRED')+'">'+esc(st)+'</span></div>'}).join(''):'<div class="why">Nothing on the watch list. Tap + Watch list under an Ask Claude trade.</div>')+
@@ -455,7 +476,7 @@ function wrender(){
     var st=Date.parse(String(s[0]).replace(/^(\d+\/\d+) /,'$1/'+new Date().getFullYear()+' '))||0;var p=(j.positions||[]).filter(function(r){var t=Date.parse(r[4])||0;return r[1]===s[1]&&t>=st-6e4&&t-st<864e5})[0];if(p)return p[11]==='OPEN'?'OPEN: trade is live':'DONE: '+(p[14]!==''?'$'+(+p[14]).toFixed(2):'closed');
     return 'EXPIRED: not taken'};
   wwatchR(j.watch||{});
-  try{BX={sig:(j.signals||[]).slice(-30),watch:j.watch||{}};localStorage.setItem('bx',JSON.stringify(BX));render()}catch(e){}
+  try{BX={sig:(j.signals||[]).slice(-30),watch:j.watch||{},weex:j.weex||(BX&&BX.weex)||[]};localStorage.setItem('bx',JSON.stringify(BX));render()}catch(e){}
   $('wsig').innerHTML=_sig.slice(-10).reverse().map(function(s){s=s.slice();s[6]=_lbl(s);var sh=s[3]==='SHORT';return '<div class="row"><div class="sym '+(sh?'symS':'symL')+'">'+esc(String(s[1]).slice(0,5))+'</div><div class="mid"><div class="l1"><b>'+esc(s[3])+' '+esc(s[1])+'</b><span>$'+esc(s[4])+'</span></div><div class="why">'+esc(s[5])+'</div><div class="plan">'+esc(wnm(s[2]))+' · '+esc(s[0])+'</div></div><span class="chip s-'+esc(String(s[6]).split(':')[0].toUpperCase())+'">'+esc(String(s[6]).split(':')[0])+'</span></div>'}).join('')||'<div class="why">No signals yet.</div>';
   var w=closed.filter(function(p){return Number(p[14])>0}).length,tot=closed.reduce(function(s,p){return s+(Number(p[14])||0)},0);
   $('wrec').innerHTML='<div class="why">'+closed.length+' closed · '+(closed.length?Math.round(100*w/closed.length)+'% won':'no wins yet')+' · total <b class="'+(tot>=0?'pos':'neg')+'">'+wsm(tot)+'</b></div>'+closed.slice(0,20).map(function(p){var v=Number(p[14])||0;return '<div class="hl"><i class="chip s-'+(v>=0?'ENTER':'AVOID')+'">'+wsm(v)+'</i><span>'+esc(p[3])+' '+esc(p[1])+' · $'+esc(p[5])+' → $'+esc(p[13])+' · '+esc(p[16])+' · '+esc(p[12])+'</span></div>'}).join('');
@@ -547,6 +568,7 @@ document.addEventListener('click',function(e){var b=e.target.closest('[data-tf]'
 setTimeout(cardsload,300);setInterval(function(){if(!document.hidden)cardsload()},600000);
 var CARDS=[];function cardsrender(){var G=CARDS.filter(function(c){return c.ok}).sort(function(a,b){return (b.trend-a.trend)||((a.px-a.lvl.p)/a.px-(b.px-b.lvl.p)/b.px)}).slice(0,3);
   $('tcards').innerHTML=G.length?G.map(cardhtml).join(''):'<div class="card"><div class="why">No coin has support 2-6% below price right now. Type a ticker below for its own card.</div></div>';$('tcat').textContent=new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});try{localStorage.setItem('cards_html',$('tcards').innerHTML);localStorage.setItem('cards_at',$('tcat').textContent)}catch(e){}}
+document.addEventListener('click',function(e){var m=e.target.closest('[data-mk]');if(!m)return;e.preventDefault();go('home');$('qtk').value=m.dataset.mk;$('tkbtn').click();setTimeout(function(){$('tkout').scrollIntoView({behavior:'smooth',block:'start'})},300)});
 document.addEventListener('click',function(e){var a=e.target.closest('[data-amt]');if(a){AMT=+a.dataset.amt;try{localStorage.setItem('card_amt',AMT)}catch(x){}cardsrender();if($('tkout')._C)$('tkout').innerHTML=cardhtml($('tkout')._C)||$('tkout').innerHTML;return}
   var b=e.target.closest('[data-buy]');if(!b)return;var p=JSON.parse(b.dataset.buy);if(!WAPI||!WPIN){toast('Connect the bot first');return}
   if(!confirm('BUY $'+AMT+' of '+p.c+' at '+p.lev+'x on WEEX now? Stop $'+Number(p.stop).toPrecision(5)))return;b.disabled=true;b.textContent='Sending to WEEX…';

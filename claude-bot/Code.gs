@@ -315,6 +315,12 @@ function symbolInfo_(coin) {
   all.forEach(function (x) { if (BOT.coins.indexOf(x.baseAsset) >= 0) c.put('SYM_' + x.baseAsset, JSON.stringify({ quantityPrecision: x.quantityPrecision, pricePrecision: x.pricePrecision, minOrderSize: x.minOrderSize }), 21600); if (x.symbol == coin + 'USDT') s = x; });
   return s ? { quantityPrecision: s.quantityPrecision, pricePrecision: s.pricePrecision, minOrderSize: s.minOrderSize } : null;
 }
+// Every coin WEEX lists (USDT perps), cached 6h: the app labels ENTER rows 'WEEX ✔' or 'BloFin only'
+function weexList_() {
+  var c = CacheService.getScriptCache(), v = c.get('WEEX_ALL'); if (v) return JSON.parse(v);
+  var out = []; try { (get_('/capi/v3/market/exchangeInfo').symbols || []).forEach(function (x) { if (/USDT$/.test(x.symbol) && out.indexOf(x.baseAsset) < 0) out.push(x.baseAsset); }); } catch (e) { }
+  if (out.length) c.put('WEEX_ALL', JSON.stringify(out), 21600); return out;
+}
 function priceStr_(coin, p) { var info = symbolInfo_(coin), dp = info ? info.pricePrecision : 4; return Number(p).toFixed(dp); }
 
 function openPos_(o, fill, mode, note) {
@@ -515,7 +521,7 @@ function doGet(e) {
       CacheService.getScriptCache().remove('LIVE');
     }
     return json_({ ok: true, status: ss_().getSheetByName('Home').getRange(2, 2).getValue(), mode: set_('Mode'), kill: set_('Kill switch'), equity: equity_(), dayStart: Number(PropertiesService.getScriptProperties().getProperty('DAY_START')) || 0, killPct: num_('Daily loss % (kill)', 1, 90), peak: Number(PropertiesService.getScriptProperties().getProperty('PEAK')) || 0, ddPct: num_('Max drawdown % (kill)', 1, 90),
-      watch: watchJson_(), slots: slots_(), noapi: noApi_(), positions: rows_('Positions').slice(-60), orders: rows_('Orders').filter(function (r) { return r[10] == 'PENDING'; }).map(function (r) { return r.slice(0, 11).concat([r[11]]); }), signals: rows_('Signals').slice(-30), log: rows_('Log').slice(-25), phoenix: phoenix_(), keys: !!keys_(), live: livePnl_() });
+      watch: watchJson_(), slots: slots_(), noapi: noApi_(), weex: weexList_(), positions: rows_('Positions').slice(-60), orders: rows_('Orders').filter(function (r) { return r[10] == 'PENDING'; }).map(function (r) { return r.slice(0, 11).concat([r[11]]); }), signals: rows_('Signals').slice(-30), log: rows_('Log').slice(-25), phoenix: phoenix_(), keys: !!keys_(), live: livePnl_() });
   }
   return json_({ ok: true, service: "Claude's Auto Trading Bot", version: BOT.version });
 }
