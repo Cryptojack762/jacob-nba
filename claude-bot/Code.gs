@@ -56,6 +56,8 @@ var DEFAULTS = [
   ['Watch wait (min)', 15, 'Minutes to wait for your tap before the watch fallback places it'],
   ['Watch trail (ATR x)', 2, 'Trailing stop on watch fallback trades: highest close minus this many 4H ATRs (never moves down)'],
   ['Watch expiry (days)', 7, 'Watch-list items that never trigger expire after this many days'],
+  ['Auto scan', 'ON', 'Bot buys on its own: every scan it checks its coin list with the Auto entry rules (Swing 4H, then Day 1H) inside the $15 pot'],
+  ['Auto scan $', 5, 'Amount per Auto scan trade (risk is 10% of it, half while BTC gate is down)'],
   ['Auto pot $', 15, 'Auto entry + bot slice share this pot (open margin cap)'],
   ['Auto max open', 3, 'Max auto-entry trades open at once'],
   ['Auto daily stop $', 3, 'No new auto trades after the pot loses this much in a day'],
@@ -176,6 +178,7 @@ function scan() {
     try { watchCheck_(); } catch (e) { log_('ERROR', 'watch list: ' + e.message); }
     try { manageAuto_(); } catch (e) { log_('ERROR', 'auto exits: ' + e.message); }
     try { autoCheck_(btcUp); } catch (e) { log_('ERROR', 'auto entry: ' + e.message); }
+    try { autoScan_(btcUp); } catch (e) { log_('ERROR', 'auto scan: ' + e.message); }
     try { favCheck_(); } catch (e) { log_('ERROR', 'favorites: ' + e.message); }
     try { pickPush_(); } catch (e) { log_('ERROR', 'pick push: ' + e.message); }
     var eq = equity_(); killCheck_(eq);
@@ -1295,14 +1298,38 @@ function autoCheck_(btcUp) {
     var s; try { s = autoSignal_(it.coin, it.tf); } catch (e) { it.note = 'Check failed: ' + e.message.slice(0, 80); changed = true; return; }
     it.note = (s.enter ? 'ENTER: ' : 'Waiting: ') + s.why + ' · checked ' + ct_(); changed = true;
     if (!s.enter) return;
-    var block = P.halt ? 'Pot stopped (down $' + num_('Auto total stop $', 0, 1000) + ')' : on_('Kill switch') ? 'Kill switch ON' : eventPause_() ? 'Event pause' :
-      P.today <= -num_('Auto daily stop $', 0, 1000) ? 'Daily stop hit ($' + (-P.today).toFixed(2) + ' down today)' : P.open >= num_('Auto max open', 0, 20) ? 'Max ' + num_('Auto max open', 0, 20) + ' auto trades open' :
-      P.used + it.usd > num_('Auto pot $', 0, 1000) ? 'Pot full ($' + P.used + ' of $' + num_('Auto pot $', 0, 1000) + ' in use)' : '';
+    var block = autoBlock_(P, it.usd);
     if (block) { it.note = 'ENTER but waiting: ' + block + ' · ' + ct_(); return; }
     var r = autoBuy_(it, s, btcUp);
     if (r.ok) { it.st = 'BOUGHT'; it.note = r.msg; it.bought = ct_(); P.used += it.usd; P.open++; } else it.note = 'ENTER but not bought: ' + r.msg + ' · ' + ct_();
   });
   if (changed) autoSave_(l);
+}
+function autoBlock_(P, usd) {
+  return P.halt ? 'Pot stopped (down $' + num_('Auto total stop $', 0, 1000) + ')' : on_('Kill switch') ? 'Kill switch ON' : eventPause_() ? 'Event pause' :
+    P.today <= -num_('Auto daily stop $', 0, 1000) ? 'Daily stop hit ($' + (-P.today).toFixed(2) + ' down today)' : P.open >= num_('Auto max open', 0, 20) ? 'Max ' + num_('Auto max open', 0, 20) + ' auto trades open' :
+    P.used + usd > num_('Auto pot $', 0, 1000) ? 'Pot full ($' + P.used + ' of $' + num_('Auto pot $', 0, 1000) + ' in use)' : '';
+}
+function autoScan_(btcUp) {   // the bot hunts on its own: BOT.coins, Swing 4H first then Day 1H, $ from 'Auto scan $'
+  if (!on_('Auto scan')) return;
+  var usd = num_('Auto scan $', 1, 1000), P = autoPnl_(), open = {}, l = autoList_(), found = [];
+  rows_('Positions').forEach(function (r) { if (r[11] == 'OPEN') open[r[1]] = 1; });
+  l.forEach(function (x) { if (x.st == 'LOCKED') open[x.coin] = 1; });
+  if (autoBlock_(P, usd)) return;
+  var na = noApi_();
+  BOT.coins.forEach(function (c) {
+    if (open[c] || na.indexOf(c) >= 0 || autoBlock_(P, usd)) return;
+    ['4H', '1H'].some(function (tf) {
+      var s; try { s = autoSignal_(c, tf); } catch (e) { return false; }
+      if (!s.enter) return false;
+      var it = { id: 'AS' + Date.now().toString(36).toUpperCase() + c, coin: c, usd: usd, tf: tf, st: 'LOCKED', at: ct_(), t: Date.now(), lockPx: s.px, scan: true };
+      var r = autoBuy_(it, s, btcUp);
+      if (r.ok) { it.st = 'BOUGHT'; it.note = '🤖 Bot found it: ' + r.msg; it.bought = ct_(); P.used += usd; P.open++; open[c] = 1; l.push(it); found.push(c + ' ' + tf); }
+      else log_('AUTO', 'Auto scan ' + c + ' ' + tf + ' ENTER but not bought: ' + r.msg);
+      return true;
+    });
+  });
+  if (found.length) { autoSave_(l); log_('AUTO', 'Auto scan bought: ' + found.join(', ')); }
 }
 function autoBuy_(it, s, btcUp) {
   var px = priceNow_(it.coin); if (!(px > s.stop)) return { ok: false, msg: 'price already under the stop' };
@@ -1347,4 +1374,5 @@ function manageAuto_() {   // TP1 1.5R sell 75% + stop to entry, TP2 2R close th
     sh.getRange(row, 19).setValue(JSON.stringify(n));
   });
 }
+function testScanAuto() { BOT.coins.forEach(function (c) { ['4H', '1H'].forEach(function (tf) { var s = autoSignal_(c, tf); if (s.enter) Logger.log('ENTER ' + c + ' ' + tf + ': ' + s.why); }); }); Logger.log('done, blocks: ' + (autoBlock_(autoPnl_(), num_('Auto scan $', 1, 1000)) || 'none')); }
 function testAuto() { ['SOL', 'XRP'].forEach(function (c) { ['15m', '1H', '4H'].forEach(function (tf) { Logger.log(c + ' ' + tf + ' ' + JSON.stringify(autoSignal_(c, tf))); }); }); Logger.log(JSON.stringify(autoJson_())); }
