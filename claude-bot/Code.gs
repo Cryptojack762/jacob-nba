@@ -282,9 +282,14 @@ function act_(coin, sig, x) {
   var lev = num_('Leverage', 1, 5), margin = equity_() * num_('Margin per trade %', 1, 50) / 100;
   var sa = sig.stopAtr || num_('Protective stop (ATR x)', 1, 10), stop = sig.stopPx || (sig.side == 'LONG' ? x.c - sa * x.atr : x.c + sa * x.atr);
   var o = { id: 'CB' + Date.now().toString(36).toUpperCase() + coin, coin: coin, strategy: sig.strategy, side: sig.side, ref: x.c, stop: stop, margin: margin, lev: lev, why: sig.why };
+  if (action == 'BOT-AUTO') { var bo = autoOrder_(o, num_('Bot $ per trade', 0, 50), 'BOT-AUTO'); if (bo) sendLive_(bo, 'AUTO'); return; }   // own small sizing + its own minimum check
   o.qty = qty_(coin, margin * lev / x.c);
-  if (!(o.qty > 0)) { log_('SKIP', coin + ' size below the exchange minimum'); return; }
-  if (action == 'BOT-AUTO') { var bo = autoOrder_(o, num_('Bot $ per trade', 0, 50), 'BOT-AUTO'); if (bo) sendLive_(bo, 'AUTO'); return; }
+  if (!(o.qty > 0)) {   // below WEEX minimum: use the minimum size if it needs at most 2x the planned margin, else skip and SAY so
+    var info = null; try { info = symbolInfo_(coin); } catch (e) { }
+    var minQ = info ? Number(info.minOrderSize) || 0 : 0, need = minQ * x.c / lev;
+    if (minQ > 0 && need <= margin * 2) { o.qty = minQ; o.margin = margin = need; o.why += ' (sized up to the WEEX minimum ' + minQ + ' ' + coin + ', margin $' + need.toFixed(2) + ')'; }
+    else { var m = coin + ': WEEX minimum is ' + minQ + ' ' + coin + ' (needs $' + need.toFixed(2) + ' margin at ' + lev + 'x, planned $' + margin.toFixed(2) + '). Signal skipped.'; log_('SKIP', m); notify_('Skipped ' + sig.side + ' ' + coin + ' (too small for WEEX)', STRAT_NAMES[sig.strategy] + ' fired. ' + m); return; }
+  }
   if (mode == 'PAPER') return openPos_(o, priceNow_(coin), 'PAPER', 'Paper fill');
   if (mode == 'AUTO') return sendLive_(o, 'AUTO');
   if (mode == 'APPROVE') {
