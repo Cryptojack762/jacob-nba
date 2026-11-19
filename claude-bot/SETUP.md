@@ -41,3 +41,9 @@ Jacob's steps, in order:
 
 ## Rule for every app (Jacob 11/18)
 - Host it on the VPS with a manifest + service worker so it installs as a real app with no Chrome badge. Bump the sw.js cache name on every change.
+
+## Auto entry (11/19/2026, bot Version 42, Atlas v33)
+- Atlas Home > Auto entry: ticker + $ + Scalp 15m / Day 1H / Swing 4H > Lock it in. Card shows LOCKED IN (green) with an on/off switch.
+- Bot checks every 15-min scan (autoCheck_). ENTER rules: 4H = TPI breakout or washout bounce; 1H/15m = EMA21>EMA50, close>EMA21 and EMA200, RSI 50-70, within 1.5 ATR of EMA21. Long only, WEEX coins only.
+- Risk 10% of the amount (half while BTC gate down). TP1 1.5R sell 75% + stop to entry, TP2 2R rest, time stop 3h/8h/72h (manageAuto_). Tag AUTO-ENTRY, strategy AUTOE.
+- Shared pot with the bot slice: Auto pot $15, max 3 open, daily stop $3, total stop $5 (AUTO_HALT; restart from Atlas). List in script property AUTOQ.
