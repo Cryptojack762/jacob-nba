@@ -1,4 +1,4 @@
-var C='atlas-v33', SHELL=['./','index.html','manifest.json','atlas-180.png','atlas-192.png','atlas-512.png'];
+var C='atlas-v34', SHELL=['./','index.html','manifest.json','atlas-180.png','atlas-192.png','atlas-512.png'];
 self.addEventListener('install',function(e){e.waitUntil(caches.open(C).then(function(c){return c.addAll(SHELL)}).then(function(){return self.skipWaiting()}))});
 self.addEventListener('activate',function(e){e.waitUntil(caches.keys().then(function(k){return Promise.all(k.filter(function(x){return x!=C}).map(function(x){return caches.delete(x)}))}).then(function(){return self.clients.claim()}))});
 self.addEventListener('fetch',function(e){

@@ -137,7 +137,7 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
       <div class="seg" id="aqtf"><button class="mb" data-aqt="15m">Scalp 15m</button><button class="mb sel" data-aqt="1H">Day 1H</button><button class="mb" data-aqt="4H">Swing 4H</button></div>
       <button class="buy" id="aqgo" style="width:100%;margin-top:8px">🔒 Lock it in</button>
       <div id="aqlist"></div>
-      <div class="why" style="margin-top:8px">The bot checks every 15 min. When your chart turns ENTER it buys on WEEX with the stop set, sells 75% at 1.5R (stop moves to entry) and the rest at 2R. Risk is 10% of the amount (half while the Bitcoin gate is down). Shared $15 pot, stops for the day after −$3 and for good after −$5.</div>
+      <div class="why" style="margin-top:8px">The bot checks every 15 min. When your chart turns ENTER it buys on WEEX with the stop set, sells 75% at 1.5R (stop moves to entry) and the rest at 2R. Risk is 10% of the amount (half while the Bitcoin gate is down). Coins you lock in use your own money (max 3 open). Separately the bot hunts on its own with its $15 pot: $1.50 trades, up to 10 open, stops for the day after −$3, and for good after −$5 or 5 losses in a row.</div>
     </div>
     <div id="nbanner"></div>
     <div id="gate"><div class="sk"></div></div>
@@ -439,8 +439,8 @@ function wshow(c){$('wsetup').style.display=c?'none':'block';$('wapp').style.dis
 function wapi(qs,ok){if(!WAPI||!WPIN){toast('Connect the bot first');return}fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+qs,{cache:'no-store'}).then(function(r){return r.json()}).then(function(k){toast(k.ok?k.msg:(k.err||'Failed'));if(k.ok&&ok)ok(k);wload('',false)}).catch(function(){toast('Bot not reachable')})}
 var AQ={usd:5,tf:'1H'};
 function aqR(A){if(!A||!$('aqlist'))return;var L=(A.list||[]).slice().reverse(),T={'15m':'Scalp 15m','1H':'Day 1H','4H':'Swing 4H'};
-  var m=function(v){v=+v||0;return (v<0?'−':'')+'$'+Math.abs(v).toFixed(2).replace(/\.00$/,'')};$('aqpot').textContent=m(A.used)+' of '+m(A.pot||15)+' in use · today '+((A.today||0)>0?'+':'')+m(A.today)+(A.halt?' · STOPPED':'');
-  $('aqlist').innerHTML=(A.halt?'<div class="why" style="margin-top:8px;color:#f85149">Pot stopped after −$'+A.totalStop+'. <button class="mb" data-aqx="reset" style="min-height:0;padding:6px 10px">Restart pot</button></div>':'')+L.map(function(x){
+  var m=function(v){v=+v||0;return (v<0?'−':'')+'$'+Math.abs(v).toFixed(2).replace(/\.00$/,'')};$('aqpot').textContent='🤖 pot '+m(A.used)+'/'+m(A.pot||15)+' · '+(A.open||0)+'/'+(A.maxOpen||10)+' open · today '+((A.today||0)>0?'+':'')+m(A.today)+(A.halt?' · STOPPED':A.scanOn===false?' · scan OFF':'');
+  $('aqlist').innerHTML=(A.halt?'<div class="why" style="margin-top:8px;color:#f85149">Bot cut itself off (down $'+A.totalStop+' or '+(A.streak||5)+' losses in a row). <button class="mb" data-aqx="reset" style="min-height:0;padding:6px 10px">Restart pot</button></div>':'')+L.map(function(x){
     var lk=x.st==='LOCKED',off=x.st==='OFF'||x.st==='EXPIRED'||x.st==='SKIP',bt=x.st==='BOUGHT';
     var ic=lk?'🔒':bt?'✅':x.st==='EXPIRED'?'⌛':'🔓',lab=lk?'LOCKED IN':bt?'BOUGHT':x.st==='EXPIRED'?'EXPIRED':'OFF';
     return '<div class="aq '+(lk?'lk':bt?'bt':'off')+'"><div class="ic">'+ic+'</div><div class="bd"><div class="t1">'+esc(x.coin)+' · $'+esc(x.usd)+' · '+esc(T[x.tf]||x.tf)+'</div><div class="t2"><b style="color:'+(lk?'#3fb950':bt?'#d4a24c':'var(--mut)')+'">'+lab+'</b> · locked '+esc(x.at)+(x.lockPx?' at $'+esc(x.lockPx):'')+'</div><div class="t3">'+esc(x.note||'')+'</div>'+(bt?'':'<button class="more" data-aqx="del" data-id="'+esc(x.id)+'" style="margin-top:6px;padding:4px 0;min-height:0">Remove</button>')+'</div>'+(bt?'':'<button class="sw'+(lk?' on':'')+'" aria-label="On/off" data-aqx="'+(lk?'off':'on')+'" data-id="'+esc(x.id)+'"></button>')+'</div>'}).join('')}

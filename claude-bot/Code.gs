@@ -57,9 +57,11 @@ var DEFAULTS = [
   ['Watch trail (ATR x)', 2, 'Trailing stop on watch fallback trades: highest close minus this many 4H ATRs (never moves down)'],
   ['Watch expiry (days)', 7, 'Watch-list items that never trigger expire after this many days'],
   ['Auto scan', 'ON', 'Bot buys on its own: every scan it checks its coin list with the Auto entry rules (Swing 4H, then Day 1H) inside the $15 pot'],
-  ['Auto scan $', 5, 'Amount per Auto scan trade (risk is 10% of it, half while BTC gate is down)'],
-  ['Auto pot $', 15, 'Auto entry + bot slice share this pot (open margin cap)'],
-  ['Auto max open', 3, 'Max auto-entry trades open at once'],
+  ['Auto scan $', 1.5, 'Amount per Auto scan trade (risk is 10% of it, half while BTC gate is down)'],
+  ['Auto pot $', 15, 'Bot money: Auto scan + bot slice share this pot (open margin cap)'],
+  ['Auto max open', 10, 'Max Auto scan trades open at once'],
+  ['Auto loss streak', 5, 'Auto scan shuts itself off after this many losses in a row (restart in Atlas)'],
+  ['My auto max open', 3, 'Max open trades from coins YOU lock in (your own money, not the pot)'],
   ['Auto daily stop $', 3, 'No new auto trades after the pot loses this much in a day'],
   ['Auto total stop $', 5, 'Auto entry stops for good after the pot loses this much (restart in Atlas)'],
   ['Event pause (min)', 60, 'Bot opens no new trades this many minutes before/after a HIGH-impact US report (FOMC, CPI, jobs). 0 = off'],
@@ -1235,18 +1237,20 @@ function seedNoApi() { noApiAdd_('PROM'); }
 var AUTO_TF = { '15m': { name: 'Scalp', bar: '15m', hold: 3, life: 24 }, '1H': { name: 'Day', bar: '1H', hold: 8, life: 72 }, '4H': { name: 'Swing', bar: '4H', hold: 72, life: 168 } };
 function autoList_() { try { return JSON.parse(PropertiesService.getScriptProperties().getProperty('AUTOQ') || '[]'); } catch (e) { return []; } }
 function autoSave_(l) { PropertiesService.getScriptProperties().setProperty('AUTOQ', JSON.stringify(l.slice(-30))); }
-function autoPnl_() {   // closed P&L of the shared pot: today and since the pot started
-  var p = PropertiesService.getScriptProperties(), start = Number(p.getProperty('AUTO_START')) || 0, today = ct_().split(' ')[0], d = 0, t = 0, used = 0, n = 0;
+function autoPnl_(mine) {   // mine=true: coins Jacob locks in (AUTO-ENTRY, his money). Else the bot's $15 pot (AUTO-SCAN + BOT-AUTO)
+  var p = PropertiesService.getScriptProperties(), start = Number(p.getProperty('AUTO_START')) || 0, today = ct_().split(' ')[0], d = 0, t = 0, used = 0, n = 0, closed = [];
+  var tags = mine ? ['AUTO-ENTRY'] : ['AUTO-SCAN', 'BOT-AUTO'];
   rows_('Positions').forEach(function (r) {
-    if (r[19] != 'AUTO-ENTRY' && r[19] != 'BOT-AUTO') return;
-    if (r[11] == 'OPEN') { used += Number(r[7]) || 0; if (r[19] == 'AUTO-ENTRY') n++; return; }
-    var pl = Number(r[14]) || 0; if (parseTime_(r[4]) >= start) t += pl; if (String(r[12]).split(' ')[0] == today) d += pl;
+    if (tags.indexOf(r[19]) < 0) return;
+    if (r[11] == 'OPEN') { used += Number(r[7]) || 0; if (r[19] != 'BOT-AUTO') n++; return; }
+    var pl = Number(r[14]) || 0; if (parseTime_(r[4]) >= start) { t += pl; closed.push(pl); } if (String(r[12]).split(' ')[0] == today) d += pl;
   });
-  return { today: Math.round(d * 100) / 100, total: Math.round(t * 100) / 100, used: Math.round(used * 100) / 100, open: n, halt: p.getProperty('AUTO_HALT') == '1' };
+  var streak = 0; for (var i = closed.length - 1; i >= 0 && closed[i] < 0; i--) streak++;
+  return { today: Math.round(d * 100) / 100, total: Math.round(t * 100) / 100, used: Math.round(used * 100) / 100, open: n, streak: streak, halt: p.getProperty('AUTO_HALT') == '1' };
 }
 function autoJson_() {
-  var P = autoPnl_();
-  return { list: autoList_(), pot: num_('Auto pot $', 0, 1000), daily: num_('Auto daily stop $', 0, 1000), totalStop: num_('Auto total stop $', 0, 1000), maxOpen: num_('Auto max open', 0, 20), used: P.used, open: P.open, today: P.today, total: P.total, halt: P.halt };
+  var P = autoPnl_(), M = autoPnl_(true);
+  return { mine: { open: M.open, max: num_('My auto max open', 0, 20), today: M.today, used: M.used }, streak: P.streak, scanUsd: num_('Auto scan $', 0, 1000), scanOn: on_('Auto scan'), list: autoList_(), pot: num_('Auto pot $', 0, 1000), daily: num_('Auto daily stop $', 0, 1000), totalStop: num_('Auto total stop $', 0, 1000), maxOpen: num_('Auto max open', 0, 20), used: P.used, open: P.open, today: P.today, total: P.total, halt: P.halt };
 }
 function autoApi_(q) {
   var lk = LockService.getScriptLock(); lk.waitLock(20000);
@@ -1255,7 +1259,7 @@ function autoApi_(q) {
     if (q.auto == 'add') {
       var coin = cleanCoin_(q.coin), usd = Math.round(Number(q.usd) * 100) / 100, tf = AUTO_TF[q.tf] ? q.tf : '1H';
       if (!coin) return { ok: false, err: 'Type a ticker' };
-      if (!(usd >= 1 && usd <= num_('Auto pot $', 1, 1000))) return { ok: false, err: 'Amount must be $1 to $' + num_('Auto pot $', 1, 1000) + ' (the pot)' };
+      if (!(usd >= 1 && usd <= 50)) return { ok: false, err: 'Amount must be $1 to $50' };
       if (!onWeex_(coin)) return { ok: false, err: coin + ' is not on WEEX (BloFin only). The bot can only buy WEEX coins.' };
       if (noApi_().indexOf(coin) >= 0) return { ok: false, err: 'WEEX blocks API trading for ' + coin };
       if (l.some(function (x) { return x.coin == coin && x.tf == tf && (x.st == 'LOCKED' || x.st == 'OFF'); })) return { ok: false, err: coin + ' ' + AUTO_TF[tf].name + ' is already on the list' };
@@ -1289,8 +1293,7 @@ function autoSignal_(coin, tf) {   // {enter, stop, why, px} on the closed candl
 }
 function autoCheck_(btcUp) {
   var l = autoList_(); if (!l.some(function (x) { return x.st == 'LOCKED'; })) return;
-  var p = PropertiesService.getScriptProperties(), P = autoPnl_(), now = Date.now(), changed = false;
-  if (!P.halt && P.total <= -num_('Auto total stop $', 0, 1000)) { p.setProperty('AUTO_HALT', '1'); P.halt = true; notify_('Auto entry STOPPED', 'The $15 pot is down $' + (-P.total).toFixed(2) + ' (limit $' + num_('Auto total stop $', 0, 1000) + '). No new auto trades until you restart the pot in Atlas.'); log_('AUTO', 'Total stop hit: pot down $' + (-P.total).toFixed(2)); }
+  var P = autoPnl_(true), now = Date.now(), changed = false;
   l.forEach(function (it) {
     if (it.st != 'LOCKED') return;
     var T = AUTO_TF[it.tf] || AUTO_TF['1H'];
@@ -1298,7 +1301,7 @@ function autoCheck_(btcUp) {
     var s; try { s = autoSignal_(it.coin, it.tf); } catch (e) { it.note = 'Check failed: ' + e.message.slice(0, 80); changed = true; return; }
     it.note = (s.enter ? 'ENTER: ' : 'Waiting: ') + s.why + ' · checked ' + ct_(); changed = true;
     if (!s.enter) return;
-    var block = autoBlock_(P, it.usd);
+    var block = on_('Kill switch') ? 'Kill switch ON' : eventPause_() ? 'Event pause' : P.open >= num_('My auto max open', 0, 20) ? 'Max ' + num_('My auto max open', 0, 20) + ' of your auto trades open' : '';
     if (block) { it.note = 'ENTER but waiting: ' + block + ' · ' + ct_(); return; }
     var r = autoBuy_(it, s, btcUp);
     if (r.ok) { it.st = 'BOUGHT'; it.note = r.msg; it.bought = ct_(); P.used += it.usd; P.open++; } else it.note = 'ENTER but not bought: ' + r.msg + ' · ' + ct_();
@@ -1312,7 +1315,12 @@ function autoBlock_(P, usd) {
 }
 function autoScan_(btcUp) {   // the bot hunts on its own: BOT.coins, Swing 4H first then Day 1H, $ from 'Auto scan $'
   if (!on_('Auto scan')) return;
-  var usd = num_('Auto scan $', 1, 1000), P = autoPnl_(), open = {}, l = autoList_(), found = [];
+  var usd = num_('Auto scan $', 0.5, 1000), P = autoPnl_(), open = {}, l = autoList_(), found = [], pr = PropertiesService.getScriptProperties();
+  if (!P.halt && (P.total <= -num_('Auto total stop $', 0, 1000) || P.streak >= num_('Auto loss streak', 1, 100))) {
+    pr.setProperty('AUTO_HALT', '1'); P.halt = true;
+    var why = P.streak >= num_('Auto loss streak', 1, 100) ? P.streak + ' losses in a row' : 'pot down $' + (-P.total).toFixed(2);
+    notify_('Auto scan STOPPED', 'The bot cut itself off: ' + why + '. No new bot trades until you restart the pot in Atlas.'); log_('AUTO', 'Auto scan stopped: ' + why);
+  }
   rows_('Positions').forEach(function (r) { if (r[11] == 'OPEN') open[r[1]] = 1; });
   l.forEach(function (x) { if (x.st == 'LOCKED') open[x.coin] = 1; });
   if (autoBlock_(P, usd)) return;
@@ -1336,7 +1344,7 @@ function autoBuy_(it, s, btcUp) {
   var stopD = (px - s.stop) / px; if (stopD > 0.25) return { ok: false, msg: 'stop ' + (stopD * 100).toFixed(1) + '% away (too wide)' };
   var risk = it.usd * 0.10 * (btcUp ? 1 : 0.5), lev = Math.max(1, Math.min(20, Math.floor(risk / stopD / it.usd)));
   if (stopD >= 1 / lev - 0.005) lev = Math.max(1, Math.floor(1 / (stopD + 0.01)));
-  var o = { id: 'AE' + Date.now().toString(36).toUpperCase() + it.coin, coin: it.coin, strategy: 'AUTOE', side: 'LONG', ref: px, stop: s.stop, margin: it.usd, lev: lev, tag: 'AUTO-ENTRY',
+  var o = { id: 'AE' + Date.now().toString(36).toUpperCase() + it.coin, coin: it.coin, strategy: 'AUTOE', side: 'LONG', ref: px, stop: s.stop, margin: it.usd, lev: lev, tag: it.scan ? 'AUTO-SCAN' : 'AUTO-ENTRY',
     why: 'Auto entry ' + AUTO_TF[it.tf].name + ' (' + it.tf + '): ' + s.why + '. Risk ~$' + (it.usd * lev * stopD).toFixed(2) + (btcUp ? '' : ' (half size, Bitcoin gate down)') };
   o.qty = qty_(it.coin, it.usd * lev / px); if (!(o.qty > 0)) return { ok: false, msg: '$' + it.usd + ' at ' + lev + 'x is below the WEEX minimum size' };
   ss_().getSheetByName('Signals').appendRow([ct_(), it.coin, STRAT_NAMES.AUTOE, 'LONG', px, o.why, 'AUTO ENTRY', '']);
