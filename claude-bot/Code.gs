@@ -1346,7 +1346,14 @@ function autoBuy_(it, s, btcUp) {
   if (stopD >= 1 / lev - 0.005) lev = Math.max(1, Math.floor(1 / (stopD + 0.01)));
   var o = { id: 'AE' + Date.now().toString(36).toUpperCase() + it.coin, coin: it.coin, strategy: 'AUTOE', side: 'LONG', ref: px, stop: s.stop, margin: it.usd, lev: lev, tag: it.scan ? 'AUTO-SCAN' : 'AUTO-ENTRY',
     why: 'Auto entry ' + AUTO_TF[it.tf].name + ' (' + it.tf + '): ' + s.why + '. Risk ~$' + (it.usd * lev * stopD).toFixed(2) + (btcUp ? '' : ' (half size, Bitcoin gate down)') };
-  o.qty = qty_(it.coin, it.usd * lev / px); if (!(o.qty > 0)) return { ok: false, msg: '$' + it.usd + ' at ' + lev + 'x is below the WEEX minimum size' };
+  o.qty = qty_(it.coin, it.usd * lev / px);
+  if (!(o.qty > 0)) {   // below WEEX's minimum order: raise leverage just enough to reach it, if risk stays small and liquidation stays past the stop
+    var info = symbolInfo_(it.coin) || {}, minQ = Number(info.minOrderSize) || 0, need = Math.ceil(minQ * px / it.usd * 1.02);
+    var maxRisk = it.scan ? Math.max(0.5, it.usd * 0.35) : it.usd * 0.25;
+    if (minQ > 0 && need <= 20 && stopD < 1 / need - 0.005 && minQ * px * stopD <= maxRisk) { lev = need; o.lev = lev; o.qty = qty_(it.coin, minQ * 1.0001); }
+    if (!(o.qty > 0)) return { ok: false, msg: '$' + it.usd + ' is below the WEEX minimum for ' + it.coin + ' (min ~$' + (minQ * px).toFixed(2) + ')' };
+    o.why += ' · sized up to the WEEX minimum (' + o.qty + ' ' + it.coin + ', ' + lev + 'x, risk ~$' + (o.qty * px * stopD).toFixed(2) + ')';
+  }
   ss_().getSheetByName('Signals').appendRow([ct_(), it.coin, STRAT_NAMES.AUTOE, 'LONG', px, o.why, 'AUTO ENTRY', '']);
   var res;
   if (String(set_('Mode')).toUpperCase() == 'PAPER') { openPos_(o, px, 'PAPER', 'Auto entry, paper mode'); res = { ok: true, msg: 'paper' }; }
