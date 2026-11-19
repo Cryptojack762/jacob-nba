@@ -382,7 +382,9 @@ function sendLive_(o, how) {
     if (!res.success) throw new Error(res.errorCode + ' ' + res.errorMessage);
     openPos_(o, priceNow_(o.coin), 'LIVE', how + ' order sent (WEEX order ' + res.orderId + ')');
     return { ok: true, msg: 'Order ' + res.orderId };
-  } catch (e) { log_('ERROR', 'Send ' + o.coin + ': ' + e.message); notify_('ORDER FAILED ' + o.coin, e.message); return { ok: false, msg: e.message }; }
+  } catch (e) {
+    if (/-1058/.test(e.message)) { noApiAdd_(o.coin); log_('ERROR', 'Send ' + o.coin + ': WEEX does not allow API trading for ' + o.coin); notify_('NOT SENT: ' + o.coin, 'WEEX does not allow ' + o.coin + ' to be traded through the API. Nothing was bought. Trade it by hand in the WEEX app if you want it.'); return { ok: false, msg: 'WEEX blocks API trading for ' + o.coin + '. Nothing was bought. Use the WEEX app for this one.' }; }
+    log_('ERROR', 'Send ' + o.coin + ': ' + e.message); notify_('ORDER FAILED ' + o.coin, e.message); return { ok: false, msg: e.message }; }
 }
 function weexClose_(r) {
   var prevA = ACCT; if (r[19] == 'MISSED-WATCH') ACCT = '2';
@@ -507,7 +509,7 @@ function doGet(e) {
       CacheService.getScriptCache().remove('LIVE');
     }
     return json_({ ok: true, status: ss_().getSheetByName('Home').getRange(2, 2).getValue(), mode: set_('Mode'), kill: set_('Kill switch'), equity: equity_(), dayStart: Number(PropertiesService.getScriptProperties().getProperty('DAY_START')) || 0, killPct: num_('Daily loss % (kill)', 1, 90), peak: Number(PropertiesService.getScriptProperties().getProperty('PEAK')) || 0, ddPct: num_('Max drawdown % (kill)', 1, 90),
-      watch: watchJson_(), slots: slots_(), positions: rows_('Positions').slice(-60), orders: rows_('Orders').filter(function (r) { return r[10] == 'PENDING'; }).map(function (r) { return r.slice(0, 11).concat([r[11]]); }), signals: rows_('Signals').slice(-30), log: rows_('Log').slice(-25), phoenix: phoenix_(), keys: !!keys_(), live: livePnl_() });
+      watch: watchJson_(), slots: slots_(), noapi: noApi_(), positions: rows_('Positions').slice(-60), orders: rows_('Orders').filter(function (r) { return r[10] == 'PENDING'; }).map(function (r) { return r.slice(0, 11).concat([r[11]]); }), signals: rows_('Signals').slice(-30), log: rows_('Log').slice(-25), phoenix: phoenix_(), keys: !!keys_(), live: livePnl_() });
   }
   return json_({ ok: true, service: "Claude's Auto Trading Bot", version: BOT.version });
 }
@@ -749,6 +751,7 @@ function buyNow_(q) {
   if (on_('Kill switch')) return { ok: false, err: 'Kill switch is ON' };
   var lk = LockService.getScriptLock(); lk.waitLock(20000);
   try {
+    if (noApi_().indexOf(coin) >= 0) return { ok: false, err: 'WEEX blocks API trading for ' + coin + '. Nothing was bought. Use the WEEX app for this one.' };
     var px = priceNow_(coin); if (!(px > 0)) return { ok: false, err: 'No WEEX price for ' + coin };
     if (!(stop > 0 && stop < px)) return { ok: false, err: 'Stop must be below the price' };
     if ((px - stop) / px > 0.26) return { ok: false, err: 'Stop more than 26% away' };  // weekly cards use 8-25% supports
@@ -1162,7 +1165,7 @@ function readyBoard_(DX) {
     var d = DX && DX[coin] ? DX[coin].d : null;
     if (!d) { try { d = candles_(coin); } catch (e) { return; } }
     if (!d || d.length < 220) return;
-    var x = DX && DX[coin] ? DX[coin].x : ind_(d), up = x.c > x.e200, f = function (n) { return '$' + round_(n); };
+    var x = DX && DX[coin] ? DX[coin].x : ind_(d), up = x.c > x.e200, f = function (n) { return '$' + (n >= 100 ? Math.round(n).toLocaleString('en-US') : n >= 1 ? n.toFixed(2) : Number(n.toPrecision(4))); };
     var tpi = (x.hh40 / x.c - 1) * 100, st = 'WAIT', note, dist = null, rule = '';
     if (up && x.c > x.hh40 && x.rsi > 55) { st = 'ENTER'; rule = 'L_TPI'; note = 'TPI breakout fired: closed above ' + f(x.hh40) + ', RSI ' + x.rsi.toFixed(0); dist = 0; }
     else if (!up && x.rsiPrev < 20 && x.rsi >= 20) { st = 'ENTER'; rule = 'L_RSI20'; note = 'Washout bounce: RSI back above 20 (needs 3+ coins)'; dist = 0; }
@@ -1173,13 +1176,13 @@ function readyBoard_(DX) {
     else { note = 'Below EMA200 ' + f(x.e200) + ', RSI ' + x.rsi.toFixed(0) + ' (washout buy zone starts under 25)'; dist = 20 + x.rsi; }
     out.push({ c: coin, px: x.c, st: st, note: note, d: dist, rule: rule, on: rule ? on_(rule) : true });
   });
-  var o = { v: 2, at: ct_(), coins: out };
+  var o = { v: 3, at: ct_(), coins: out };
   PropertiesService.getScriptProperties().setProperty('READY', JSON.stringify(o));
   return o;
 }
 function readyGet_() {
   var v = PropertiesService.getScriptProperties().getProperty('READY');
-  if (v && JSON.parse(v).v == 2) return { ok: true, board: JSON.parse(v) };
+  if (v && JSON.parse(v).v == 3) return { ok: true, board: JSON.parse(v) };
   var lk = LockService.getScriptLock(); if (!lk.tryLock(5000)) return { ok: false, err: 'Bot busy, try again in a minute' };
   try { return { ok: true, board: readyBoard_(null) }; } finally { lk.releaseLock(); }
 }
@@ -1195,3 +1198,7 @@ function slots_() {
       keys: !!keys_(), keys2: k2, relay: !!String(set_('Relay URL') || '').trim(), event: eventPause_() };
   } catch (e) { return { err: e.message }; }
 }
+
+function noApi_() { try { return JSON.parse(PropertiesService.getScriptProperties().getProperty('NOAPI') || '["PROM"]'); } catch (e) { return []; } }
+function noApiAdd_(coin) { var l = noApi_(); if (l.indexOf(coin) < 0) { l.push(coin); PropertiesService.getScriptProperties().setProperty('NOAPI', JSON.stringify(l)); } }
+function seedNoApi() { noApiAdd_('PROM'); }
