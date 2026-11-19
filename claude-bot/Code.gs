@@ -802,7 +802,7 @@ function tpNote_(r) { try { var j = JSON.parse(String(r[18] || '{}')); return j 
 function manageTP_() {
   var sh = ss_().getSheetByName('Positions'), all = rows_('Positions');
   all.forEach(function (r, i) {
-    if (r[10] != 'LIVE' || r[11] != 'OPEN' || (r[2] != 'CARD' && r[2] != 'CHAT')) return;
+    if (r[10] != 'LIVE' || r[11] != 'OPEN' || (r[2] != 'CARD' && r[2] != 'CHAT' && !(r[2] == 'WATCH' && r[19] != 'MISSED-WATCH'))) return;
     var row = i + 2, side = r[3] == 'LONG' ? 1 : -1, entry = Number(r[5]), R = Math.abs(entry - Number(r[9])); if (!(R > 0)) return;
     var n = tpNote_(r), px = priceNow_(r[1]); n.s = n.s || 0; n.q0 = n.q0 || Number(r[6]); n.m0 = n.m0 || Number(r[7]); n.real = n.real || 0;
     n.hi = side > 0 ? Math.max(n.hi || entry, px) : Math.min(n.hi || entry, px);
@@ -964,11 +964,11 @@ function onWeex_(coin) { try { return !!symbolInfo_(coin); } catch (e) { return 
 function cleanCoin_(c) { return String(c || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
 
 function watchApi_(q) {
-  var lk = LockService.getScriptLock(); lk.waitLock(20000);
+  var lk = LockService.getScriptLock(); if (!lk.tryLock(25000)) return { ok: false, err: 'Bot is busy scanning, try again in a minute' };
   try {
     if (q.watch == 'rm') {
       var v = wrows_('Watch');
-      for (var i = 0; i < v.length; i++) if (v[i][0] == q.id) { wset_(i + 2, 10, ['REMOVED', ct_(), 'Removed from Atlas']); return { ok: true, msg: 'Removed' }; }
+      for (var i = 0; i < v.length; i++) if (v[i][0] == q.id) { if (v[i][9] == 'QUEUED') { var fo = findOrder_(String(v[i][12])); if (fo && fo.r[10] == 'PENDING') setOrder_(fo.row, 'SKIPPED', 'Removed from the watch list ' + ct_()); } wset_(i + 2, 10, ['REMOVED', ct_(), 'Removed from Atlas']); return { ok: true, msg: 'Removed' }; }
       return { ok: false, err: 'Not found' };
     }
     var coin = cleanCoin_(q.coin), side = String(q.side || '').toUpperCase(), entry = Number(q.entry) || 0, stop = Number(q.stop) || 0, tp1 = Number(q.tp1) || 0;
@@ -987,6 +987,10 @@ function watchApi_(q) {
   } catch (e) { return { ok: false, err: e.message }; } finally { lk.releaseLock(); }
 }
 function favApi_(q) {
+  var lk = LockService.getScriptLock(); if (!lk.tryLock(25000)) return { ok: false, err: 'Bot is busy scanning, try again in a minute' };
+  try { return favApi2_(q); } finally { lk.releaseLock(); }
+}
+function favApi2_(q) {
   var coin = cleanCoin_(q.coin); if (!coin) return { ok: false, err: 'No coin' };
   var sh = wsh_('Favorites'), v = wrows_('Favorites');
   for (var i = 0; i < v.length; i++) if (v[i][0] == coin) {
@@ -1161,7 +1165,7 @@ function pickPush_() {
 // ---------------- WEEX section: what the bot is about to trade + its health ----------------
 // Board of the bot's own coins: state (ENTER/ALMOST/WAIT/AVOID) from the tested rules, and how far each is from firing.
 function readyBoard_(DX) {
-  var out = [];
+  var out = [], ON = { L_TPI: on_('L_TPI'), L_RSI20: on_('L_RSI20') };
   BOT.coins.forEach(function (coin) {
     var d = DX && DX[coin] ? DX[coin].d : null;
     if (!d) { try { d = candles_(coin); } catch (e) { return; } }
@@ -1175,7 +1179,7 @@ function readyBoard_(DX) {
     else if (up) { rule = 'L_TPI'; note = 'Uptrend. ' + tpi.toFixed(1) + '% under the breakout ' + f(x.hh40); dist = tpi; }
     else if (x.st === -1) { st = 'AVOID'; note = 'Downtrend: ' + ((1 - x.c / x.e200) * 100).toFixed(0) + '% under EMA200 ' + f(x.e200) + '. RSI ' + x.rsi.toFixed(0) + ' (washout buy zone starts under 25)'; dist = 50 + x.rsi; }
     else { note = 'Below EMA200 ' + f(x.e200) + ', RSI ' + x.rsi.toFixed(0) + ' (washout buy zone starts under 25)'; dist = 20 + x.rsi; }
-    out.push({ c: coin, px: x.c, st: st, note: note, d: dist, rule: rule, on: rule ? on_(rule) : true });
+    out.push({ c: coin, px: x.c, st: st, note: note, d: dist, rule: rule, on: rule ? ON[rule] : true });
   });
   var o = { v: 3, at: ct_(), coins: out };
   PropertiesService.getScriptProperties().setProperty('READY', JSON.stringify(o));
@@ -1196,7 +1200,7 @@ function slots_() {
     return { bot: [cnt('BOT-AUTO'), num_('Bot max open', 0, 20), round_(sum('BOT-AUTO')), num_('Bot slice $', 0, 1000)],
       missed: [cnt('MISSED-AUTO'), num_('Missed max open', 0, 20), round_(sum('MISSED-AUTO')), num_('Missed cap $', 0, 1000)],
       watch: [cnt('MISSED-WATCH'), num_('Watch max open', 0, 20), round_(sum('MISSED-WATCH')), num_('Watch $ per missed trade', 0, 50)],
-      keys: !!keys_(), keys2: k2, relay: !!String(set_('Relay URL') || '').trim(), event: eventPause_() };
+      keys: !!keys_(), keys2: k2, relay: !!String(set_('Relay URL') || '').trim(), event: CacheService.getScriptCache().get('NEWS3') ? eventPause_() : '' };   // never fetch the news feeds on an app refresh
   } catch (e) { return { err: e.message }; }
 }
 
