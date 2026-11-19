@@ -1321,7 +1321,7 @@ function autoScan_(btcUp) {   // the bot hunts on its own: BOT.coins, Swing 4H f
     var why = P.streak >= num_('Auto loss streak', 1, 100) ? P.streak + ' losses in a row' : 'pot down $' + (-P.total).toFixed(2);
     notify_('Auto scan STOPPED', 'The bot cut itself off: ' + why + '. No new bot trades until you restart the pot in Atlas.'); log_('AUTO', 'Auto scan stopped: ' + why);
   }
-  rows_('Positions').forEach(function (r) { if (r[11] == 'OPEN') open[r[1]] = 1; });
+  rows_('Positions').forEach(function (r) { if (r[11] == 'OPEN' && r[10] == 'LIVE') open[r[1]] = 1; });   // paper trades don't count as held
   l.forEach(function (x) { if (x.st == 'LOCKED') open[x.coin] = 1; });
   if (autoBlock_(P, usd)) return;
   var na = noApi_();
