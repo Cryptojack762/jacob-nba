@@ -626,7 +626,7 @@ function chat_(text, hist) {
     "Fees ~0.15% round trip on WEEX: skip setups whose target is under ~0.6% away. Be honest: if no tested rule fires, say WAIT and give the exact trigger level that would make it a trade. " +
     "Never promise profit. Keep risk small: suggest risking about 1% of the account per trade. " +
     "Earlier messages in this chat are follow-ups: keep the same coin unless Jacob names a new one. If he asks about his open trade, use his open WEEX trades data (entry, stop, size) and say hold, tighten stop, take profit or close, with the exact price. " +
-    "End your answer with one line of JSON exactly like: PLAN {\"coin\":\"XRP\",\"side\":\"LONG|SHORT|NONE\",\"verdict\":\"ENTER|WAIT|AVOID\",\"entry\":0,\"stop\":0,\"tp1\":0,\"tp2\":0,\"rule\":\"name or UNTESTED\"}";
+    "On WAIT, still fill side, entry (the exact trigger price), stop and tp1 for the trade that WOULD be taken at the trigger, so Jacob can put it on his watch list; use side NONE only for AVOID. End your answer with one line of JSON exactly like: PLAN {\"coin\":\"XRP\",\"side\":\"LONG|SHORT|NONE\",\"verdict\":\"ENTER|WAIT|AVOID\",\"entry\":0,\"stop\":0,\"tp1\":0,\"tp2\":0,\"rule\":\"name or UNTESTED\"}";
   var msg = 'Jacob asked: ' + text + '\n\nLive data: ' + JSON.stringify(data || { note: 'no coin recognised - ask which coin' }) + '\nWashout bounces in last 24h: ' + JSON.stringify(wash) + '\nJacob\'s open real WEEX trades: ' + JSON.stringify(mine) + (/PHOENIX|BOARD|PICK|SCREENER|BOTTOM/.test(up) || !coin ? '\nPhoenix board (Dustin screener, read-only): ' + (function () { var x = phoenix_(); return JSON.stringify({ gate: x.gate, picks: (x.picks || []).slice(0, 5), bottom: (x.bottom || []).slice(0, 4) }).slice(0, 1800); })() : '') + '\nTime: ' + ct_();
   var r = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', { method: 'post', contentType: 'application/json', muteHttpExceptions: true,
     headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01' },
@@ -1028,7 +1028,7 @@ function watchCheck_() {
       if (st == 'WATCHING') {
         var added = parseInt(String(r[0]).slice(1, -coin.length), 36);
         if (isFinite(added) && now - added > num_('Watch expiry (days)', 1, 60) * 86400e3) return wset_(row, 10, ['EXPIRED', ct_(), 'Never triggered in ' + num_('Watch expiry (days)', 1, 60) + ' days']);
-        if (stop && (L ? px <= stop : px >= stop)) return wset_(row, 10, ['EXPIRED', ct_(), 'Price hit the stop $' + stop + ' before the entry']);
+        if (stop && ((L && r[7] == 'DOWN' && px <= stop) || (!L && r[7] == 'UP' && px >= stop))) return wset_(row, 10, ['EXPIRED', ct_(), 'Price hit the stop $' + stop + ' before the entry']);
         var hit = r[7] == 'UP' ? px >= entry : r[7] == 'DOWN' ? px <= entry : false, plan = null;
         if (r[7] == 'ASK') {   // condition only: ask Claude once an hour
           if (now - Number(P.getProperty('WASK_' + r[0]) || 0) < 55 * 60e3) return;
@@ -1130,7 +1130,7 @@ function watchTick() {   // one-off 5-min check while a watch trade waits for Ja
 // Favorites: state from the tested 4H rules, every scan. Push when a coin turns ENTER.
 function favState_(coin) {
   var d = []; try { d = bfCandles_(coin, '4H'); } catch (e) { } if (d.length < 220) d = candles_(coin); if (d.length < 220) return { state: '?', note: 'Not enough 4H candles' };
-  var x = ind_(d), up = x.c > x.e200, f = function (n) { return '$' + round_(n); };
+  var x = ind_(d), up = x.c > x.e200, f = function (n) { return '$' + (n >= 100 ? Math.round(n).toLocaleString('en-US') : n >= 1 ? n.toFixed(2) : Number(n.toPrecision(4))); };
   if (up && x.c > x.hh40 && x.rsi > 55) return { state: 'ENTER', note: 'TPI breakout: closed above the 40-candle high ' + f(x.hh40) + ', RSI ' + x.rsi.toFixed(0) + '. Stop: close under ' + f(x.ll20), px: x.c };
   if (!up && x.rsiPrev < 20 && x.rsi >= 20) return { state: 'ENTER', note: 'Washout bounce: 4H RSI back above 20 (needs 3+ coins doing it). Stop ' + f(x.c - 2 * x.atr) + ', target ' + f(x.c + 2 * x.atr), px: x.c };
   if (up && x.c >= x.hh40 * 0.98 && x.rsi > 50) return { state: 'ALMOST', note: 'Within 2% of the breakout. Trigger: 4H close above ' + f(x.hh40) + ' with RSI over 55', px: x.c };
