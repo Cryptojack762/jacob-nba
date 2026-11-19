@@ -1283,9 +1283,9 @@ function autoSignal_(coin, tf) {   // {enter, stop, why, px} on the closed candl
     if (x.c < x.e200 && x.rsiPrev < 20 && x.rsi >= 20) return { enter: true, stop: x.c - 2 * x.atr, px: x.c, why: '4H washout bounce, RSI back above 20' };
     return { enter: false, why: x.c > x.e200 ? 'Waiting for a 4H close above ' + f(x.hh40) + ' with RSI over 55' : 'Below the 4H EMA200 ' + f(x.e200) + ', waiting for a washout bounce' };
   }
-  var ok = e21 > e50 && x.c > e21 && x.c > x.e200 && x.rsi >= 50 && x.rsi <= 70 && (x.c - e21) <= 1.5 * x.atr;
-  if (ok) return { enter: true, stop: x.c - 1.5 * x.atr, px: x.c, why: tf + ' trend: EMA21 over EMA50, closed above EMA21 and EMA200, RSI ' + x.rsi.toFixed(0) };
-  return { enter: false, why: x.c < x.e200 ? 'Below the ' + tf + ' EMA200 ' + f(x.e200) : e21 <= e50 ? tf + ' EMA21 under EMA50' : x.c <= e21 ? 'Waiting for a ' + tf + ' close above EMA21 ' + f(e21) : x.rsi > 70 ? 'RSI ' + x.rsi.toFixed(0) + ' too hot, waiting for a pullback' : x.rsi < 50 ? 'RSI ' + x.rsi.toFixed(0) + ' too weak' : 'Too far above EMA21, waiting for a pullback' };
+  var ok = e21 > e50 && x.c > e21 && (x.c - e21) <= 2 * x.atr;   // same ENTER rule as the Atlas Day tab (+ don't chase more than 2 ATR above EMA21)
+  if (ok) return { enter: true, stop: x.c - 1.5 * x.atr, px: x.c, why: tf + ' ENTER: EMA21 over EMA50 and closed above EMA21 (Atlas Day rule), RSI ' + x.rsi.toFixed(0) + (x.c < x.e200 ? ', under EMA200 = bounce trade' : '') };
+  return { enter: false, why: e21 <= e50 ? tf + ' EMA21 under EMA50' : x.c <= e21 ? 'Waiting for a ' + tf + ' close above EMA21 ' + f(e21) : 'Too far above EMA21 (over 2 ATR), waiting for a pullback' };
 }
 function autoCheck_(btcUp) {
   var l = autoList_(); if (!l.some(function (x) { return x.st == 'LOCKED'; })) return;
