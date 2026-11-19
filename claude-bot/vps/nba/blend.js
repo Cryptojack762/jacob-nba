@@ -8,7 +8,7 @@
 // | then an improve loop until 2 rounds in a row do not get better. Goal: best average night, ties -> more profit nights.
 const fs = require('fs');
 const CFG = JSON.parse(fs.readFileSync('/opt/rb/config.json', 'utf8'));   // { url, key } shared with the server browser
-const NTFY = 'atlas-jacob-c2112e987573', DIR = '/opt/nba', FEE = 0.07, HAIR = 0.03, FAV_MIN = 0.60;
+const NTFY = 'atlas-jacob-c2112e987573', DIR = '/opt/nba', FEE = 0.07, HAIR = 0, FAV_MIN = 0.60;   // HAIR 0: real 11/17 fills showed Kalshi combos price at the product of the legs
 const ct = (f) => new Intl.DateTimeFormat('en-US', Object.assign({ timeZone: 'America/Chicago' }, f)).format(new Date());
 const post = async (b) => (await fetch(CFG.url, { method: 'POST', headers: { 'content-type': 'text/plain' }, body: JSON.stringify(Object.assign({ key: CFG.key }, b)), redirect: 'follow' })).json();
 const push = (t, m) => fetch('https://ntfy.sh/' + NTFY, { method: 'POST', headers: { Title: t }, body: m }).catch(() => {});
@@ -21,7 +21,7 @@ async function main() {
   const cfg = await post({ rb: 'nbacfg' }); if (!cfg.ok) throw new Error('config: ' + JSON.stringify(cfg));
   const mon = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
   const p = ct({ year: '2-digit', month: 'numeric', day: '2-digit' }).split('/');   // M/DD/YY
-  const code = p[2] + mon[+p[0] - 1] + p[1].padStart(2, '0');                       // e.g. 26NOV18
+  const code = process.env.NBA_CODE || (p[2] + mon[+p[0] - 1] + p[1].padStart(2, '0'));   // NBA_CODE=26NOV19 builds another day                       // e.g. 26NOV18
   const j = await (await fetch('https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNBAGAME&status=open&limit=500')).json();
   const mk = {}; for (const m of j.markets || []) if (m.ticker.includes('-' + code)) { const [, ev, side] = m.ticker.split('-'); (mk[ev] = mk[ev] || {})[side] = { t: m.ticker, a: +m.yes_ask_dollars, b: +m.yes_bid_dollars, open: m.open_time }; }
   // morning prices for the 15c-drop rule
