@@ -50,6 +50,13 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
 .plan{font-size:12px;color:var(--fire2);margin-top:4px}
 .bar{height:4px;border-radius:4px;background:#2a2333;margin-top:7px;position:relative;overflow:hidden}
 .bar i{position:absolute;top:0;bottom:0;border-radius:4px}
+.aq{border:2px solid var(--line);border-radius:14px;padding:12px;margin-top:10px;display:flex;gap:12px;align-items:center}
+.aq.lk{border-color:#3fb950;background:rgba(63,185,80,.08)}.aq.off{opacity:.55}.aq.bt{border-color:#d4a24c}
+.aq .ic{font-size:26px;flex:none}.aq .bd{flex:1;min-width:0}.aq .t1{font-weight:800;font-size:17px}.aq .t2{color:var(--mut);font-size:13px;margin-top:2px}.aq .t3{font-size:12px;color:var(--dim);margin-top:4px}
+.sw{position:relative;width:52px;height:30px;border-radius:999px;background:#3a3344;border:0;flex:none;cursor:pointer}.sw:after{content:'';position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:.2s}
+.sw.on{background:#3fb950}.sw.on:after{left:25px}
+.seg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px}.seg .mb.sel,.amt .mb.sel{border-color:#3fb950;color:#3fb950}
+.amt{display:grid;grid-template-columns:1fr 1fr 1fr 1.2fr;gap:8px;margin-top:8px}
 .chip{font-size:11px;font-weight:800;letter-spacing:.06em;padding:6px 10px;border-radius:999px;flex:none}
 .s-ENTER{background:var(--upb);color:var(--up)}.s-ALMOST{background:var(--alb);color:var(--al)}.s-WAIT{background:var(--wtb);color:var(--wt)}.s-AVOID{background:var(--dnb);color:var(--dn)}
 .rk{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-weight:800;font-size:13px;background:var(--card2);border:1px solid var(--line);flex:none}
@@ -123,6 +130,15 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
       <div style="display:flex;gap:8px;margin-top:8px"><input class="inp" id="qfree" style="margin:0" placeholder="Or ask anything…" autocomplete="off"><button class="mb" id="qgo" style="min-width:70px">Ask</button></div>
       <button class="more" id="askc" style="margin-top:8px">Market read (BTC + best setups)</button>
       <div class="why" id="askout" style="white-space:pre-wrap;margin-top:8px"></div></div>
+    <div class="k"><span>Auto entry · bot buys when it turns ENTER</span><span id="aqpot"></span></div>
+    <div class="card">
+      <input class="inp" id="aqc" style="margin:0" placeholder="Ticker, e.g. SOL" autocomplete="off" autocapitalize="characters">
+      <div class="amt" id="aqamt"><button class="mb sel" data-aqa="5">$5</button><button class="mb" data-aqa="10">$10</button><button class="mb" data-aqa="15">$15</button><input class="inp" id="aqusd" style="margin:0" inputmode="decimal" placeholder="$ other"></div>
+      <div class="seg" id="aqtf"><button class="mb" data-aqt="15m">Scalp 15m</button><button class="mb sel" data-aqt="1H">Day 1H</button><button class="mb" data-aqt="4H">Swing 4H</button></div>
+      <button class="buy" id="aqgo" style="width:100%;margin-top:8px">🔒 Lock it in</button>
+      <div id="aqlist"></div>
+      <div class="why" style="margin-top:8px">The bot checks every 15 min. When your chart turns ENTER it buys on WEEX with the stop set, sells 75% at 1.5R (stop moves to entry) and the rest at 2R. Risk is 10% of the amount (half while the Bitcoin gate is down). Shared $15 pot, stops for the day after −$3 and for good after −$5.</div>
+    </div>
     <div id="nbanner"></div>
     <div id="gate"><div class="sk"></div></div>
     <div class="k">Today's read</div>
@@ -421,6 +437,20 @@ function wm(n){n=Number(n)||0;return (n<0?'-':'')+'$'+Math.abs(n).toFixed(2)}
 function wsm(n){n=Number(n)||0;return (n>=0?'+':'-')+'$'+Math.abs(n).toFixed(2)}
 function wshow(c){$('wsetup').style.display=c?'none':'block';$('wapp').style.display=c?'block':'none';$('tconn').style.display=c?'none':'block'}
 function wapi(qs,ok){if(!WAPI||!WPIN){toast('Connect the bot first');return}fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+qs,{cache:'no-store'}).then(function(r){return r.json()}).then(function(k){toast(k.ok?k.msg:(k.err||'Failed'));if(k.ok&&ok)ok(k);wload('',false)}).catch(function(){toast('Bot not reachable')})}
+var AQ={usd:5,tf:'1H'};
+function aqR(A){if(!A||!$('aqlist'))return;var L=(A.list||[]).slice().reverse(),T={'15m':'Scalp 15m','1H':'Day 1H','4H':'Swing 4H'};
+  var m=function(v){v=+v||0;return (v<0?'−':'')+'$'+Math.abs(v).toFixed(2).replace(/\.00$/,'')};$('aqpot').textContent=m(A.used)+' of '+m(A.pot||15)+' in use · today '+((A.today||0)>0?'+':'')+m(A.today)+(A.halt?' · STOPPED':'');
+  $('aqlist').innerHTML=(A.halt?'<div class="why" style="margin-top:8px;color:#f85149">Pot stopped after −$'+A.totalStop+'. <button class="mb" data-aqx="reset" style="min-height:0;padding:6px 10px">Restart pot</button></div>':'')+L.map(function(x){
+    var lk=x.st==='LOCKED',off=x.st==='OFF'||x.st==='EXPIRED'||x.st==='SKIP',bt=x.st==='BOUGHT';
+    var ic=lk?'🔒':bt?'✅':x.st==='EXPIRED'?'⌛':'🔓',lab=lk?'LOCKED IN':bt?'BOUGHT':x.st==='EXPIRED'?'EXPIRED':'OFF';
+    return '<div class="aq '+(lk?'lk':bt?'bt':'off')+'"><div class="ic">'+ic+'</div><div class="bd"><div class="t1">'+esc(x.coin)+' · $'+esc(x.usd)+' · '+esc(T[x.tf]||x.tf)+'</div><div class="t2"><b style="color:'+(lk?'#3fb950':bt?'#d4a24c':'var(--mut)')+'">'+lab+'</b> · locked '+esc(x.at)+(x.lockPx?' at $'+esc(x.lockPx):'')+'</div><div class="t3">'+esc(x.note||'')+'</div>'+(bt?'':'<button class="more" data-aqx="del" data-id="'+esc(x.id)+'" style="margin-top:6px;padding:4px 0;min-height:0">Remove</button>')+'</div>'+(bt?'':'<button class="sw'+(lk?' on':'')+'" aria-label="On/off" data-aqx="'+(lk?'off':'on')+'" data-id="'+esc(x.id)+'"></button>')+'</div>'}).join('')}
+document.addEventListener('click',function(e){var a=e.target.closest('[data-aqa]'),t=e.target.closest('[data-aqt]'),x=e.target.closest('[data-aqx]');
+  if(a){AQ.usd=+a.dataset.aqa;$('aqusd').value='';[].forEach.call(document.querySelectorAll('[data-aqa]'),function(b){b.classList.toggle('sel',b===a)});return}
+  if(t){AQ.tf=t.dataset.aqt;[].forEach.call(document.querySelectorAll('[data-aqt]'),function(b){b.classList.toggle('sel',b===t)});return}
+  if(x){e.preventDefault();var act=x.dataset.aqx;if(act==='del'&&!confirm('Remove it?'))return;if(act==='reset'&&!confirm('Restart the $15 pot? The loss count goes back to $0.'))return;wapi('&auto='+act+'&id='+encodeURIComponent(x.dataset.id||''),function(k){aqR(k.auto)})}});
+$('aqgo').onclick=function(){var c=$('aqc').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,''),o=parseFloat($('aqusd').value),u=o>0?o:AQ.usd;if(!c){toast('Type a ticker first');return}
+  wapi('&auto=add&coin='+c+'&usd='+u+'&tf='+AQ.tf,function(k){$('aqc').value='';aqR(k.auto)})};
+try{if(W&&W.auto)aqR(W.auto)}catch(e){}
 function wwatchR(W){var F=W.favs||[],L=W.list||[];
   try{var act=L.filter(function(w){return /WATCHING|QUEUED/.test(w.status)}),ex=L.filter(function(w){return w.status==='EXPIRED'}).slice(-3);$('wcN').textContent=act.length?act.length+' waiting':'';
   $('wcards').innerHTML=(act.length||ex.length)?act.concat(ex).map(function(w){var lg=w.side==='LONG',x=w.status==='EXPIRED',q=w.status==='QUEUED',ow=onW(w.coin);
@@ -475,7 +505,7 @@ function wrender(){
     if((j.orders||[]).some(function(o){return o[2]===s[1]&&o[10]==='PENDING'}))return 'APPROVE';
     var st=Date.parse(String(s[0]).replace(/^(\d+\/\d+) /,'$1/'+new Date().getFullYear()+' '))||0;var p=(j.positions||[]).filter(function(r){var t=Date.parse(r[4])||0;return r[1]===s[1]&&t>=st-6e4&&t-st<864e5})[0];if(p)return p[11]==='OPEN'?'OPEN: trade is live':'DONE: '+(p[14]!==''?'$'+(+p[14]).toFixed(2):'closed');
     return 'EXPIRED: not taken'};
-  wwatchR(j.watch||{});
+  wwatchR(j.watch||{});aqR(j.auto);
   try{BX={sig:(j.signals||[]).slice(-30),watch:j.watch||{},weex:j.weex||(BX&&BX.weex)||[]};localStorage.setItem('bx',JSON.stringify(BX));render()}catch(e){}
   $('wsig').innerHTML=_sig.slice(-10).reverse().map(function(s){s=s.slice();s[6]=_lbl(s);var sh=s[3]==='SHORT';return '<div class="row"><div class="sym '+(sh?'symS':'symL')+'">'+esc(String(s[1]).slice(0,5))+'</div><div class="mid"><div class="l1"><b>'+esc(s[3])+' '+esc(s[1])+'</b><span>$'+esc(s[4])+'</span></div><div class="why">'+esc(s[5])+'</div><div class="plan">'+esc(wnm(s[2]))+' · '+esc(s[0])+'</div></div><span class="chip s-'+esc(String(s[6]).split(':')[0].toUpperCase())+'">'+esc(String(s[6]).split(':')[0])+'</span></div>'}).join('')||'<div class="why">No signals yet.</div>';
   var w=closed.filter(function(p){return Number(p[14])>0}).length,tot=closed.reduce(function(s,p){return s+(Number(p[14])||0)},0);
