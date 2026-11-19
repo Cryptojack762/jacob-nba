@@ -57,6 +57,12 @@ var DEFAULTS = [
   ['Watch trail (ATR x)', 2, 'Trailing stop on watch fallback trades: highest close minus this many 4H ATRs (never moves down)'],
   ['Watch expiry (days)', 7, 'Watch-list items that never trigger expire after this many days'],
   ['Auto scan', 'ON', 'Bot buys on its own: every scan it checks its coin list with the Auto entry rules (Swing 4H, then Day 1H) inside the $15 pot'],
+  ['Tier $ Scalp 15m', 0.5, 'Auto scan scalp size (15m pullback with 1H trend up, 8:30-11:30 AM CT, scalp coins only). 0 = off'],
+  ['Tier $ Day 1H', 1, 'Auto scan day-trade size (1H Atlas rule + 4H above EMA50). 0 = off'],
+  ['Tier $ Swing 4H', 3, 'Auto scan swing size (tested 4H breakout / washout). 0 = off'],
+  ['Tier $ Daily', 5, 'Auto scan daily size (new 20-day high, 1D EMA50 > EMA200). 0 = off'],
+  ['Scalp coins', 'BTC,ETH,SOL,XRP,BNB,DOGE', 'Liquid coins only for 15m scalps'],
+  ['Scalp hours CT', '8:30-11:30', 'Scalps only in this window (busy hours)'],
   ['Auto scan $', 1.5, 'Amount per Auto scan trade (risk is 10% of it, half while BTC gate is down)'],
   ['Auto pot $', 15, 'Bot money: Auto scan + bot slice share this pot (open margin cap)'],
   ['Auto max open', 10, 'Max Auto scan trades open at once'],
@@ -1234,7 +1240,7 @@ function seedNoApi() { noApiAdd_('PROM'); }
 
 // ---------------- Auto entry (11/19): Jacob locks in a ticker + $ + Scalp/Day/Swing; the bot buys when that chart turns ENTER ----------------
 // Shared $15 pot with the bot slice. Risk = 10% of the amount (half while the Bitcoin gate is down). TP1 1.5R sell 75% + stop to entry, TP2 2R rest.
-var AUTO_TF = { '15m': { name: 'Scalp', bar: '15m', hold: 3, life: 24 }, '1H': { name: 'Day', bar: '1H', hold: 8, life: 72 }, '4H': { name: 'Swing', bar: '4H', hold: 72, life: 168 } };
+var AUTO_TF = { '15m': { name: 'Scalp', bar: '15m', hold: 3, life: 24 }, '1H': { name: 'Day', bar: '1H', hold: 8, life: 72 }, '4H': { name: 'Swing', bar: '4H', hold: 72, life: 168 }, '1D': { name: 'Daily', bar: '1D', hold: 240, life: 720 } };
 function autoList_() { try { return JSON.parse(PropertiesService.getScriptProperties().getProperty('AUTOQ') || '[]'); } catch (e) { return []; } }
 function autoSave_(l) { PropertiesService.getScriptProperties().setProperty('AUTOQ', JSON.stringify(l.slice(-30))); }
 function autoPnl_(mine) {   // mine=true: coins Jacob locks in (AUTO-ENTRY, his money). Else the bot's $15 pot (AUTO-SCAN + BOT-AUTO)
@@ -1282,11 +1288,26 @@ function autoSignal_(coin, tf) {   // {enter, stop, why, px} on the closed candl
   var d = bfCandles_(coin, AUTO_TF[tf].bar); if (d.length < 220) return { enter: false, why: 'Not enough ' + tf + ' candles' };
   var x = ind_(d), c = d.map(function (k) { return k.c; }), n = c.length - 1, e21 = ema_(c, 21)[n], e50 = ema_(c, 50)[n];
   var f = function (v) { return Number(Number(v).toPrecision(5)); };
+  if (tf == '1D') {
+    var hh20 = Math.max.apply(null, d.slice(-21, -1).map(function (k) { return k.h; })), e50d = ema_(c, 50)[n], e200d = ema_(c, 200)[n];
+    if (x.c > hh20 && e50d > e200d) return { enter: true, stop: x.c - 2 * x.atr, px: x.c, why: 'Daily close at a new 20-day high ' + f(hh20) + ', 50 > 200 day' };
+    return { enter: false, why: e50d <= e200d ? 'Daily 50 under 200 (downtrend)' : 'Waiting for a daily close above ' + f(hh20) };
+  }
+  if (tf == '15m') {
+    var H = bfCandles_(coin, '1H'); if (H.length < 60) return { enter: false, why: 'No 1H data' };
+    var hc = H.map(function (k) { return k.c; }), hn = hc.length - 1, h21 = ema_(hc, 21)[hn], h50 = ema_(hc, 50)[hn];
+    if (!(h21 > h50 && hc[hn] > h21)) return { enter: false, why: '1H trend not up (scalps only with the 1H trend)' };
+    var e21s = ema_(c, 21), touched = d[n - 1].l <= e21s[n - 1] * 1.001 || d[n].l <= e21s[n] * 1.001;
+    if (touched && x.c > e21s[n] && x.c > d[n].o && (x.c - e21s[n]) <= x.atr) return { enter: true, stop: x.c - 1.2 * x.atr, px: x.c, why: '15m pullback to EMA21 bounced, 1H trend up' };
+    return { enter: false, why: 'Waiting for a 15m pullback to EMA21 ' + f(e21s[n]) + ' that bounces' };
+  }
   if (tf == '4H') {
     if (x.c > x.e200 && x.c > x.hh40 && x.rsi > 55 && x.atr / x.c < 0.05) return { enter: true, stop: Math.max(x.ll20, x.c - 2 * x.atr), px: x.c, why: '4H breakout above the 40-candle high ' + f(x.hh40) + ', RSI ' + x.rsi.toFixed(0) };
     if (x.c < x.e200 && x.rsiPrev < 20 && x.rsi >= 20) return { enter: true, stop: x.c - 2 * x.atr, px: x.c, why: '4H washout bounce, RSI back above 20' };
     return { enter: false, why: x.c > x.e200 ? 'Waiting for a 4H close above ' + f(x.hh40) + ' with RSI over 55' : 'Below the 4H EMA200 ' + f(x.e200) + ', waiting for a washout bounce' };
   }
+  var F = bfCandles_(coin, '4H'), fc = F.map(function (k) { return k.c; }), f4ok = fc.length > 60 && fc[fc.length - 1] > ema_(fc, 50)[fc.length - 1];
+  if (!f4ok) return { enter: false, why: '4H under its EMA50 (day trades need the 4H not falling)' };
   var ok = e21 > e50 && x.c > e21 && (x.c - e21) <= 2 * x.atr;   // same ENTER rule as the Atlas Day tab (+ don't chase more than 2 ATR above EMA21)
   if (ok) return { enter: true, stop: x.c - 1.5 * x.atr, px: x.c, why: tf + ' ENTER: EMA21 over EMA50 and closed above EMA21 (Atlas Day rule), RSI ' + x.rsi.toFixed(0) + (x.c < x.e200 ? ', under EMA200 = bounce trade' : '') };
   return { enter: false, why: e21 <= e50 ? tf + ' EMA21 under EMA50' : x.c <= e21 ? 'Waiting for a ' + tf + ' close above EMA21 ' + f(e21) : 'Too far above EMA21 (over 2 ATR), waiting for a pullback' };
@@ -1315,7 +1336,11 @@ function autoBlock_(P, usd) {
 }
 function autoScan_(btcUp) {   // the bot hunts on its own: BOT.coins, Swing 4H first then Day 1H, $ from 'Auto scan $'
   if (!on_('Auto scan')) return;
-  var usd = num_('Auto scan $', 0.5, 1000), P = autoPnl_(), open = {}, l = autoList_(), found = [], pr = PropertiesService.getScriptProperties();
+  var TIER = { '1D': num_('Tier $ Daily', 0, 1000), '4H': num_('Tier $ Swing 4H', 0, 1000), '1H': num_('Tier $ Day 1H', 0, 1000), '15m': num_('Tier $ Scalp 15m', 0, 1000) };
+  var usd = Math.min.apply(null, [TIER['1D'], TIER['4H'], TIER['1H'], TIER['15m']].filter(function (v) { return v > 0; }).concat([1000])), P = autoPnl_(), open = {}, l = autoList_(), found = [], pr = PropertiesService.getScriptProperties();
+  var scalpCoins = String(set_('Scalp coins') || '').toUpperCase().split(/[ ,]+/), hrs = String(set_('Scalp hours CT') || '8:30-11:30').split('-');
+  var nowCT = Utilities.formatDate(new Date(), 'America/Chicago', 'H:mm'), mins = function (t) { var a = String(t).split(':'); return (+a[0]) * 60 + (+a[1] || 0); };
+  var scalpOpen = mins(nowCT) >= mins(hrs[0]) && mins(nowCT) <= mins(hrs[1] || '11:30');
   if (!P.halt && (P.total <= -num_('Auto total stop $', 0, 1000) || P.streak >= num_('Auto loss streak', 1, 100))) {
     pr.setProperty('AUTO_HALT', '1'); P.halt = true;
     var why = P.streak >= num_('Auto loss streak', 1, 100) ? P.streak + ' losses in a row' : 'pot down $' + (-P.total).toFixed(2);
@@ -1327,12 +1352,14 @@ function autoScan_(btcUp) {   // the bot hunts on its own: BOT.coins, Swing 4H f
   var na = noApi_();
   BOT.coins.forEach(function (c) {
     if (open[c] || na.indexOf(c) >= 0 || autoBlock_(P, usd)) return;
-    ['4H', '1H'].some(function (tf) {
+    ['1D', '4H', '1H', '15m'].some(function (tf) {
+      var tusd = TIER[tf]; if (!(tusd > 0) || autoBlock_(P, tusd)) return false;
+      if (tf == '15m' && (!scalpOpen || scalpCoins.indexOf(c) < 0)) return false;
       var s; try { s = autoSignal_(c, tf); } catch (e) { return false; }
       if (!s.enter) return false;
-      var it = { id: 'AS' + Date.now().toString(36).toUpperCase() + c, coin: c, usd: usd, tf: tf, st: 'LOCKED', at: ct_(), t: Date.now(), lockPx: s.px, scan: true };
+      var it = { id: 'AS' + Date.now().toString(36).toUpperCase() + c, coin: c, usd: tusd, tf: tf, st: 'LOCKED', at: ct_(), t: Date.now(), lockPx: s.px, scan: true };
       var r = autoBuy_(it, s, btcUp);
-      if (r.ok) { it.st = 'BOUGHT'; it.note = '🤖 Bot found it: ' + r.msg; it.bought = ct_(); P.used += usd; P.open++; open[c] = 1; l.push(it); found.push(c + ' ' + tf); }
+      if (r.ok) { it.st = 'BOUGHT'; it.note = '🤖 Bot found it (' + AUTO_TF[tf].name + '): ' + r.msg; it.bought = ct_(); P.used += tusd; P.open++; open[c] = 1; l.push(it); found.push(c + ' ' + tf); }
       else log_('AUTO', 'Auto scan ' + c + ' ' + tf + ' ENTER but not bought: ' + r.msg);
       return true;
     });
@@ -1349,7 +1376,7 @@ function autoBuy_(it, s, btcUp) {
   o.qty = qty_(it.coin, it.usd * lev / px);
   if (!(o.qty > 0)) {   // below WEEX's minimum order: raise leverage just enough to reach it, if risk stays small and liquidation stays past the stop
     var info = symbolInfo_(it.coin) || {}, minQ = Number(info.minOrderSize) || 0, need = Math.ceil(minQ * px / it.usd * 1.02);
-    var maxRisk = it.scan ? Math.max(0.5, it.usd * 0.35) : it.usd * 0.25;
+    var maxRisk = it.scan ? Math.max(0.3, it.usd * 0.35) : it.usd * 0.25;
     if (minQ > 0 && need <= 20 && stopD < 1 / need - 0.005 && minQ * px * stopD <= maxRisk) { lev = need; o.lev = lev; o.qty = qty_(it.coin, minQ * 1.0001); }
     if (!(o.qty > 0)) return { ok: false, msg: '$' + it.usd + ' is below the WEEX minimum for ' + it.coin + ' (min ~$' + (minQ * px).toFixed(2) + ')' };
     o.why += ' · sized up to the WEEX minimum (' + o.qty + ' ' + it.coin + ', ' + lev + 'x, risk ~$' + (o.qty * px * stopD).toFixed(2) + ')';
