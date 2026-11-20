@@ -1,5 +1,5 @@
 // K-Saju service worker: offline shell + cached engine. Bump VERSION on each deploy.
-const VERSION = 'ksaju-app-v2';
+const VERSION = 'ksaju-app-v3';
 const SHELL = ['./', './index.html', './reading.html', './compat.html', './privacy.html', './terms.html', './offline.html', './hub.html', './css/hub.css', './lib/library.json', './lib/categories/index.json',
   './css/site.css', './css/v2.css', './manifest.webmanifest', './img/icons/icon-192.png', './img/icons/icon-512.png', './img/samchon.jpg'];
 const ENGINE = 'https://cdn.jsdelivr.net/npm/manseryeok@2.0.0/';
