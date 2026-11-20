@@ -113,34 +113,57 @@ function streak() {
 function checkIn() { const s = streak(); if (s.done) return; const n = (s.st.last === s.y ? s.st.n : 0) + 1; ls.set('ks_streak', { last: s.t, n, best: Math.max(s.st.best || 0, n) }); }
 
 // ---------- TODAY ----------
+const DO = {
+  same: [['Team up with a friend or coworker', 'Stand by a decision you already made', 'Move your body hard'], ['Arguing just to win', 'Lending money on impulse']],
+  output: [['Make, cook or create something', 'Teach or explain what you know', 'Share your work'], ['Over-promising', 'Skipping rest']],
+  wealth: [['Pay a bill or check your budget', 'Finish your errand list', 'Ask for what you\'re owed'], ['Risky bets', 'Taking on too much at once']],
+  power: [['Follow the plan', 'Hit deadlines early', 'Keep promises small and exact'], ['Fighting with bosses or rules', 'Late nights']],
+  resource: [['Read or learn something', 'Ask for help', 'Nap or rest'], ['Saying yes to everything', 'Comparing yourself']] };
+const LUCKY = { Wood: ['green', 'east'], Fire: ['red', 'south'], Earth: ['yellow or brown', 'the center of a room'], Metal: ['white or gold', 'west'], Water: ['black or navy', 'north'] };
+const hourLabel = b => { const h = (2 * b + 23) % 24, f = x => { const p = x >= 12 ? 'PM' : 'AM', y = x % 12 || 12; return y + ' ' + p; }; return `${f(h)}–${f((h + 2) % 24)}`; };
+function hours(c) {
+  const myB = BR.indexOf(c?.pillars?.day?.branch?.hanja); if (myB < 0) return null;
+  const good = [], bad = [];
+  for (let b = 0; b < 12; b++) { if (COMBO[myB] === b || (myB % 4 === b % 4 && myB !== b)) good.push(b); if ((myB + 6) % 12 === b) bad.push(b); }
+  const awake = b => { const h = (2 * b + 23) % 24; return h >= 5 && h <= 21; };
+  return { good: good.filter(awake).map(b => `${hourLabel(b)} (${AN[b]})`), bad: bad.map(b => `${hourLabel(b)} (${AN[b]})`) };
+}
 async function today() {
   const c = chart(), tp = dayPillar(), m = moon(), term = solarTerm(), L = await lib(), now = new Date();
   setTheme(tp.el);
   const tip = L.tips[Math.floor(Date.now() / 864e5) % L.tips.length];
-  const s = streak(), evening = now.getHours() >= 17;
-  let msg = needChart(), lk = '';
+  const s = streak(), evening = now.getHours() >= 17, tk = dkey(now), intents = ls.get('g_intent', {});
+  let msg = needChart(), lk = '', plan = '', week = '';
   if (c && c.dayMaster) {
-    const [h, t] = GOD[rel(c.dayMaster.element, tp.el)], l = luck(c, tp);
-    msg = `<div class="card acc ink"><div class="kick">${esc(c.dayMaster.title)} · ${esc(c.dayMaster.label)}</div><h2>${h}</h2><p>${t}</p>
-      <p class="muted">Today's ${tp.el} meets your ${c.dayMaster.element}. Your word for today: <b>${EL_WORD[tp.el]}</b>.</p></div>`;
-    if (l) lk = `<div class="card ink" style="border-left:4px solid var(${l.tone === 'good' ? '--Wood' : l.tone === 'care' ? '--Earth' : '--line'})"><div class="kick">Good day or careful day</div>
-      <h2>${l.head}</h2><p>${l.text}</p>${l.stars.map(x => `<p>✦ <b>${x[0]} day.</b> ${x[1]}</p>`).join('')}
-      <a class="muted" href="#calendar">See my next 5 weeks →</a></div>`;
+    const r = rel(c.dayMaster.element, tp.el), [h, t] = GOD[r], l = luck(c, tp), hr = hours(c);
+    const res = ORDER[(ORDER.indexOf(c.dayMaster.element) + 4) % 5], [col, dir] = LUCKY[res];
+    msg = `<div class="card acc frame ink"><div class="kick">${esc(c.dayMaster.title)} · ${esc(c.dayMaster.label)}</div><h2>${h}</h2><p>${t}</p>
+      <div class="dolist"><div><div class="kick">Do</div>${DO[r][0].map(x => `<p>✓ ${x}</p>`).join('')}</div><div><div class="kick">Avoid</div>${DO[r][1].map(x => `<p>✕ ${x}</p>`).join('')}</div></div></div>`;
+    if (l) lk = `<div class="card frame ink tone-${l.tone}"><div class="kick">Good day or careful day</div>
+      <h2>${l.head}</h2><p>${l.text}</p>${l.stars.map(x => `<p>✦ <b>${x[0]} day.</b> ${x[1]}</p>`).join('')}</div>`;
+    plan = `<div class="card frame ink"><div class="kick">Your plan for today</div>
+      ${hr ? `<p><b>Best hours:</b> ${hr.good.join(' · ') || 'any time'}</p><p><b>Go slow:</b> ${hr.bad.join(' · ')}</p>` : ''}
+      <p><b>Helpful color:</b> ${col} · <b>Face:</b> ${dir}<br><span class="muted">From ${res}, the element that feeds your ${c.dayMaster.element}. Tradition, for fun.</span></p></div>`;
+    const days = Array.from({ length: 7 }, (_, i) => { const d = new Date(now); d.setDate(now.getDate() + i); const p = dayPillar(d), x = luck(c, p);
+      return `<a class="wd ${x?.tone || ''}" href="#calendar"><span>${i ? d.toLocaleDateString(undefined, { weekday: 'short' }) : 'Today'}</span><b>${p.hanja}</b><i>${x?.tone === 'good' ? '◎' : x?.tone === 'care' ? '△' : '·'}</i></a>`; }).join('');
+    week = `<div class="card ink"><div class="kick">Your week</div><div class="week">${days}</div><p class="muted" style="margin-top:8px">◎ smooth · △ go slow · tap for 5 weeks</p></div>`;
   }
   const ipchun = new Date(2027, 1, 4), toGoat = Math.ceil((ipchun - now) / 864e5);
   V.innerHTML = `
-  <section class="hero ink"><div class="date">${now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</div>
-    <h1>${tp.hanja} ${ELKO[tp.el]}</h1><p>${tp.yang ? 'Yang' : 'Yin'} ${tp.el} ${tp.animal} day · ${tp.name}-${AN[tp.b]}</p></section>
-  ${msg}${lk}
-  <div class="card ink"><div class="kick">${evening ? 'Evening' : 'Morning'} ritual</div>
-    <h2>${evening ? 'Close the day' : 'Three minutes to begin'}</h2>
-    <p>${evening ? 'Write three small things you\'re grateful for, then one slow breath.' : `Breathe with your element, then read today's intention.`}</p>
-    <div class="row"><a class="btn" href="#ritual/${evening ? 'evening' : 'breathe'}">${evening ? 'Open journal' : 'Start breathing'}</a>
-    <span class="muted">${s.live}🔥 day streak · best ${Math.max(s.st.best || 0, s.live)}</span></div></div>
-  <div class="card ink"><div class="row" style="flex-wrap:nowrap">${moonSvg(m)}<div><div class="kick">Moon · ${Math.round(m.lit * 100)}% lit</div><b>${m.name}</b><p class="muted" style="margin:2px 0 0">${m.note}</p></div></div></div>
-  <div class="card ink"><div class="kick">Season · solar term</div><h2><span class="brush" style="font-size:30px">${term.cur[3]}</span> ${term.cur[4]}</h2>
-    <p>${TERM_NOTE[term.season]}</p><p class="muted">Next: ${term.next[4]} (${term.next[3]}) in about ${term.days} day${term.days === 1 ? '' : 's'}.${toGoat > 0 ? ` The Fire Goat year 丁未 begins in about ${toGoat} days (Ipchun).` : ''}</p></div>
-  <div class="card ink"><div class="kick">Small practice</div><p>${esc(tip.tip_trick)}</p></div>`;
+  <section class="hero ink"><div class="seal-lg" aria-hidden="true">${tp.hanja}</div><div><div class="date">${now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</div>
+    <h1>${tp.yang ? 'Yang' : 'Yin'} ${tp.el} ${tp.animal}</h1><p>${tp.name}-${AN[tp.b]} day · word for today: <b>${EL_WORD[tp.el]}</b></p></div></section>
+  ${msg}${lk}${plan}
+  <div class="card frame ink"><div class="kick">${evening ? 'Evening' : 'Morning'} ritual</div>
+    ${evening ? '<h2>Close the day</h2><p>Write three small things you\'re grateful for, then one slow breath.</p>'
+      : `<h2>Set today's intention</h2><input id="intent" placeholder="Today I will…" value="${esc(intents[tk] || '')}"><p class="muted" id="imsg" style="margin-top:6px">${intents[tk] ? 'Saved ✓' : 'One line. It shows up in your evening journal.'}</p>`}
+    <div class="row"><a class="btn" href="#ritual/${evening ? 'evening' : 'breathe'}">${evening ? 'Open journal' : 'Breathe · 2 min'}</a>
+    <span class="streak">${s.live}<small>day streak</small></span></div></div>
+  ${week}
+  <div class="grid2 ink"><div class="card mini"><div class="row" style="flex-wrap:nowrap;gap:12px">${moonSvg(m)}<div><div class="kick">Moon</div><b>${m.name}</b><p class="muted" style="margin:2px 0 0">${Math.round(m.lit * 100)}% lit</p></div></div><p class="muted">${m.note}</p></div>
+    <div class="card mini"><div class="kick">Solar term</div><div class="brush" style="font-size:34px;line-height:1">${term.cur[3]}</div><b>${term.cur[4]}</b><p class="muted">${TERM_NOTE[term.season]}</p></div></div>
+  <div class="card ink"><p class="muted" style="margin:0">Next solar term: <b>${term.next[4]}</b> in about ${term.days} day${term.days === 1 ? '' : 's'}.${toGoat > 0 ? ` The Fire Goat year 丁未 begins in about <b>${toGoat} days</b>.` : ''}</p></div>
+  <div class="card frame ink"><div class="kick">Small practice</div><p>${esc(tip.tip_trick)}</p></div>`;
+  const it = $('#intent'); if (it) it.onchange = () => { intents[tk] = it.value.trim(); ls.set('g_intent', intents); $('#imsg').textContent = 'Saved ✓'; };
 }
 
 // ---------- RITUAL ----------
@@ -154,14 +177,25 @@ function ritual(sub) {
   if (sub === 'sounds') return sounds();
   V.innerHTML = `<section class="hero ink"><div class="date">Ritual</div><h1>息</h1><p>Breath, stillness and gratitude, matched to your ${myEl} energy.</p></section>
   <div class="grid2 ink">
-    <a class="tile" href="#ritual/breathe"><span class="ic">🌬</span><b>Breathe</b><span>2 minutes · ${myEl} rhythm</span></a>
-    <a class="tile" href="#ritual/meditate"><span class="ic">🪷</span><b>Meditate</b><span>Your ${myEl} meditation</span></a>
-    <a class="tile" href="#ritual/evening"><span class="ic">🌙</span><b>Evening journal</b><span>3 thank-yous</span></a>
-    <a class="tile" href="#ritual/sounds"><span class="ic">🔔</span><b>Sounds</b><span>Rain, stream, temple bell</span></a>
+    <a class="tile" href="#ritual/breathe"><span class="glyph">息</span><b>Breathe</b><span>2 minutes · ${myEl} rhythm</span></a>
+    <a class="tile" href="#ritual/meditate"><span class="glyph">禪</span><b>Meditate</b><span>Your ${myEl} meditation</span></a>
+    <a class="tile" href="#ritual/evening"><span class="glyph">夜</span><b>Evening journal</b><span>3 thank-yous</span></a>
+    <a class="tile" href="#ritual/sounds"><span class="glyph">聲</span><b>Sounds</b><span>Rain, stream, temple bell</span></a>
   </div>
-  <div class="card ink"><div class="kick">All five meditations</div>${ORDER.map(e => `<a class="btn ghost block" href="#ritual/meditate" data-el="${e}">${ELKO[e]} ${e} · ${EL_WORD[e]}</a>`).join('')}</div>
-  ${soon('Narrated meditations with music', 'Narrated audio is coming soon. Tap Listen inside any meditation to hear it now.')}`;
+  <div class="card frame ink"><div class="kick">All five meditations</div><div class="els">${ORDER.map(e => `<a class="elchip" style="--c:var(--${e})" href="#ritual/meditate" data-el="${e}"><b>${ELKO[e]}</b><span>${e}</span><small>${EL_WORD[e]}</small></a>`).join('')}</div></div>
+  <div class="card ink"><div class="kick">Daily reminder</div><p>Add a daily ritual reminder to your phone's calendar. Works today, no sign-up.</p>
+    <div class="row"><input id="rtime" type="time" value="${esc(ls.get('ks_time', '08:00'))}" style="width:140px"><button class="btn" id="rics" type="button">Add to my calendar</button></div></div>`;
   V.querySelectorAll('[data-el]').forEach(a => a.onclick = () => ls.set('g_med', a.dataset.el));
+  $('#rics').onclick = () => { ls.set('ks_time', $('#rtime').value || '08:00'); ics($('#rtime').value || '08:00'); };
+}
+function ics(time) {   // daily repeating calendar reminder, made on the phone (no server needed)
+  const [h, mi] = time.split(':'), d = new Date(); d.setDate(d.getDate() + 1);
+  const ds = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}T${h}${mi}00`;
+  const url = new URL('./#today', location.href).href;
+  const body = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Giun//Daily Ritual//EN', 'BEGIN:VEVENT', `UID:giun-daily-${Date.now()}@giun`, `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`,
+    `DTSTART:${ds}`, 'DURATION:PT5M', 'RRULE:FREQ=DAILY', 'SUMMARY:Giun · your daily ritual', `DESCRIPTION:Breathe\, read today's energy and set an intention. ${url}`, `URL:${url}`,
+    'BEGIN:VALARM', 'TRIGGER:PT0M', 'ACTION:DISPLAY', 'DESCRIPTION:Giun · your daily ritual', 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([body], { type: 'text/calendar' })); a.download = 'giun-daily-ritual.ics'; a.click();
 }
 function breathe(el) {
   const [i, h, o, cue] = BREATH[el], total = 8;
@@ -185,13 +219,22 @@ function breathe(el) {
 function meditate(el) {
   const pick = ls.get('g_med', null) || el; ls.set('g_med', null); setTheme(pick);
   V.innerHTML = `<a class="back" href="#ritual">← Ritual</a><section class="hero ink"><div class="date">${pick} meditation · about 2 minutes</div><h1>${ELKO[pick]}</h1><p>${EL_WORD[pick][0].toUpperCase() + EL_WORD[pick].slice(1)}</p></section>
-  <div class="card ink"><p style="font-size:18px;line-height:1.75">${MED[pick]}</p><div class="row"><button class="btn" id="say" type="button">▶ Listen</button><button class="btn ghost" id="done" type="button">I finished</button></div></div>`;
+  <div class="card ink"><p style="font-size:18px;line-height:1.75">${MED[pick]}</p><div class="row"><button class="btn" id="say" type="button">▶ Listen</button><button class="btn ghost" id="done" type="button">I finished</button></div></div>
+  <div class="card frame ink"><div class="kick">Silent timer</div><div class="seg">${[3, 5, 10, 20].map(n => `<button class="btn ghost" data-min="${n}" type="button">${n} min</button>`).join('')}</div>
+  <div class="timer" id="tmr">—</div><p class="muted">A temple bell rings at the end. Keep this page open.</p></div>`;
   $('#say').onclick = e => say(MED[pick], e.currentTarget);
   $('#done').onclick = e => { checkIn(); e.currentTarget.textContent = 'Streak updated ✓'; };
+  V.querySelectorAll('[data-min]').forEach(b => b.onclick = () => {
+    clearInterval(medTimer); V.querySelectorAll('[data-min]').forEach(x => x.classList.toggle('on', x === b));
+    let left = +b.dataset.min * 60; const show = () => { $('#tmr').textContent = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`; }; show();
+    medTimer = setInterval(() => { left--; show(); if (left <= 0) { clearInterval(medTimer); $('#tmr').textContent = 'Done 🙏'; play('bell'); setTimeout(stopSound, 8000); checkIn(); } }, 1000);
+  });
 }
+let medTimer = null;
 function evening() {
   const j = ls.get('g_journal', {}), t = dkey(new Date()), e = j[t] || ['', '', '', ''];
   V.innerHTML = `<a class="back" href="#ritual">← Ritual</a><section class="hero ink"><div class="date">Evening journal</div><h1>夜</h1><p>Three small thank-yous and one word for tomorrow.</p></section>
+  ${ls.get('g_intent', {})[t] ? `<div class="card frame ink"><div class="kick">This morning you said</div><p><i>${esc(ls.get('g_intent', {})[t])}</i></p><p class="muted">How did it go?</p></div>` : ''}
   <div class="card ink">${[1, 2, 3].map(n => `<label>Thank you for…</label><input id="g${n}" value="${esc(e[n - 1])}">`).join('')}
     <label>One word for tomorrow</label><input id="g4" value="${esc(e[3])}" placeholder="e.g. patience">
     <button class="btn block" id="jsave" type="button">Save tonight</button><p class="muted" id="jmsg">Saved only on this phone.</p></div>
@@ -236,11 +279,12 @@ async function library(slug) {
     return;
   }
   const idx = await (await fetch(LIB + 'categories/index.json')).json(), q = ls.get('g_q', '');
-  const tile = c => `<a class="tile" href="#library/${c.slug}"><b>${esc(c.name)}</b><span>${c.count} entries</span></a>`;
+  const GL = { saju_basics: '柱', five_elements: '五', ten_stems: '干', twelve_branches: '支', ten_gods: '神', luck_pillars: '運', solar_terms: '節', compatibility: '合', hidden_stems: '藏', clashes_combos: '沖', shen_sha: '星', korean_almanac: '曆', dream_dictionary: '夢', love_saju: '愛', career_money_saju: '財', k_culture_saju: '韓', korean_names: '名', korean_holidays: '節', purple_star: '紫', sleep: '眠', nutrition_herb_safety: '草', mind_body: '心', oral_health: '齒', environment_home: '家', movement: '動', stress_breathing: '息', gut_health: '腸', healthy_aging: '壽' };
+  const tile = c => `<a class="tile" href="#library/${c.slug}"><span class="glyph">${GL[c.slug] || '書'}</span><b>${esc(c.name)}</b><span>${c.count} entries</span></a>`;
   const grp = (k, t) => `<h3 class="kick" style="margin:18px 0 8px">${t}</h3><div class="grid2">${idx.filter(c => c.kind === k).map(tile).join('')}</div>`;
   V.innerHTML = `<section class="hero ink"><div class="date">Library</div><h1>書</h1><p>Korean tradition, culture and plain-English wellness, every entry with its source.</p></section>
-    <a class="tile ink" href="#library/books" style="min-height:0"><span class="ic">📚</span><b>Free books you can listen to</b><span>Public-domain classics with summaries</span></a>
-    <input id="lq" placeholder="Search the library…" value="${esc(q)}" style="margin-top:12px"><div id="lres"></div>
+    <a class="tile ink" href="#library/books" style="min-height:0"><span class="glyph">冊</span><b>Free books you can listen to</b><span>Public-domain classics with summaries</span></a>
+    <input id="lq" placeholder="Search the library…" value="${esc(q)}" style="margin-top:12px"><div id="lres"></div><div id="pick"></div>
     ${grp('tradition', 'Saju & tradition')}${grp('culture', 'Korean culture')}${grp('wellness', 'Wellness')}`;
   let all = null;
   const run = async () => {
@@ -251,6 +295,9 @@ async function library(slug) {
     out.innerHTML = hits.map(e => `<details class="ent"><summary>${esc(e.title)} <span class="muted">· ${esc(e.cat)}</span></summary><p>${esc(e.content)}</p><p class="muted">${esc(e.source)}</p></details>`).join('') || '<p class="muted">No matches yet.</p>';
   };
   let tm; $('#lq').oninput = () => { clearTimeout(tm); tm = setTimeout(run, 200); }; if (q) run();
+  const pc = idx[Math.floor(Date.now() / 864e5) % idx.length];   // today's pick: one entry a day
+  fetch(`${LIB}categories/${pc.slug}/data.json`).then(r => r.json()).then(d => { const e = d.entries[Math.floor(Date.now() / 864e5) % d.entries.length];
+    $('#pick') && ($('#pick').innerHTML = `<div class="card frame"><div class="kick">Today's pick · ${esc(d.name)}</div><h2>${esc(e.title)}</h2><p>${esc(e.content)}</p><p class="muted">${esc(e.source)}</p></div>`); }).catch(() => {});
 }
 async function books() {
   const L = await lib();
@@ -267,11 +314,13 @@ function ask() {
   V.innerHTML = `<section class="hero ink"><div class="date">Ask</div><h1>問</h1><p>Ask Haneul about love, work, money or timing. Answers come from your own chart.</p></section>
     ${c ? '' : needChart()}
     <div id="chat">${log.map(m => `<div class="msg ${m.who === 'h' ? 'h' : 'u'}">${esc(m.t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>')}</div>`).join('')}</div>
+    ${c && !log.length ? `<div class="chips">${['What is my biggest strength?', 'When is a good month for love in 2027?', 'What kind of work suits me?', 'What should I watch out for this year?'].map(x => `<button class="chip" data-q="${esc(x)}" type="button">${esc(x)}</button>`).join('')}</div>` : ''}
     <div class="card"><textarea id="q" rows="3" placeholder="What's on your mind?" ${c ? '' : 'disabled'}></textarea>
     <button class="btn block" id="send" type="button" ${c ? '' : 'disabled'}>${used < free ? 'Ask Haneul (free)' : 'Ask Haneul'}</button>
     <p class="muted" id="amsg">${used < free ? `${free - used} free answer left` : 'Your free answer is used. More answers open at launch.'}</p></div>
     <div class="grid2"><a class="tile" href="../ksaju/compat.html"><span class="ic">❤</span><b>Compatibility</b><span>Free score with anyone</span></a>
     <a class="tile" href="#library/love_saju"><span class="ic">💌</span><b>Love & saju</b><span>Library</span></a></div>`;
+  V.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { $('#q').value = b.dataset.q; $('#q').focus(); });
   const send = $('#send'); if (!send || !c) return;
   send.onclick = async () => {
     const q = $('#q').value.trim(), m = $('#amsg'); if (!q) return;
@@ -296,17 +345,12 @@ async function me(sub) {
     <div class="row"><a class="btn" href="#me/chart">My chart</a><a class="btn ghost" href="#calendar">My good days</a><a class="btn ghost" href="#card">Share card</a></div></div>` : needChart()}
   <div class="card ink"><div class="kick">Daily message by email</div><div class="row"><input id="dem" type="email" placeholder="you@email.com" value="${esc(ls.get('ks_email', ''))}" style="flex:1;min-width:170px">
     <input id="dtime" type="time" value="${esc(ls.get('ks_time', '08:00'))}" style="width:130px"></div><button class="btn block" id="dsub" type="button">Email it to me daily</button><p class="muted" id="dmsg">Free. Unsubscribe anytime.</p>
-    ${soon('Phone notifications', 'Phone reminders are coming soon.')}</div>
+    <button class="btn ghost block" id="mics" type="button">Or add a daily reminder to my calendar</button></div>
   <div class="card ink"><div class="kick">Readings</div><a class="btn ghost block" href="../ksaju/sample-report.html">See a sample report</a>
     ${SITE.mode === 'live' && c ? `<a class="btn block" href="../ksaju/index.html#mine">${esc(SITE.product.name)} · ${esc(SITE.product.price)}</a>` : soon(`${SITE.product.name} · ${SITE.product.price}`, 'Opens at launch.')}
-    ${(SITE.shop || []).map(p => soon(`${p.name} · ${p.price}`, p.note || 'Opens at launch.')).join('')}
+    <div class="prices">${(SITE.shop || []).map(p => `<div class="price"><span>${esc(p.name)}</span><b>${esc(p.price)}</b><em>Soon</em></div>`).join('')}</div>
     ${SITE.mode === 'live' ? '' : `<div class="row" style="margin-top:12px"><input id="wem" type="email" placeholder="you@email.com" value="${esc(ls.get('ks_email', ''))}" style="flex:1;min-width:170px"><button class="btn" id="wl" type="button">Notify me at launch</button></div><p class="muted" id="wmsg">Get first access to paid readings. One email at launch.</p>`}</div>
-  <div class="card ink"><div class="kick">Coming soon</div>
-    ${soon('Friends: see and compare your friends\' Day Masters', 'Friends opens after launch.')}
-    ${soon('Holiday readings: Seollal and Chuseok', 'Holiday readings open before Lunar New Year.')}
-    ${soon('Narrated meditations with music', 'Narrated audio is coming soon.')}
-    ${soon('Back up to my account', 'Accounts are coming soon. For now everything stays on this phone.')}
-    <a class="btn ghost block" href="#library/korean_holidays">Korean holidays &amp; customs (Library)</a></div>
+  <div class="card frame ink"><div class="kick">Coming soon</div><div class="chips">${['Friends & compare', 'Holiday readings', 'Narrated meditations', 'Account backup', 'Phone notifications', 'Full-year calendar'].map(x => `<span class="chip soonchip">${x}</span>`).join('')}</div></div>
   <div class="card ink"><div class="kick">Help near you</div><p>In a crisis call or text <a href="tel:988">988</a>. In danger call <a href="tel:911">911</a>. Food, housing and services: <a href="tel:211">211</a>.</p>
     <select id="st"><option value="">Pick your state…</option>${states.map(s => `<option>${esc(s)}</option>`).join('')}</select><div id="stout"></div></div>
   <div class="card ink"><div class="kick">Settings</div><div class="seg">${['auto', 'light', 'dark'].map(t => `<button class="btn ghost ${ls.get('g_theme', 'auto') === t ? 'on' : ''}" data-th="${t}" type="button">${t[0].toUpperCase() + t.slice(1)}</button>`).join('')}</div>
@@ -316,6 +360,7 @@ async function me(sub) {
   V.querySelectorAll('[data-th]').forEach(b => b.onclick = () => { ls.set('g_theme', b.dataset.th); applyTheme(); me(); });
   $('#wipe').onclick = () => { if (!$('#wipe').dataset.sure) { $('#wipe').dataset.sure = 1; $('#wipe').textContent = 'Tap again to clear everything'; return; }
     ['ksaju_chart', 'ks_streak', 'ks_chat', 'ks_email', 'ks_time', 'g_journal', 'g_q'].forEach(k => { try { localStorage.removeItem(k); } catch (_) {} }); location.hash = '#start'; };
+  $('#mics').onclick = () => { ls.set('ks_time', $('#dtime').value || '08:00'); ics($('#dtime').value || '08:00'); };
   const wl = $('#wl'); if (wl) wl.onclick = async () => {
     const em = $('#wem').value.trim(), msg = $('#wmsg');
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { msg.textContent = 'Please enter a real email.'; return; }
@@ -428,7 +473,7 @@ document.addEventListener('click', e => { const s = e.target.closest('[data-soon
 function route() {
   const [t, a] = (location.hash.slice(1) || (chart() ? 'today' : 'start')).split('/');
   document.querySelectorAll('#tabs a').forEach(x => x.classList.toggle('on', x.dataset.t === t || (t === 'calendar' || t === 'card' || t === 'start') && x.dataset.t === 'me'));
-  try { speechSynthesis?.cancel(); } catch (_) {} stopSound(); clearTimeout(breathTimer); scrollTo(0, 0);
+  try { speechSynthesis?.cancel(); } catch (_) {} stopSound(); clearTimeout(breathTimer); clearInterval(medTimer); scrollTo(0, 0);
   const fn = { today, ritual: () => ritual(a), library: () => library(a), ask, me: () => me(a), calendar, card, start }[t] || today;
   Promise.resolve(fn()).catch(e => { V.innerHTML = `<div class="card"><p>Something didn't load. Check your connection and try again.</p><p class="muted">${esc(e.message)}</p></div>`; });
 }

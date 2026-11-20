@@ -21,11 +21,12 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Nanum+Brush+Script&family=Noto+Serif+KR:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=1">
+<link rel="stylesheet" href="style.css?v=2">
 </head>
 <body data-el="Earth">
+<div class="mountains" aria-hidden="true"><svg viewBox="0 0 1200 300" preserveAspectRatio="xMidYMax slice"><path d="M0 300V190c60-20 110-80 170-70s90 60 150 50 110-110 180-100 100 90 160 80 80-50 140-40 90 60 150 40 80-50 130-30 50 40 120 30v150z" fill="var(--accent)" opacity=".10"/><path d="M0 300V230c80-10 120-50 200-40s120 50 190 40 130-70 210-60 110 50 180 45 100-40 170-30 90 35 140 25 70-20 110-15v135z" fill="var(--accent)" opacity=".14"/></svg></div>
 <div class="wrap">
-  <header class="top"><a class="brand" href="#today">기운 <small>Giun</small></a><span class="sp"></span><button class="chip" id="share" type="button">Share</button></header>
+  <header class="top"><a class="brand" href="#today"><span class="seal" aria-hidden="true">氣</span>기운 <small>Giun</small></a><span class="sp"></span><button class="chip" id="share" type="button">Share</button></header>
   <main id="view" aria-live="polite"></main>
   <footer class="foot">For reflection and education, not medical, mental health, legal or financial advice.<br>In a crisis call or text <a href="tel:988">988</a>. · <a href="../ksaju/privacy.html">Privacy</a> · <a href="../ksaju/terms.html">Terms</a></footer>
 </div>
@@ -36,7 +37,7 @@
   <a href="#ask" data-t="ask"><i>問</i>Ask</a>
   <a href="#me" data-t="me"><i>我</i>Me</a>
 </nav>
-<script type="module" src="app.js?v=2"></script>
+<script type="module" src="app.js?v=3"></script>
 <script src="../ksaju/js/pwa.js?v=3" defer></script>
 </body>
 </html>
