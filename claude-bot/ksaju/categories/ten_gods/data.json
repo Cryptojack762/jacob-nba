@@ -1,0 +1,32 @@
+{
+ "slug": "ten_gods",
+ "name": "Ten Gods",
+ "kind": "tradition",
+ "sheet_tab": "LIB_Ten_Gods",
+ "entries": [
+  {
+   "id": "ten_gods-01",
+   "title": "What the Ten Gods are",
+   "content": "The Ten Gods describe how every other part of a chart relates to your Day Master. They group into five themes: support, peers, expression, wealth and authority.",
+   "source": "Four Pillars of Destiny - Wikipedia; Luck Pillars (dayun)",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "ten_gods-02",
+   "title": "Direct vs indirect wealth",
+   "content": "Direct wealth is read as steady, planned earning. Indirect wealth is read as risk, sudden chances and ventures.",
+   "source": "Luck Pillars (dayun)",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "ten_gods-03",
+   "title": "Hurting Officer",
+   "content": "The Hurting Officer is read as strong creativity and self-expression, sometimes pushing against authority. It is often linked with independent or artistic paths.",
+   "source": "Luck Pillars (dayun)",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  }
+ ]
+}

@@ -205,15 +205,29 @@ function home(){
 function saveP(){var bd=document.getElementById('bd').value;if(!bd){alertBox('Pick your birth date first.');return}put('profile',{bd:bd,city:document.getElementById('bc').value});render()}
 function alertBox(t){var a=document.getElementById('app');a.insertAdjacentHTML('afterbegin','<div class="card" style="border-color:var(--fire)">'+esc(t)+'</div>')}
 
-var OPEN_CAT=null;
+var OPEN_CAT=null, OPEN_LIB=null, LIBS=get('libs',null), LIBDATA={};
+function loadLibs(){fetch('categories/index.json',{cache:'no-cache'}).then(function(r){return r.json()}).then(function(d){LIBS=d;put('libs',d);if(TAB==='library')render()}).catch(function(){})}
+var H={entries:function(d){return d.entries.filter(function(e){return e.verified==='Y'}).map(function(e){return '<div class="card"><span class="tag">'+esc(e.label)+'</span><h2>'+esc(e.title)+'</h2><p>'+esc(e.content)+'</p><p class="q" style="margin-top:6px">Source: '+esc(e.source)+'</p></div>'}).join('')}};
+function openLib(slug){OPEN_LIB=slug;OPEN_CAT=null;
+  if(LIBDATA[slug]){render();return}
+  fetch('categories/'+slug+'/data.json',{cache:'no-cache'}).then(function(r){return r.json()}).then(function(d){LIBDATA[slug]=d;
+    if(window.KS_VIEWS&&window.KS_VIEWS[slug]){render();return}
+    var sc=document.createElement('script');sc.src='categories/'+slug+'/view.js';sc.onload=render;sc.onerror=render;document.head.appendChild(sc);render()}).catch(function(){alertBox('This library needs a connection the first time.')});render()}
+function libView(){var d=LIBDATA[OPEN_LIB], meta=(LIBS||[]).find(function(x){return x.slug===OPEN_LIB})||{};
+  var back='<p><a href="#" onclick="OPEN_LIB=null;render();return false">‹ All libraries</a></p><h1>'+esc(meta.name||'')+'</h1>';
+  if(!d) return back+'<p class="q">Loading…</p>';
+  var v=(window.KS_VIEWS&&window.KS_VIEWS[OPEN_LIB])?window.KS_VIEWS[OPEN_LIB](d,H):H.entries(d);
+  return back+(meta.kind==='tradition'?'<p class="q">Korean tradition, shared for reflection and culture.</p>':'<p class="q">Plain-language summaries of health research. Education only.</p>')+v+FOOT}
+function libTiles(kind){return (LIBS||[]).filter(function(c){return c.kind===kind}).map(function(c){return '<div class="tile" onclick="openLib(\''+c.slug+'\')"><b>'+esc(c.name)+'</b><span class="q">'+c.count+' entries</span></div>'}).join('')}
 function library(){
+  if(OPEN_LIB) return libView();
   if(OPEN_CAT){var c=LIB.categories.find(function(x){return x.category_id===OPEN_CAT})||{};
     var bs=LIB.books.filter(function(b){return b.category_id===OPEN_CAT});
     return '<p><a href="#" onclick="OPEN_CAT=null;render();return false">‹ All categories</a></p><h1>'+esc(c.name)+'</h1>'+
      (bs.length?bs.map(bookCard).join(''):'<p class="q">Books for this category are coming soon.</p>')+FOOT}
   return '<h1>Library</h1><p class="q">'+LIB.categories.length+' of 27 categories ready</p><div class="grid">'+
    LIB.categories.map(function(c){var l=locked(c.tier);return '<div class="tile" onclick="'+(l?'go(\'me\')':'OPEN_CAT=\''+c.category_id+'\';render()')+'"><b>'+esc(c.name)+'</b><span class="q">'+(l?'<span class="lock">🔒 Paid</span>':'Free')+'</span></div>'}).join('')+
-   '</div>'+FOOT;
+   '</div>'+(LIBS?'<h2>Saju library</h2><div class="grid">'+libTiles('tradition')+'</div><h2>Wellness library</h2><div class="grid">'+libTiles('wellness')+'</div>':'')+FOOT;
 }
 function bookCard(b){var l=locked(b.tier);
   var sm=b.summary?(l?esc(b.summary.split('. ')[0])+'.':esc(b.summary)):esc(b.notes);
@@ -227,7 +241,8 @@ function resources(){
    (rows.length?rows.map(function(r){return '<div class="card"><span class="tag">'+esc(r.type)+'</span><h2>'+esc(r.resource_name)+'</h2><a href="'+esc(r.url)+'" target="_blank" rel="noopener">Open</a></div>'}).join(''):'<p class="q">Checked resources for '+esc(st)+' are coming soon.</p>')+FOOT;
 }
 
-function guide(){
+function preloadLibs(){(LIBS||[]).forEach(function(c){if(!LIBDATA[c.slug])fetch('categories/'+c.slug+'/data.json').then(function(r){return r.json()}).then(function(d){LIBDATA[c.slug]=d}).catch(function(){})})}
+function guide(){ preloadLibs();
   var used=get('qs',0), left=PAID?'∞':Math.max(0,FREE_Q-used);
   return '<h1>Ask the guide</h1><p class="q">Answers come only from the K-Saju library, with sources. Free questions left: '+left+'</p>'+
    '<div class="card"><input id="q" placeholder="e.g. tips for better sleep"><button class="pri" onclick="ask()">Ask</button></div><div id="ans"></div>'+FOOT;
@@ -240,7 +255,8 @@ function ask(){
   if(BLOCK.test(q)){out.innerHTML='<div class="card">I can\'t help with that. Please talk to a doctor or pharmacist.</div>';return}
   var used=get('qs',0); if(!PAID&&used>=FREE_Q){go('me');return} put('qs',used+1);
   var words=q.toLowerCase().split(/\W+/).filter(function(w){return w.length>3});
-  var pool=LIB.tips.map(function(t){return {id:t.id,text:t.tip_trick}}).concat(LIB.books.map(function(b){return {id:b.id,text:b.title+' - '+(b.summary||b.notes),url:b.source_url,hist:1}}));
+  var libPool=[];Object.keys(LIBDATA).forEach(function(k){LIBDATA[k].entries.forEach(function(e){libPool.push({id:e.id,text:e.title+' - '+e.content})})});
+  var pool=LIB.tips.map(function(t){return {id:t.id,text:t.tip_trick}}).concat(libPool).concat(LIB.books.map(function(b){return {id:b.id,text:b.title+' - '+(b.summary||b.notes),url:b.source_url,hist:1}}));
   var hits=pool.map(function(p){var s=0;words.forEach(function(w){if(p.text.toLowerCase().indexOf(w.slice(0,5))>-1)s++});return {p:p,s:s}}).filter(function(x){return x.s>0}).sort(function(a,b){return b.s-a.s}).slice(0,3);
   out.innerHTML=hits.length?'<div class="card">'+hits.map(function(h){return '<p>• '+esc(h.p.text.length>260?h.p.text.slice(0,260)+'…':h.p.text)+' <span class="q">('+h.p.id+(h.p.hist?', historical text':'')+')</span></p>'}).join('')+'<p class="q" style="margin-top:8px">For education only. Not medical advice.</p></div>':'<div class="card">I don\'t have that in the library yet.</div>';
 }
@@ -257,14 +273,14 @@ function me(){
 
 var TABS=[['home','☀️','Today',home],['library','📚','Library',library],['resources','🧭','Help',resources],['guide','💬','Guide',guide],['me','👤','Me',me]];
 function setPaid(v){if(!PREVIEW)return;PAID=v;put('paid',v);render()}
-function go(t){TAB=t;put('tab',t);OPEN_CAT=null;render();scrollTo(0,0)}
+function go(t){TAB=t;put('tab',t);OPEN_CAT=null;OPEN_LIB=null;render();scrollTo(0,0)}
 function render(){
   var t=TABS.find(function(x){return x[0]===TAB})||TABS[0];
   var bar=!PREVIEW?'':'<div class="pv">Preview<div class="seg"><button class="'+(PAID?'':'on')+'" onclick="setPaid(false)">Free</button><button class="'+(PAID?'on':'')+'" onclick="setPaid(true)">Paid</button></div></div>';
   document.getElementById('app').innerHTML=bar+t[3]();
   document.getElementById('nav').innerHTML=TABS.map(function(x){return '<button class="'+(x[0]===TAB?'on':'')+'" onclick="go(\''+x[0]+'\')"><span>'+x[1]+'</span>'+x[2]+'</button>'}).join('');
 }
-render(); syncNow();
+render(); syncNow(); loadLibs();
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 </script>
 </body>

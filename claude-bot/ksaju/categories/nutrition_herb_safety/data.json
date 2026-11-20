@@ -1,0 +1,32 @@
+{
+ "slug": "nutrition_herb_safety",
+ "name": "Nutrition & Herb Safety",
+ "kind": "wellness",
+ "sheet_tab": "LIB_Nutrition_Herb_Safety",
+ "entries": [
+  {
+   "id": "nutrition_herb_safety-01",
+   "title": "Herbs can interact with medicines",
+   "content": "Herbal supplements can interact with prescription drugs; for example St. John's wort can make some birth control and other medicines work less well. Always ask a doctor or pharmacist first.",
+   "source": "Herb-Drug Interactions - NCCIH (NIH)",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "nutrition_herb_safety-02",
+   "title": "Supplements aren't pre-approved",
+   "content": "In the US, dietary supplements don't need FDA approval for safety or effectiveness before sale. Quality and strength can vary between products.",
+   "source": "Herbal Supplements: Quality and Safety Concerns",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "nutrition_herb_safety-03",
+   "title": "Probiotics basics",
+   "content": "Probiotics are live microbes found in some foods and supplements; effects depend on the specific strain. NCCIH warns they can be risky for premature infants and people with weak immune systems.",
+   "source": "Probiotics: Usefulness and Safety - NCCIH (NIH)",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  }
+ ]
+}

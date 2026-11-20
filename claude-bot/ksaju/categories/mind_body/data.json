@@ -1,0 +1,32 @@
+{
+ "slug": "mind_body",
+ "name": "Mind-Body",
+ "kind": "wellness",
+ "sheet_tab": "LIB_Mind_Body",
+ "entries": [
+  {
+   "id": "mind_body-01",
+   "title": "Mindfulness programs",
+   "content": "Studies of mindfulness-based stress reduction (MBSR) have found people report less stress and anxiety. It is a learnable practice, not a replacement for care.",
+   "source": "Systematic Review for Medical Applications of Meditation - PMC",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "mind_body-02",
+   "title": "Meditation and the body",
+   "content": "Some studies link regular meditation with lower blood pressure and stress markers. Results vary, and it works best alongside medical advice.",
+   "source": "Meditation and Its Mental and Physical Health Benefits in 2023 - PMC",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "mind_body-03",
+   "title": "Yoga",
+   "content": "Research suggests yoga can help with flexibility, balance, sleep quality and some kinds of back discomfort. Start gently and check with a professional if you have pain or a condition.",
+   "source": "Yoga: Effectiveness and Safety - NCCIH (NIH)",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  }
+ ]
+}

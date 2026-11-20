@@ -1,0 +1,104 @@
+[
+ {
+  "slug": "saju_basics",
+  "name": "Saju Basics",
+  "kind": "tradition",
+  "count": 4
+ },
+ {
+  "slug": "five_elements",
+  "name": "Five Elements & Obangsaek",
+  "kind": "tradition",
+  "count": 4
+ },
+ {
+  "slug": "ten_stems",
+  "name": "Ten Heavenly Stems",
+  "kind": "tradition",
+  "count": 13
+ },
+ {
+  "slug": "twelve_branches",
+  "name": "Twelve Earthly Branches",
+  "kind": "tradition",
+  "count": 15
+ },
+ {
+  "slug": "ten_gods",
+  "name": "Ten Gods",
+  "kind": "tradition",
+  "count": 3
+ },
+ {
+  "slug": "luck_pillars",
+  "name": "Luck Pillars (Daeun)",
+  "kind": "tradition",
+  "count": 3
+ },
+ {
+  "slug": "solar_terms",
+  "name": "24 Solar Terms",
+  "kind": "tradition",
+  "count": 3
+ },
+ {
+  "slug": "compatibility",
+  "name": "Compatibility (Gunghap)",
+  "kind": "tradition",
+  "count": 3
+ },
+ {
+  "slug": "sleep",
+  "name": "Sleep",
+  "kind": "wellness",
+  "count": 3
+ },
+ {
+  "slug": "nutrition_herb_safety",
+  "name": "Nutrition & Herb Safety",
+  "kind": "wellness",
+  "count": 3
+ },
+ {
+  "slug": "mind_body",
+  "name": "Mind-Body",
+  "kind": "wellness",
+  "count": 3
+ },
+ {
+  "slug": "oral_health",
+  "name": "Oral Health",
+  "kind": "wellness",
+  "count": 3
+ },
+ {
+  "slug": "environment_home",
+  "name": "Environment & Home",
+  "kind": "wellness",
+  "count": 5
+ },
+ {
+  "slug": "movement",
+  "name": "Movement",
+  "kind": "wellness",
+  "count": 4
+ },
+ {
+  "slug": "stress_breathing",
+  "name": "Stress & Breathing",
+  "kind": "wellness",
+  "count": 4
+ },
+ {
+  "slug": "gut_health",
+  "name": "Gut Health",
+  "kind": "wellness",
+  "count": 4
+ },
+ {
+  "slug": "healthy_aging",
+  "name": "Healthy Aging",
+  "kind": "wellness",
+  "count": 4
+ }
+]
