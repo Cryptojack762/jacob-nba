@@ -1,0 +1,4 @@
+ID	Entry title	Content	Source	Label	Verified (Y/N)	App file
+solar_terms-01	The 24 solar terms	The year is split into 24 solar terms, one every 15 degrees of the sun's path. This is astronomy, and Saju uses it to set month pillars.	24 Solar Terms in Bazi	Astronomical fact	Y	ksaju/categories/solar_terms/data.json
+solar_terms-02	Months start at solar terms	In Saju a new month starts at a solar term, not on the 1st of the calendar month or at the new moon. Getting this time right matters for the month pillar.	24 Solar Terms in Bazi; Four Pillars of Destiny - Wikipedia	Calculation rule	Y	ksaju/categories/solar_terms/data.json
+solar_terms-03	Ipchun starts the Saju year	The Saju year begins at Ipchun (start of spring, around February 4), not at Lunar New Year. Births within a day of Ipchun need an exact time check.	24 Solar Terms in Bazi; saju-platform (GitHub)	Calculation rule	Y	ksaju/categories/solar_terms/data.json

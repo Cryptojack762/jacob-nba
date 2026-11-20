@@ -21,3 +21,7 @@ for slug, (name, kind, entries) in CATS.items():
     index.append({"slug": slug, "name": name, "kind": kind, "count": len(entries)})
 json.dump(index, open(os.path.join(root, 'index.json'), 'w'), ensure_ascii=False, indent=1)
 print(len(index), 'categories,', sum(i['count'] for i in index), 'entries')
+# also write data.tsv per category (the sheet's LIB_* tabs can import it)
+for slug, (name, kind, entries) in CATS.items():
+    rows = [["ID","Entry title","Content","Source","Label","Verified (Y/N)","App file"]] + [[f"{slug}-{i+1:02d}", t, c, s, l, "Y", f"ksaju/categories/{slug}/data.json"] for i, (t, c, s, l) in enumerate(entries)]
+    open(os.path.join(root, slug, 'data.tsv'), 'w').write("\n".join("\t".join(x.replace('\t', ' ') for x in r) for r in rows) + "\n")
