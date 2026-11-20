@@ -1,4 +1,4 @@
-var C='ksaju-v2', SHELL=['./','index.html','manifest.json','ks-180.png','ks-192.png','ks-512.png'];
+var C='ksaju-v3', SHELL=['./','index.html','manifest.json','ks-180.png','ks-192.png','ks-512.png'];
 self.addEventListener('install',function(e){e.waitUntil(caches.open(C).then(function(c){return c.addAll(SHELL)}).then(function(){return self.skipWaiting()}))});
 self.addEventListener('activate',function(e){e.waitUntil(caches.keys().then(function(k){return Promise.all(k.filter(function(x){return x.indexOf('ksaju-')==0&&x!=C}).map(function(x){return caches.delete(x)}))}).then(function(){return self.clients.claim()}))});
 self.addEventListener('fetch',function(e){

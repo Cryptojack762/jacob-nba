@@ -28,6 +28,10 @@ nav button{background:none;border:0;font-size:12px;color:var(--quiet);display:fl
 nav button.on{color:var(--acc)}nav span{font-size:20px}
 .el{font-weight:700}.foot{font-size:12px;color:var(--quiet);margin:18px 0;text-align:center}
 .hide{display:none}a{color:var(--acc)}
+.pv{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;align-items:center;gap:8px;padding:10px 0 6px;font-size:13px;color:var(--quiet)}
+.pv .seg{display:flex;border:1px solid var(--line);border-radius:99px;overflow:hidden}
+.pv .seg button{border:0;border-radius:0;min-height:34px;padding:6px 16px;background:none;color:var(--quiet)}
+.pv .seg button.on{background:var(--acc);color:#1a1405;font-weight:600}
 .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
 </style>
 </head>
@@ -159,7 +163,7 @@ function library(){
 }
 function bookCard(b){var l=locked(b.tier);
   return '<div class="card"><h2>'+esc(b.title)+'</h2><p class="q">'+esc(b.author)+'</p><p>'+esc(b.notes)+'</p>'+
-   (l?'<p class="lock">🔒 Paid - <a href="#" onclick="go(\'me\');return false">see plans</a></p>':'<a href="'+esc(b.source_url)+'" target="_blank" rel="noopener">Open the free book</a> <span class="q">· audio summary coming soon</span>')+'</div>'}
+   (l?'<p class="lock">🔒 Paid - <a href="#" onclick="go(\'me\');return false">see plans</a></p>':'<a href="'+esc(b.source_url)+'" target="_blank" rel="noopener">Open the book</a> <span class="q">· audio summary coming soon</span>')+'</div>'}
 
 function resources(){
   var st=get('state','Texas'), rows=LIB.states.filter(function(r){return r.state===st});
@@ -188,7 +192,7 @@ function ask(){
 function me(){
   var p=get('profile',null);
   return '<h1>Me</h1>'+
-   '<div class="card"><h2>K-Saju Plus</h2><p>Every category and book, audio summaries, unlimited guide questions, full chart and weekly forecast.</p><p class="q">Price coming soon.</p><button class="pri" disabled>Coming soon</button></div>'+
+   '<div class="card"><h2>K-Saju Plus</h2><p>Every category and book, audio summaries, unlimited guide questions, full chart and weekly forecast.</p>'+(PAID?'<p class="lock">✓ You are previewing the Paid version.</p>':'<p class="q">Price coming soon.</p><button class="pri" onclick="setPaid(true)">Preview Paid</button>')+'</div>'+
    (p?'<div class="card"><p>Birth date: '+esc(p.bd)+'</p><p>Your element: <b style="color:'+COL[yearEl(p.bd)]+'">'+yearEl(p.bd)+'</b></p><button onclick="if(confirm(\'Delete your birth data from this phone?\')){localStorage.clear();location.reload()}">Delete my data</button></div>':'')+
    '<div class="card"><h2>Disclaimer</h2><p class="q">K-Saju is for education and reflection only. It is not medical, mental health, or legal advice, and it does not diagnose or treat any condition. Always talk to a licensed professional before changing your health routine, diet, or medications. Saju readings are for reflection and entertainment. In an emergency, call 911. For crisis support, call or text 988.</p></div>'+
    '<div class="card"><h2>Privacy</h2><p class="q">Your birth date and city stay on this phone. We don\'t sell your data. You can delete everything above at any time.</p></div>'+
@@ -196,10 +200,12 @@ function me(){
 }
 
 var TABS=[['home','☀️','Today',home],['library','📚','Library',library],['resources','🧭','Help',resources],['guide','💬','Guide',guide],['me','👤','Me',me]];
+function setPaid(v){PAID=v;put('paid',v);render()}
 function go(t){TAB=t;put('tab',t);OPEN_CAT=null;render();scrollTo(0,0)}
 function render(){
   var t=TABS.find(function(x){return x[0]===TAB})||TABS[0];
-  document.getElementById('app').innerHTML=t[3]();
+  var bar='<div class="pv">Preview<div class="seg"><button class="'+(PAID?'':'on')+'" onclick="setPaid(false)">Free</button><button class="'+(PAID?'on':'')+'" onclick="setPaid(true)">Paid</button></div></div>';
+  document.getElementById('app').innerHTML=bar+t[3]();
   document.getElementById('nav').innerHTML=TABS.map(function(x){return '<button class="'+(x[0]===TAB?'on':'')+'" onclick="go(\''+x[0]+'\')"><span>'+x[1]+'</span>'+x[2]+'</button>'}).join('');
 }
 render(); syncNow();
