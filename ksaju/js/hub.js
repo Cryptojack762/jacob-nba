@@ -169,7 +169,7 @@ async function ask() {
   V.innerHTML = `<a class="back" href="#me">← Me</a><h1 class="pg">Ask Haneul</h1>
     <p class="lead">Ask about your chart: love, work, money, timing. Haneul answers from your own four pillars.</p>
     ${chart ? '' : '<div class="card"><a class="btn" href="index.html">Get my free reading first</a></div>'}
-    <div id="chat">${log.map(m => `<div class="card ${m.who === 'h' ? 'h' : 'u'}"><div class="kick">${m.who === 'h' ? 'Haneul' : 'You'}</div><p>${esc(m.t).replace(/\n/g, '<br>')}</p></div>`).join('')}</div>
+    <div id="chat">${log.map(m => `<div class="card ${m.who === 'h' ? 'h' : 'u'}"><div class="kick">${m.who === 'h' ? 'Haneul' : 'You'}</div><p>${esc(m.t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>')}</p></div>`).join('')}</div>
     <div class="card"><textarea id="q" rows="3" placeholder="What do you want to ask?" ${chart ? '' : 'disabled'}></textarea>
     <button class="btn" id="send" type="button" ${chart ? '' : 'disabled'}>${used < free ? 'Ask (free)' : 'Ask'}</button>
     <div class="micro" id="amsg">${used < free ? `${free - used} free answer left` : 'Your free answer is used. More answers open at launch.'}</div></div>
