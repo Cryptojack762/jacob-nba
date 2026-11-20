@@ -298,7 +298,15 @@ async function me(sub) {
     <input id="dtime" type="time" value="${esc(ls.get('ks_time', '08:00'))}" style="width:130px"></div><button class="btn block" id="dsub" type="button">Email it to me daily</button><p class="muted" id="dmsg">Free. Unsubscribe anytime.</p>
     ${soon('Phone notifications', 'Phone reminders are coming soon.')}</div>
   <div class="card ink"><div class="kick">Readings</div><a class="btn ghost block" href="../ksaju/sample-report.html">See a sample report</a>
-    ${soon(`${SITE.product.name} · ${SITE.product.price}`, 'Opens at launch.')}${(SITE.shop || []).map(p => soon(`${p.name} · ${p.price}`, p.note || 'Opens at launch.')).join('')}</div>
+    ${SITE.mode === 'live' && c ? `<a class="btn block" href="../ksaju/index.html#mine">${esc(SITE.product.name)} · ${esc(SITE.product.price)}</a>` : soon(`${SITE.product.name} · ${SITE.product.price}`, 'Opens at launch.')}
+    ${(SITE.shop || []).map(p => soon(`${p.name} · ${p.price}`, p.note || 'Opens at launch.')).join('')}
+    ${SITE.mode === 'live' ? '' : `<div class="row" style="margin-top:12px"><input id="wem" type="email" placeholder="you@email.com" value="${esc(ls.get('ks_email', ''))}" style="flex:1;min-width:170px"><button class="btn" id="wl" type="button">Notify me at launch</button></div><p class="muted" id="wmsg">Get first access to paid readings. One email at launch.</p>`}</div>
+  <div class="card ink"><div class="kick">Coming soon</div>
+    ${soon('Friends: see and compare your friends\' Day Masters', 'Friends opens after launch.')}
+    ${soon('Holiday readings: Seollal and Chuseok', 'Holiday readings open before Lunar New Year.')}
+    ${soon('Narrated meditations with music', 'Narrated audio is coming soon.')}
+    ${soon('Back up to my account', 'Accounts are coming soon. For now everything stays on this phone.')}
+    <a class="btn ghost block" href="#library/korean_holidays">Korean holidays &amp; customs (Library)</a></div>
   <div class="card ink"><div class="kick">Help near you</div><p>In a crisis call or text <a href="tel:988">988</a>. In danger call <a href="tel:911">911</a>. Food, housing and services: <a href="tel:211">211</a>.</p>
     <select id="st"><option value="">Pick your state…</option>${states.map(s => `<option>${esc(s)}</option>`).join('')}</select><div id="stout"></div></div>
   <div class="card ink"><div class="kick">Settings</div><div class="seg">${['auto', 'light', 'dark'].map(t => `<button class="btn ghost ${ls.get('g_theme', 'auto') === t ? 'on' : ''}" data-th="${t}" type="button">${t[0].toUpperCase() + t.slice(1)}</button>`).join('')}</div>
@@ -308,6 +316,14 @@ async function me(sub) {
   V.querySelectorAll('[data-th]').forEach(b => b.onclick = () => { ls.set('g_theme', b.dataset.th); applyTheme(); me(); });
   $('#wipe').onclick = () => { if (!$('#wipe').dataset.sure) { $('#wipe').dataset.sure = 1; $('#wipe').textContent = 'Tap again to clear everything'; return; }
     ['ksaju_chart', 'ks_streak', 'ks_chat', 'ks_email', 'ks_time', 'g_journal', 'g_q'].forEach(k => { try { localStorage.removeItem(k); } catch (_) {} }); location.hash = '#start'; };
+  const wl = $('#wl'); if (wl) wl.onclick = async () => {
+    const em = $('#wem').value.trim(), msg = $('#wmsg');
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { msg.textContent = 'Please enter a real email.'; return; }
+    wl.disabled = true; ls.set('ks_email', em);
+    try { const r = await api({ action: 'waitlist', email: em, dm: c?.dayMaster?.label || '', title: c?.dayMaster?.title || '', element: c?.elements?.strongest || '', src: 'giun' });
+      msg.textContent = r.ok ? (r.dup ? 'You\'re already on the list.' : 'You\'re on the list. We\'ll email you at launch.') : 'Could not add you. Try again soon.'; } catch (_) { msg.textContent = 'Could not reach the server. Try again soon.'; }
+    wl.disabled = false;
+  };
   $('#dsub').onclick = async () => {
     const em = $('#dem').value.trim(), msg = $('#dmsg');
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { msg.textContent = 'Please enter a real email.'; return; }

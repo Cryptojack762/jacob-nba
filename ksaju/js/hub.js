@@ -148,6 +148,7 @@ async function me() {
     <a class="btn ghost" href="#ask">Ask Haneul (first answer free)</a>
     ${F.fullReport && SITE.mode === 'live' ? `<a class="btn" href="index.html#mine">${esc(SITE.product.name)} · ${esc(SITE.product.price)}</a>` : soon(`Full report · ${SITE.product.price}`, 'The full report opens at launch.')}
     <a class="btn ghost" href="sample-report.html">See a sample report</a>
+    <a class="btn ghost" href="../giun/">Daily ritual app: Giun (기운)</a>
     ${F.cloudSync ? '' : soon('Back up to my account', 'Accounts are coming soon. For now everything stays on this phone.')}
     <button class="btn ghost" id="share2" type="button">Share K-Saju</button>
   </div>
