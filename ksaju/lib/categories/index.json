@@ -117,7 +117,13 @@
   "slug": "psychology",
   "name": "Psychology",
   "kind": "wellness",
-  "count": 12
+  "count": 20
+ },
+ {
+  "slug": "relationships_family",
+  "name": "Relationships & Family",
+  "kind": "wellness",
+  "count": 10
  },
  {
   "slug": "sleep",

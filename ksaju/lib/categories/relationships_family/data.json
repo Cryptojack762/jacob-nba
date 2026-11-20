@@ -1,0 +1,88 @@
+{
+ "slug": "relationships_family",
+ "name": "Relationships & Family",
+ "kind": "wellness",
+ "sheet_tab": "LIB_Relationships_Family",
+ "entries": [
+  {
+   "id": "relationships_family-01",
+   "title": "When you feel flooded",
+   "content": "In a heated argument the body can 'flood' (heart rate up, hard to listen). An agreed break of 20 to 30 minutes lets the nervous system calm down before talking again.",
+   "source": "The Gottman Institute; Emotional Flooding - Connected Couples",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "relationships_family-02",
+   "title": "The four warning signs",
+   "content": "Criticism, contempt, defensiveness and stonewalling strongly predict relationship trouble. Their antidotes: a gentle start, appreciation, taking responsibility, and self-soothing.",
+   "source": "The Gottman Institute: The Four Horsemen",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "relationships_family-03",
+   "title": "Start soft",
+   "content": "Opening with blame makes people feel attacked and shut down. Describe the situation calmly with an 'I' statement and say what you need: 'I feel hurt when plans change last minute; can we decide by noon?'",
+   "source": "How To Repair Inevitable Relationship Conflict - Retune Life; Gottman research",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "relationships_family-04",
+   "title": "Attachment styles",
+   "content": "Adult attachment is measured on two scales: anxiety (fear of rejection) and avoidance (discomfort with closeness). Low on both feels 'secure' and handles stress more easily.",
+   "source": "Attachment theory, individual psychodynamics, and relationship functioning",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "relationships_family-05",
+   "title": "Calming anxious attachment",
+   "content": "If you tend to panic when someone seems distant, pause and check the facts before reacting. Separating what happened from the scary story helps.",
+   "source": "Anxious Attachment Triggers - Simply Psychology",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "relationships_family-06",
+   "title": "Mindfulness in relationships",
+   "content": "Attachment anxiety can make it hard to stay present with a partner. Practicing mindfulness together is linked with higher relationship satisfaction.",
+   "source": "Attachment insecurity and relationship satisfaction - Frontiers",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "relationships_family-07",
+   "title": "Appreciation balances criticism",
+   "content": "Couples who stay happy share far more appreciation than criticism. Name one thing you value about the other person each day.",
+   "source": "The Gottman Institute: Four Horsemen antidotes",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "relationships_family-08",
+   "title": "Family support builds kindness",
+   "content": "People who grew up with warm, responsive caregivers tend to treat themselves and others more kindly as adults.",
+   "source": "A meta-analysis of self-compassion and attachment in adults - Cardiff University",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "relationships_family-09",
+   "title": "Calm parents, calm kids",
+   "content": "Parents who feel secure are more attuned to their children's feelings. Consistent comfort teaches kids how to calm their own emotions.",
+   "source": "Attachment theory, individual psychodynamics, and relationship functioning",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "relationships_family-10",
+   "title": "Ask for support",
+   "content": "When family duties feel heavy, reaching out for emotional support is a strength, not a weakness. Shared stress is lighter stress.",
+   "source": "Self-compassion and attachment research",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  }
+ ]
+}

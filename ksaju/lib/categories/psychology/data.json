@@ -7,96 +7,160 @@
   {
    "id": "psychology-01",
    "title": "Why readings feel so accurate",
-   "content": "The Barnum (or Forer) effect: people rate general statements like 'you can be hard on yourself' as a perfect fit. In 1949 psychologist Bertram Forer gave students the same 'personal' profile and they rated it 4.3 out of 5. Use saju as a mirror for reflection, not proof.",
+   "content": "The Barnum (Forer) effect: people rate vague statements like 'you can be hard on yourself' as a perfect fit, especially from a trusted source. In 1949 Forer gave students the same 'personal' profile and they rated it 4.3 out of 5. Use saju as a mirror for reflection, not proof.",
    "source": "Forer (1949), Journal of Abnormal and Social Psychology; Barnum effect - Wikipedia",
    "label": "Evidence summary - education only",
    "verified": "Y"
   },
   {
    "id": "psychology-02",
-   "title": "Habits take about 66 days",
-   "content": "A University College London study followed people building a new habit. On average it took 66 days to feel automatic, with a range of 18 to 254 days. Missing one day didn't ruin progress.",
-   "source": "Lally et al. (2010), European Journal of Social Psychology",
+   "title": "Catch, check, change (reframing)",
+   "content": "A core tool from cognitive behavioral therapy (CBT): catch the thought, check the evidence for and against it, then change it to something more balanced. Studies link this to fewer anxiety and depression symptoms.",
+   "source": "APA: What is CBT?; Cognitive Restructuring and Psychotherapy Outcome: A Meta-Analytic Review - PMC",
    "label": "Evidence summary - education only",
    "verified": "Y"
   },
   {
    "id": "psychology-03",
-   "title": "Gratitude and mood",
-   "content": "In a 10-week study, people who wrote down things they were grateful for each week felt more positive about their lives than people who listed hassles. Small and regular beats big and rare.",
-   "source": "Emmons & McCullough (2003), Journal of Personality and Social Psychology",
+   "title": "CBT for work stress",
+   "content": "Reviews find CBT skills help with job stress more than general workplace programs. Reframing stressful thoughts helps people feel back in control and lowers burnout.",
+   "source": "The Efficacy of Cognitive Behavioral Therapy: A Review of Meta-analyses - PMC",
    "label": "Evidence summary - education only",
    "verified": "Y"
   },
   {
    "id": "psychology-04",
-   "title": "Catch, check, change (reframing)",
-   "content": "A core tool from cognitive behavioral therapy: catch the thought ('they ignored me, they hate me'), check the evidence for and against it, then change it to something more balanced ('they might be busy').",
-   "source": "American Psychological Association: What is cognitive behavioral therapy?",
+   "title": "Taming imposter feelings",
+   "content": "Stress can make one mistake feel like proof you don't belong. Write the thought down, list evidence for and against it, and talk to yourself like you would a coworker.",
+   "source": "Workbook II: Understanding Cognitive Distortions & Imposter Fears",
    "label": "Evidence summary - education only",
    "verified": "Y"
   },
   {
    "id": "psychology-05",
-   "title": "Self-compassion",
-   "content": "Research by Kristin Neff and others links treating yourself like a good friend would with less anxiety and more motivation, not less. Being harsh with yourself tends to backfire.",
-   "source": "Neff (2003), Self and Identity; self-compassion research overview",
+   "title": "Self-compassion, three parts",
+   "content": "Self-compassion means kindness instead of self-criticism, remembering everyone struggles, and noticing pain without drowning in it. Research links it to less anxiety and more motivation, not less.",
+   "source": "Neff (2003), Self and Identity; Self-compassion writing RCT",
    "label": "Evidence summary - education only",
    "verified": "Y"
   },
   {
    "id": "psychology-06",
-   "title": "When you feel flooded",
-   "content": "In heated arguments the body can 'flood' with stress, making it hard to listen. Relationship researcher John Gottman recommends a break of at least 20 minutes to calm down before talking again.",
-   "source": "The Gottman Institute: flooding and taking breaks",
+   "title": "Write kindly to yourself",
+   "content": "Writing about a hard event in a kind, accepting way for about 15 minutes improved coping and lowered depression in a randomized trial, more than trying to boost self-esteem.",
+   "source": "A Randomized Controlled Trial of a Self-Compassion Writing Intervention for Adults With Mental Illness",
    "label": "Evidence summary - education only",
    "verified": "Y"
   },
   {
    "id": "psychology-07",
-   "title": "Say it with 'I' statements",
-   "content": "'I feel hurt when plans change last minute, because I was looking forward to it' lands better than 'you always cancel'. It names your feeling and need without blaming.",
-   "source": "Communication research summaries; APA relationship tips",
+   "title": "Short daily practice works",
+   "content": "A four-week online program of short mindfulness and self-compassion exercises lowered daily stress and anxiety. Guided audio helped people calm the body's alarm system.",
+   "source": "Mind-OP online mindfulness and self-compassion program study",
    "label": "Evidence summary - education only",
    "verified": "Y"
   },
   {
    "id": "psychology-08",
-   "title": "The four relationship warning signs",
-   "content": "Gottman's research names four patterns that predict trouble: criticism, contempt, defensiveness and stonewalling. Each has an antidote, like a gentle start-up instead of criticism.",
-   "source": "The Gottman Institute: The Four Horsemen",
+   "title": "Gratitude and mood",
+   "content": "Keeping a gratitude journal raised life satisfaction and lowered low mood in student and adult trials. Small and regular beats big and rare.",
+   "source": "Gratitude journaling intervention study; Emmons & McCullough (2003)",
    "label": "Evidence summary - education only",
    "verified": "Y"
   },
   {
    "id": "psychology-09",
-   "title": "Personality science vs saju",
-   "content": "Psychologists measure personality with the Big Five: openness, conscientiousness, extraversion, agreeableness and neuroticism. These are tested with questionnaires; birth charts are a cultural tradition and haven't been shown to predict personality.",
-   "source": "American Psychological Association; Carlson (1985), Nature",
+   "title": "Evening gratitude list",
+   "content": "Writing down things you're grateful for before bed for two weeks improved happiness and mood in a randomized trial. Giun's evening journal is built on this.",
+   "source": "Positive Psychology and Gratitude Interventions: A Randomized Clinical Trial - Frontiers",
    "label": "Evidence summary - education only",
    "verified": "Y"
   },
   {
    "id": "psychology-10",
-   "title": "Sleep and mood",
-   "content": "Short sleep makes emotions feel bigger and patience shorter the next day. A regular sleep time is one of the simplest mood tools there is.",
-   "source": "NIH NHLBI: Sleep deprivation and deficiency",
+   "title": "Money stress and attention",
+   "content": "Dwelling on money worries raises stress, and low income itself is a real strain. Noticing small good moments each day can buffer some of that stress while you work on the practical side.",
+   "source": "Gratitude interventions RCT - Frontiers; Self-compassion writing RCT",
    "label": "Evidence summary - education only",
    "verified": "Y"
   },
   {
    "id": "psychology-11",
-   "title": "Stress is a signal, not a verdict",
-   "content": "Studies suggest that seeing stress as your body getting ready to act, rather than as harm, can improve how you perform under pressure.",
-   "source": "Jamieson et al. (2012), Journal of Experimental Psychology: General",
+   "title": "Better sleep with CBT-I",
+   "content": "CBT for insomnia beats simple relaxation for falling and staying asleep. It is the first treatment many sleep experts recommend.",
+   "source": "The Efficacy of Cognitive Behavioral Therapy: A Review of Meta-analyses - PMC",
    "label": "Evidence summary - education only",
    "verified": "Y"
   },
   {
    "id": "psychology-12",
+   "title": "Keep the bed for sleep",
+   "content": "'Stimulus control' means using the bed only for sleep: phone out, get up if you can't sleep after a while. It retrains the brain to link bed with rest.",
+   "source": "CBT Techniques & Interventions - CBT Los Angeles",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "psychology-13",
+   "title": "Sleep and mood",
+   "content": "Short sleep makes emotions feel bigger and patience shorter the next day. A steady bedtime is one of the simplest mood tools.",
+   "source": "NIH NHLBI: Sleep deprivation and deficiency",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "psychology-14",
+   "title": "Plan small good things",
+   "content": "'Activity scheduling' means putting small rewarding activities on your calendar instead of waiting for motivation. Doing them lifts mood and rebuilds routine.",
+   "source": "Mechanisms of change in CBT: implications for clinical practice",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "psychology-15",
+   "title": "Five-minute start",
+   "content": "Breaking a big task into tiny steps ('shaping') beats procrastination. Start with five focused minutes; early wins build momentum.",
+   "source": "CBT Techniques & Interventions - CBT Los Angeles",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "psychology-16",
+   "title": "Habits take about 66 days",
+   "content": "In a UCL study, new habits took 66 days on average to feel automatic (range 18 to 254). Missing a day didn't ruin progress.",
+   "source": "Lally et al. (2010), European Journal of Social Psychology",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "psychology-17",
+   "title": "Reframe early, don't bottle up",
+   "content": "Changing how you see a situation before the feeling peaks works better than pushing feelings down afterward. Suppression tends to backfire.",
+   "source": "Neuroscience of human social interactions and adult attachment style; emotion regulation research",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "psychology-18",
+   "title": "Stress is a signal",
+   "content": "Seeing stress as your body getting ready to act, rather than as harm, can improve how people perform under pressure.",
+   "source": "Jamieson et al. (2012), Journal of Experimental Psychology: General",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "psychology-19",
+   "title": "Personality science vs saju",
+   "content": "Psychologists measure personality with the Big Five (openness, conscientiousness, extraversion, agreeableness, neuroticism). Birth charts are a cultural tradition and haven't been shown to predict personality.",
+   "source": "APA; Carlson (1985), Nature",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "psychology-20",
    "title": "When to talk to a professional",
    "content": "If low mood, worry or anger lasts more than two weeks, gets in the way of work or relationships, or you feel unsafe, talk to a doctor or counselor. In a crisis call or text 988 (US).",
-   "source": "NIMH: Tips for talking with a health care provider; 988 Suicide & Crisis Lifeline",
+   "source": "NIMH; 988 Suicide & Crisis Lifeline",
    "label": "Evidence summary - education only",
    "verified": "Y"
   }
