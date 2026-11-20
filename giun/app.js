@@ -318,6 +318,7 @@ function ask() {
     <div class="card"><textarea id="q" rows="3" placeholder="What's on your mind?" ${c ? '' : 'disabled'}></textarea>
     <button class="btn block" id="send" type="button" ${c ? '' : 'disabled'}>${used < free ? 'Ask Haneul (free)' : 'Ask Haneul'}</button>
     <p class="muted" id="amsg">${used < free ? `${free - used} free answer left` : 'Your free answer is used. More answers open at launch.'}</p></div>
+    <a class="tile ink" href="#ask/mind" style="min-height:0;margin-bottom:12px;border-left:5px solid var(--accent)"><span class="glyph">心</span><b>Talk it through</b><span>Something on your heart? Chart energy + real psychology</span></a>
     <div class="grid2"><a class="tile" href="../ksaju/compat.html"><span class="ic">❤</span><b>Compatibility</b><span>Free score with anyone</span></a>
     <a class="tile" href="#library/love_saju"><span class="ic">💌</span><b>Love & saju</b><span>Library</span></a></div>`;
   V.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { $('#q').value = b.dataset.q; $('#q').focus(); });
@@ -330,6 +331,96 @@ function ask() {
     try { const r = await api({ action: 'ask', question: q.slice(0, 600), chart: c, history: log.slice(-6), device: dev() });
       if (!r.ok) throw new Error(r.err); log.push({ who: 'u', t: q }, { who: 'h', t: r.answer }); ls.set('ks_chat', log); ask();
     } catch (e) { m.textContent = e.message === 'limit' ? 'Your free answer is used. More answers open at launch.' : 'Haneul is resting. Try again soon.'; send.disabled = false; }
+  };
+}
+// ---------- TALK IT THROUGH: chart energy as a lens + real psychology tools ----------
+// Element-emotion pairs come from traditional East Asian medicine (wu xing); the tools come from psychology research (see Library > Psychology).
+const EMO = {
+  Wood: { feel: 'anger and frustration', tool: 'Take a 20-minute cool-down before you answer. Your body needs that long to settle after it floods.', crystal: ['Green aventurine', 'green'] },
+  Fire: { feel: 'restlessness and overexcitement', tool: 'Ground yourself: slow breaths, feet on the floor, and an early night. Short sleep makes every feeling louder.', crystal: ['Carnelian', 'orange-red'] },
+  Earth: { feel: 'worry and overthinking', tool: 'Check the thought: write the worry down, then the evidence for it and against it.', crystal: ['Citrine', 'golden yellow'] },
+  Metal: { feel: 'grief and letting go', tool: 'Write to yourself kindly for 10 to 15 minutes about what you lost, like you would to a friend.', crystal: ['Clear quartz', 'clear'] },
+  Water: { feel: 'fear and insecurity', tool: 'Slow breathing with a long exhale, then one small brave step you can do today.', crystal: ['Black tourmaline', 'black'] } };
+const TROUBLE = {
+  relationship: { label: 'Relationship', lib: 'relationships_family',
+    tools: [['Take a real break', 'If your heart is racing, agree on a 20 to 30 minute break, then come back. (Gottman research on flooding)'],
+            ['Start soft', 'Open with "I feel ___ when ___, and I need ___" instead of "you always". (Softened start-up)']],
+    qs: ['Did you pause when you felt flooded, or answer right away?', 'Did you start with an "I" statement or with blame?', 'Did you tell them one thing you appreciate about them lately?'],
+    step: 'Send one calm message that names your feeling and one small request.' },
+  work: { label: 'Work', lib: 'psychology',
+    tools: [['Catch, check, change', 'Write the stressful thought, the evidence for and against it, then a fairer version. (CBT reframing)'],
+            ['Five-minute start', 'Break the task into the smallest next step and do it for five minutes. (Shaping)']],
+    qs: ['Did you write the worry down, or let it loop in your head?', 'Did you separate what you control from what you don\'t?', 'Did you talk to yourself the way you\'d talk to a coworker?'],
+    step: 'Pick the one task that matters most tomorrow and write its first five-minute step.' },
+  family: { label: 'Family', lib: 'relationships_family',
+    tools: [['Calm first, talk second', 'Your calm helps theirs. Slow your breathing before you respond. (Co-regulation)'],
+            ['Ask for support', 'When family duties pile up, ask one person for one specific kind of help.']],
+    qs: ['Did you give them your full attention when they were upset?', 'Did you stay calm, or match their energy?', 'Did you ask anyone for support for yourself?'],
+    step: 'Choose one person to check in with this week, just to listen.' },
+  money: { label: 'Money', lib: 'psychology',
+    tools: [['Write it out, kindly', 'Spend 15 minutes writing about your money stress without judging yourself. (Self-compassion writing trial)'],
+            ['Plan, then notice the good', 'Do one practical money task, then note three small good things from today. (Gratitude research)']],
+    qs: ['Did you look at the actual numbers, or just the fear?', 'Did you remember money stress is common and not a measure of your worth?', 'Did you do one small practical step today?'],
+    step: 'List your next 3 bills with dates, then pick one small cost to cut this week. For big decisions, talk to a financial counselor.' },
+  self: { label: 'Me / my mood', lib: 'psychology',
+    tools: [['Self-compassion break', 'Name it ("this is hard"), remember others feel this too, and put a hand on your chest and say one kind thing.'],
+            ['Plan one good thing', 'Schedule one small enjoyable activity instead of waiting to feel like it. (Activity scheduling)']],
+    qs: ['Did you sleep enough last night?', 'Did you treat a mistake as a mistake, or as proof something is wrong with you?', 'Did you do one thing today just because it\'s good for you?'],
+    step: 'Tonight, write three small things that went okay today.' } };
+const MOON_NOTE = m => m.name === 'Full moon' ? 'Full moon: many traditions treat it as a time to release and check in. Big hospital studies found no real change in behavior at the full moon, so use it as a reminder to pause, not an explanation.'
+  : m.name === 'New moon' ? 'New moon: a traditional time to set a fresh intention.' : `${m.name}: ${m.note}`;
+function lens(c, tp, m) {
+  const out = [], r = rel(c.dayMaster.element, tp.el), l = luck(c, tp);
+  out.push(`<b>${GOD[r][0]}.</b> Today's ${tp.el} meets your ${c.dayMaster.element}. ${GOD[r][1]}`);
+  if (l?.tone === 'care') out.push(`<b>${l.head}.</b> ${l.text} Tradition reads friction as louder today, which is a reason to slow down, not a reason things went wrong.`);
+  else if (l) out.push(`<b>${l.head}.</b> ${l.text}`);
+  out.push(`<b>Today's element, ${tp.el},</b> is linked in traditional medicine with ${EMO[tp.el].feel}. If that's what you're feeling, it's a common day for it.`);
+  const miss = c.elements?.missing || []; if (miss.length) out.push(`<b>Your growth edge:</b> your chart is light on ${miss.join(' and ')}, linked with ${miss.map(x => EMO[x]?.feel).filter(Boolean).join(' and ')}.`);
+  out.push(MOON_NOTE(m));
+  return out;
+}
+function mind() {
+  const c = chart(); setTheme(c?.dayMaster?.element || 'Water');
+  const pick = ls.get('g_trouble', 'relationship'), draft = ls.get('g_trouble_txt', '');
+  V.innerHTML = `<a class="back" href="#ask">← Ask</a><section class="hero ink"><div class="date">Talk it through</div><h1 class="brush" style="font-size:46px">What's on your heart?</h1>
+    <p>Your chart gives the "why today". Psychology gives the "what to do". Private, on your phone.</p></section>
+    ${c ? '' : needChart()}
+    <div class="card frame ink"><div class="kick">It's about…</div><div class="chips">${Object.entries(TROUBLE).map(([k, t]) => `<button class="chip ${k === pick ? 'solid' : ''}" data-t="${k}" type="button">${t.label}</button>`).join('')}</div>
+      <div style="position:relative"><textarea id="tt" rows="4" placeholder="What happened? Type or tap the mic.">${esc(draft)}</textarea>
+      <button class="chip" id="mic" type="button" style="position:absolute;right:8px;bottom:10px" aria-label="Speak">🎤</button></div>
+      <button class="btn block" id="go" type="button" ${c ? '' : 'disabled'}>Help me see it</button><p class="muted" id="tmsg">In a crisis call or text <a href="tel:988">988</a>.</p></div>
+    <div id="out"></div>`;
+  V.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { ls.set('g_trouble', b.dataset.t); ls.set('g_trouble_txt', $('#tt').value); mind(); });
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition, mic = $('#mic');
+  if (!SR) mic.style.display = 'none'; else mic.onclick = () => { const r = new SR(); r.lang = 'en-US'; r.interimResults = false; mic.textContent = '…';
+    r.onresult = e => { $('#tt').value = ($('#tt').value + ' ' + e.results[0][0].transcript).trim(); }; r.onend = () => { mic.textContent = '🎤'; }; r.onerror = () => { mic.textContent = '🎤'; }; r.start(); };
+  $('#go').onclick = () => {
+    const txt = $('#tt').value.trim(), msg = $('#tmsg'); ls.set('g_trouble_txt', txt);
+    if (/suicid|kill (my ?self|me|him|her|them)|want to die|self.?harm|hurt (my ?self|me)|overdos|not safe|being (abused|hurt|hit)|he hits|she hits/i.test(txt)) {
+      $('#out').innerHTML = `<div class="card acc"><h2>You deserve support right now</h2><p>Please call or text <a href="tel:988">988</a> (Suicide & Crisis Lifeline) or call <a href="tel:911">911</a> if you're in danger. For abuse: National Domestic Violence Hotline <a href="tel:18007997233">1-800-799-7233</a>.</p></div>`; return; }
+    const t = TROUBLE[ls.get('g_trouble', 'relationship')], tp = dayPillar(), m = moon(), L = lens(c, tp, m), dm = EMO[c.dayMaster.element], cr = EMO[tp.el].crystal;
+    $('#out').innerHTML = `
+      <div class="card frame ink"><div class="kick">1 · Today's energy lens (tradition, for reflection)</div>${L.map(x => `<p>${x}</p>`).join('')}</div>
+      <div class="card frame ink"><div class="kick">2 · What psychology says</div>${t.tools.map(([h, d]) => `<p><b>${h}.</b> ${d}</p>`).join('')}
+        <p><b>For your ${c.dayMaster.element} nature:</b> ${dm.tool}</p><a class="muted" href="#library/${t.lib}">Read the research →</a></div>
+      <div class="card frame ink"><div class="kick">3 · Ask yourself</div>${t.qs.map(q => `<label style="display:flex;gap:10px;align-items:flex-start;font-weight:400"><input type="checkbox" style="width:auto;margin-top:4px"> ${q}</label>`).join('')}</div>
+      <div class="card acc frame ink"><div class="kick">4 · One small next step</div><p>${t.step}</p>
+        <p class="muted">Ritual idea: hold a ${cr[1]} stone like ${cr[0].toLowerCase()} while you do it, as a reminder of your intention. Crystals are tradition; studies found the calm comes from the ritual itself.</p></div>
+      <button class="btn block" id="hn" type="button">Talk it through with Haneul</button><p class="muted" id="hmsg"></p><div id="hans"></div>
+      <p class="muted">Not therapy. If this feels heavy for more than two weeks, a counselor can help. In a crisis call or text 988.</p>`;
+    $('#hn').onclick = async () => {
+      const hm = $('#hmsg'), log = ls.get('ks_chat', []), used = log.filter(x => x.who === 'h').length;
+      if (!txt) { hm.textContent = 'Write a few words about what happened first.'; return; }
+      if (used >= (SITE.chatFree ?? 1) && !SITE.features?.chatCredits) { hm.textContent = 'Your free Haneul answer is used. More answers open at launch.'; return; }
+      $('#hn').disabled = true; hm.textContent = 'Haneul is listening…';
+      const q = `[Talk it through] Topic: ${t.label}. Today: ${tp.hanja} (${tp.yang ? 'yang' : 'yin'} ${tp.el} ${tp.animal}), ${GOD[rel(c.dayMaster.element, tp.el)][0]}${luck(c, tp) ? ', ' + luck(c, tp).head : ''}, ${m.name}. What happened: ${txt}`;
+      try { const r = await api({ action: 'ask', mode: 'mind', question: q.slice(0, 900), chart: c, history: [], device: dev() });
+        if (!r.ok) throw new Error(r.err); log.push({ who: 'u', t: txt }, { who: 'h', t: r.answer }); ls.set('ks_chat', log);
+        $('#hans').innerHTML = `<div class="msg h">${esc(r.answer).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>')}</div><button class="btn ghost" id="hsay" type="button">▶ Listen</button>`; hm.textContent = '';
+        $('#hsay').onclick = e => say(r.answer.replace(/\*\*/g, ''), e.currentTarget);
+      } catch (e) { hm.textContent = e.message === 'limit' ? 'Your free Haneul answer is used. More answers open at launch.' : 'Haneul is resting. Try again soon.'; $('#hn').disabled = false; }
+    };
+    $('#out').scrollIntoView({ behavior: 'smooth' });
   };
 }
 function dev() { let d = ls.get('ks_dev', ''); if (!d) { d = Math.random().toString(36).slice(2) + Date.now().toString(36); ls.set('ks_dev', d); } return d; }
@@ -474,7 +565,7 @@ function route() {
   const [t, a] = (location.hash.slice(1) || (chart() ? 'today' : 'start')).split('/');
   document.querySelectorAll('#tabs a').forEach(x => x.classList.toggle('on', x.dataset.t === t || (t === 'calendar' || t === 'card' || t === 'start') && x.dataset.t === 'me'));
   try { speechSynthesis?.cancel(); } catch (_) {} stopSound(); clearTimeout(breathTimer); clearInterval(medTimer); scrollTo(0, 0);
-  const fn = { today, ritual: () => ritual(a), library: () => library(a), ask, me: () => me(a), calendar, card, start }[t] || today;
+  const fn = { today, ritual: () => ritual(a), library: () => library(a), ask: () => a === 'mind' ? mind() : ask(), me: () => me(a), calendar, card, start }[t] || today;
   Promise.resolve(fn()).catch(e => { V.innerHTML = `<div class="card"><p>Something didn't load. Check your connection and try again.</p><p class="muted">${esc(e.message)}</p></div>`; });
 }
 applyTheme(); addEventListener('hashchange', route); route();

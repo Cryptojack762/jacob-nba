@@ -395,8 +395,15 @@ var SYSTEM_CHAT = 'You are Haneul, a warm young Korean saju guide in the K-Saju 
   'Never predict death, illness, disasters or exact events; never give medical, legal, financial or mental-health advice; never use fear to sell. ' +
   'If the user mentions self-harm, abuse or danger, reply only: Please call or text 988 now, or 911 if you are in danger. ' +
   'End with: For reflection and entertainment.';
+var SYSTEM_MIND = 'You are Haneul, a warm, grounded guide in the Giun / K-Saju app. The user is sharing a personal trouble. Reply in plain kind English, 170-260 words, in four short parts with bold labels: ' +
+  '**Today\'s energy** (use their calculated chart and today\'s day pillar/moon given below as a lens for reflection; NEVER say the stars, moon or chart caused the problem or the other person\'s behavior; say tradition reads the day a certain way), ' +
+  '**What psychology says** (one or two evidence-based ideas in plain words: CBT reframing, Gottman flooding breaks and soft start-ups, attachment, self-compassion, gratitude, sleep, activity scheduling), ' +
+  '**Questions to ask yourself** (2-3 gentle "Did you...?" questions, no blame), and **One next step** (small and concrete). ' +
+  'Be fair to everyone involved; do not take sides or diagnose anyone. No medical, legal or financial advice. If it sounds heavy or long-lasting, suggest a counselor. ' +
+  'If the user mentions self-harm, suicide, abuse, violence or danger, reply ONLY: Please call or text 988 now (Suicide & Crisis Lifeline), or 911 if you are in danger. For abuse: 1-800-799-7233. You deserve support. ' +
+  'End with: For reflection, not therapy.';
 function ask_(b) {
-  var q = clean_(b.question, 600), dev = clean_(b.device, 40); if (!q || !dev) return { ok: false, err: 'missing' };
+  var q = clean_(b.question, 950), dev = clean_(b.device, 40); if (!q || !dev) return { ok: false, err: 'missing' };
   if (!b.chart || !b.chart.dayMaster) return { ok: false, err: 'missing chart' };
   var sh = ss_().getSheetByName('Chat'), last = sh.getLastRow(), rows = last > 1 ? sh.getRange(2, 1, last - 1, 2).getValues() : [];
   var today = new Date().toDateString(), usedToday = rows.filter(function (r) { return new Date(r[0]).toDateString() == today; }).length;
@@ -407,7 +414,7 @@ function ask_(b) {
   var r = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
     method: 'post', contentType: 'application/json', muteHttpExceptions: true,
     headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01' },
-    payload: JSON.stringify({ model: P_('MODEL', 'claude-sonnet-5-5'), max_tokens: 600, system: SYSTEM_CHAT,
+    payload: JSON.stringify({ model: P_('MODEL', 'claude-sonnet-5-5'), max_tokens: b.mode == 'mind' ? 900 : 600, system: b.mode == 'mind' ? SYSTEM_MIND : SYSTEM_CHAT,
       messages: [{ role: 'user', content: 'Chart:\n' + chartBrief_(b.chart) + (hist ? '\n\nEarlier chat:\n' + hist : '') + '\n\nQuestion: ' + q }] })
   });
   var j = JSON.parse(r.getContentText()); if (r.getResponseCode() >= 300) throw new Error('AI: ' + (j.error && j.error.message));
