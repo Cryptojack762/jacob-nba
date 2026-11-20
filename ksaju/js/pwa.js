@@ -2,8 +2,12 @@
 // Chrome/Android/desktop: opens Chrome's install prompt. iPhone or no prompt: shows 2-step instructions.
 if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
 let deferred = null;
+window.__ksInstall = { prompt: false };   // diagnostics: true once Chrome says the app can be installed
 const installed = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-const iOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const UA = navigator.userAgent;
+const iOS = /iphone|ipad|ipod/i.test(UA) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const iOSChrome = iOS && /crios/i.test(UA), iOSOther = iOS && /fxios|edgios|opios/i.test(UA);
+const samsung = /samsungbrowser/i.test(UA);
 
 function css() {
   if (document.getElementById('ks-dl-css')) return;
@@ -17,15 +21,20 @@ function css() {
   document.head.appendChild(s);
 }
 function help() {
-  const steps = iOS
-    ? '<li>Tap the <b>Share</b> button (square with an arrow ⬆) at the bottom of Safari.</li><li>Tap <b>Add to Home Screen</b>, then <b>Add</b>.</li>'
-    : '<li>Tap Chrome\'s menu <b>⋮</b> (top right).</li><li>Tap <b>Install app</b> or <b>Add to Home screen</b>, then <b>Install</b>.</li>';
+  const steps = iOSChrome
+    ? '<li>Tap the <b>Share</b> button ⬆ in the address bar (top right).</li><li>Scroll down, tap <b>Add to Home Screen</b>, then <b>Add</b>.</li>'
+    : iOSOther ? '<li>Open this page in <b>Safari</b>.</li><li>Tap <b>Share</b> ⬆, then <b>Add to Home Screen</b>, then <b>Add</b>.</li>'
+    : iOS ? '<li>Tap the <b>Share</b> button ⬆ at the bottom of Safari.</li><li>Scroll down, tap <b>Add to Home Screen</b>, then <b>Add</b>.</li>'
+    : samsung ? '<li>Tap the menu <b>☰</b> (bottom right).</li><li>Tap <b>Add page to</b> → <b>Home screen</b>, then <b>Add</b>.</li>'
+    : '<li>Tap Chrome\'s menu <b>⋮</b> (top right).</li><li>Tap <b>Install app</b> (or <b>Add to Home screen</b> → <b>Install</b>).</li>';
   const d = document.createElement('div'); d.id = 'ks-dl-help';
-  d.innerHTML = `<div class="box" role="dialog" aria-label="Download K-Saju"><h3>Download K-Saju</h3><ol>${steps}</ol><p style="color:#C9C4DE;margin:0 0 14px">It opens like a normal app from your home screen. Free, no app store.</p><button type="button">Got it</button></div>`;
-  d.onclick = e => { if (e.target === d || e.target.tagName === 'BUTTON') d.remove(); };
-  document.body.appendChild(d);
+  d.innerHTML = `<div class="box" role="dialog" aria-label="Download K-Saju"><h3>Download K-Saju</h3><ol>${steps}</ol><p style="color:#C9C4DE;margin:0 0 14px">It opens like a normal app from your home screen. Free, no app store.</p><button type="button" id="ks-now" style="display:none;margin-bottom:10px">⬇ Install now</button><button type="button">Got it</button></div>`;
+  d.onclick = e => { if (e.target.id === 'ks-now') { d.remove(); download(); return; } if (e.target === d || e.target.tagName === 'BUTTON') d.remove(); };
+  document.body.appendChild(d); if (deferred) d.querySelector('#ks-now').style.display = 'block';
 }
 async function download() {
+  // Chrome sometimes announces "installable" a moment after the page loads: wait up to 1.5s for it.
+  if (!deferred && !iOS) await new Promise(r => { const t = setTimeout(r, 1500); addEventListener('ks-bip', () => { clearTimeout(t); r(); }, { once: true }); });
   if (deferred) { deferred.prompt(); const r = await deferred.userChoice; deferred = null; if (r.outcome === 'accepted') hide(); return; }
   help();
 }
@@ -38,6 +47,7 @@ function addButton() {
   if (head) { const share = head.querySelector('.share-top'); share ? head.insertBefore(b, share) : head.appendChild(b); if (share) share.style.marginLeft = '8px'; }
   else { const bar = document.createElement('div'); bar.className = 'ks-dl-bar'; bar.appendChild(b); document.body.prepend(bar); }
 }
-addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; });
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; window.__ksInstall.prompt = true;
+  dispatchEvent(new Event('ks-bip')); const now = document.getElementById('ks-now'); if (now) now.style.display = 'block'; });
 addEventListener('appinstalled', hide);
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addButton); else addButton();
