@@ -140,9 +140,13 @@ var MSG={
 function relation(me,day){var a=EL.indexOf(me),b=EL.indexOf(day);if(a==b)return'same';if((a+1)%5==b)return'feeds';if((b+1)%5==a)return'fed';if((a+2)%5==b)return'control';return'checked'}
 
 /* ---------- screens ---------- */
-var TAB=get('tab','home'), PAID=get('paid',false);
+var qp=new URLSearchParams(location.search);
+if(qp.get('preview')==='1') put('pv',true); if(qp.get('preview')==='0') put('pv',false);
+var PREVIEW=get('pv',false); // testers only; real users never see the switch and stay Free until payments exist
+var TAB=get('tab','home'), PAID=PREVIEW&&get('paid',false);
 function locked(tier){return tier==='Paid'&&!PAID}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+var HIST='<span class="tag" style="border-color:var(--earth);color:var(--earth)">Historical text · not medical advice</span>';
 var FOOT='<p class="foot">For education only. Not medical advice. Talk to a licensed professional.</p>';
 
 function home(){
@@ -155,7 +159,7 @@ function home(){
    '<div class="card"><span class="tag">Saju</span><h2><span class="dot" style="background:'+COL[dy]+'"></span>'+r[0]+'</h2>'+
    '<p>You are <span class="el" style="color:'+COL[me]+'">'+me+'</span>. Today is <span class="el" style="color:'+COL[dy]+'">'+dy+'</span>.</p><p>'+r[1]+'</p><p class="q" style="margin-top:6px">For reflection and entertainment.</p></div>'+
    '<div class="card"><span class="tag">Tip of the day</span><p style="margin-top:6px">'+esc(tip.tip_trick)+'</p></div>'+
-   (book?'<div class="card"><span class="tag">Read today</span><h2>'+esc(book.title)+'</h2><p class="q">'+esc(book.author)+'</p><p>'+esc(book.notes)+'</p><a href="'+esc(book.source_url)+'" target="_blank" rel="noopener">Open the free book</a></div>':'')+FOOT;
+   (book?'<div class="card"><span class="tag">Read today</span>'+HIST+'<h2>'+esc(book.title)+'</h2><p class="q">'+esc(book.author)+'</p><p>'+esc(book.notes)+'</p><a href="'+esc(book.source_url)+'" target="_blank" rel="noopener">Open the free book</a></div>':'')+FOOT;
 }
 function saveP(){var bd=document.getElementById('bd').value;if(!bd){alertBox('Pick your birth date first.');return}put('profile',{bd:bd,city:document.getElementById('bc').value});render()}
 function alertBox(t){var a=document.getElementById('app');a.insertAdjacentHTML('afterbegin','<div class="card" style="border-color:var(--fire)">'+esc(t)+'</div>')}
@@ -171,7 +175,7 @@ function library(){
    '</div>'+FOOT;
 }
 function bookCard(b){var l=locked(b.tier);
-  return '<div class="card"><h2>'+esc(b.title)+'</h2><p class="q">'+esc(b.author)+'</p><p>'+esc(b.notes)+'</p>'+
+  return '<div class="card">'+HIST+'<h2>'+esc(b.title)+'</h2><p class="q">'+esc(b.author)+'</p><p>'+esc(b.notes)+'</p>'+
    (l?'<p class="lock">🔒 Paid - <a href="#" onclick="go(\'me\');return false">see plans</a></p>':'<a href="'+esc(b.source_url)+'" target="_blank" rel="noopener">Open the book</a> <span class="q">· audio summary coming soon</span>')+'</div>'}
 
 function resources(){
@@ -186,22 +190,23 @@ function guide(){
   return '<h1>Ask the guide</h1><p class="q">Answers come only from the K-Saju library, with sources. Free questions left: '+left+'</p>'+
    '<div class="card"><input id="q" placeholder="e.g. tips for better sleep"><button class="pri" onclick="ask()">Ask</button></div><div id="ans"></div>'+FOOT;
 }
+var CRISIS=/suicid|kill (my ?self|me)|end (it|my life|the pain|things)|want to die|wanna die|better off dead|no reason to live|don.?t want to (live|be here|wake up)|can.?t go on|hurt (my ?self|me)|self.?harm|cut(ting)? myself|overdos|take all (my|the) pills|jump off|emergency|being (abused|hurt)|not safe/i;
 var BLOCK=/\b(dose|dosage|mg|pregnan|prescri|medication|symptom|pain|diagnos|suicid|kill myself|self.?harm|overdose|emergency)\b/i;
 function ask(){
   var q=document.getElementById('q').value.trim(), out=document.getElementById('ans'); if(!q) return;
-  if(/suicid|kill myself|self.?harm|overdose|emergency/i.test(q)){out.innerHTML='<div class="card" style="border-color:var(--fire)">Please call or text <a href="tel:988">988</a> now, or call <a href="tel:911">911</a> if you are in danger.</div>';return}
+  if(CRISIS.test(q)){out.innerHTML='<div class="card" style="border-color:var(--fire)">Please call or text <a href="tel:988">988</a> now, or call <a href="tel:911">911</a> if you are in danger.</div>';return}
   if(BLOCK.test(q)){out.innerHTML='<div class="card">I can\'t help with that. Please talk to a doctor or pharmacist.</div>';return}
   var used=get('qs',0); if(!PAID&&used>=FREE_Q){go('me');return} put('qs',used+1);
   var words=q.toLowerCase().split(/\W+/).filter(function(w){return w.length>3});
-  var pool=LIB.tips.map(function(t){return {id:t.id,text:t.tip_trick}}).concat(LIB.books.map(function(b){return {id:b.id,text:b.title+' - '+b.notes,url:b.source_url}}));
+  var pool=LIB.tips.map(function(t){return {id:t.id,text:t.tip_trick}}).concat(LIB.books.map(function(b){return {id:b.id,text:b.title+' - '+b.notes,url:b.source_url,hist:1}}));
   var hits=pool.map(function(p){var s=0;words.forEach(function(w){if(p.text.toLowerCase().indexOf(w.slice(0,5))>-1)s++});return {p:p,s:s}}).filter(function(x){return x.s>0}).sort(function(a,b){return b.s-a.s}).slice(0,3);
-  out.innerHTML=hits.length?'<div class="card">'+hits.map(function(h){return '<p>• '+esc(h.p.text)+' <span class="q">('+h.p.id+')</span></p>'}).join('')+'<p class="q" style="margin-top:8px">For education only. Not medical advice.</p></div>':'<div class="card">I don\'t have that in the library yet.</div>';
+  out.innerHTML=hits.length?'<div class="card">'+hits.map(function(h){return '<p>• '+esc(h.p.text)+' <span class="q">('+h.p.id+(h.p.hist?', historical text':'')+')</span></p>'}).join('')+'<p class="q" style="margin-top:8px">For education only. Not medical advice.</p></div>':'<div class="card">I don\'t have that in the library yet.</div>';
 }
 
 function me(){
   var p=get('profile',null);
   return '<h1>Me</h1>'+
-   '<div class="card"><h2>K-Saju Plus</h2><p>Every category and book, audio summaries, unlimited guide questions, full chart and weekly forecast.</p>'+(PAID?'<p class="lock">✓ You are previewing the Paid version.</p>':'<p class="q">Price coming soon.</p><button class="pri" onclick="setPaid(true)">Preview Paid</button>')+'</div>'+
+   '<div class="card"><h2>K-Saju Plus</h2><p>Every category and book, audio summaries, unlimited guide questions, full chart and weekly forecast.</p>'+(PAID?'<p class="lock">✓ You are previewing the Paid version.</p>':'<p class="q">Price coming soon.</p>'+(PREVIEW?'<button class="pri" onclick="setPaid(true)">Preview Paid</button>':'<button class="pri" disabled>Coming soon</button>'))+'</div>'+
    (p?'<div class="card"><p>Birth date: '+esc(p.bd)+'</p><p>Your element: <b style="color:'+COL[yearEl(p.bd)]+'">'+yearEl(p.bd)+'</b></p><button onclick="if(confirm(\'Delete your birth data from this phone?\')){localStorage.clear();location.reload()}">Delete my data</button></div>':'')+
    '<div class="card"><h2>Disclaimer</h2><p class="q">K-Saju is for education and reflection only. It is not medical, mental health, or legal advice, and it does not diagnose or treat any condition. Always talk to a licensed professional before changing your health routine, diet, or medications. Saju readings are for reflection and entertainment. In an emergency, call 911. For crisis support, call or text 988.</p></div>'+
    '<div class="card"><h2>Privacy</h2><p class="q">Your birth date and city stay on this phone. We don\'t sell your data. You can delete everything above at any time.</p></div>'+
@@ -209,11 +214,11 @@ function me(){
 }
 
 var TABS=[['home','☀️','Today',home],['library','📚','Library',library],['resources','🧭','Help',resources],['guide','💬','Guide',guide],['me','👤','Me',me]];
-function setPaid(v){PAID=v;put('paid',v);render()}
+function setPaid(v){if(!PREVIEW)return;PAID=v;put('paid',v);render()}
 function go(t){TAB=t;put('tab',t);OPEN_CAT=null;render();scrollTo(0,0)}
 function render(){
   var t=TABS.find(function(x){return x[0]===TAB})||TABS[0];
-  var bar='<div class="pv">Preview<div class="seg"><button class="'+(PAID?'':'on')+'" onclick="setPaid(false)">Free</button><button class="'+(PAID?'on':'')+'" onclick="setPaid(true)">Paid</button></div></div>';
+  var bar=!PREVIEW?'':'<div class="pv">Preview<div class="seg"><button class="'+(PAID?'':'on')+'" onclick="setPaid(false)">Free</button><button class="'+(PAID?'on':'')+'" onclick="setPaid(true)">Paid</button></div></div>';
   document.getElementById('app').innerHTML=bar+t[3]();
   document.getElementById('nav').innerHTML=TABS.map(function(x){return '<button class="'+(x[0]===TAB?'on':'')+'" onclick="go(\''+x[0]+'\')"><span>'+x[1]+'</span>'+x[2]+'</button>'}).join('');
 }
