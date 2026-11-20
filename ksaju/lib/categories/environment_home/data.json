@@ -1,0 +1,48 @@
+{
+ "slug": "environment_home",
+ "name": "Environment & Home",
+ "kind": "wellness",
+ "sheet_tab": "LIB_Environment_Home",
+ "entries": [
+  {
+   "id": "environment_home-01",
+   "title": "Indoor air can be dirtier than outside",
+   "content": "The EPA notes indoor air pollutant levels can be higher than outdoor levels. Controlling sources, airing out rooms and filtering air all help.",
+   "source": "An Office Building Occupant's Guide to Indoor Air Quality - EPA",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "environment_home-02",
+   "title": "Keep vents clear",
+   "content": "Blocked vents and unserviced systems reduce fresh air. Keep grilles clear and report stuffy rooms.",
+   "source": "An Office Building Occupant's Guide to Indoor Air Quality - EPA",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "environment_home-03",
+   "title": "Microplastics in indoor air",
+   "content": "A 2024 study measured tiny plastic particles in home and car air. Regular dusting, vacuuming and ventilation reduce indoor dust.",
+   "source": "Human exposure to PM10 microplastics in indoor air - PLOS One",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "environment_home-04",
+   "title": "New furniture and paint smells",
+   "content": "New furniture, paint and cleaners can release chemicals (VOCs) indoors. Choose low-emission products and air out rooms after renovating.",
+   "source": "An Office Building Occupant's Guide to Indoor Air Quality - EPA",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "environment_home-05",
+   "title": "Light and seasons at home",
+   "content": "Letting in natural daylight and fresh air supports a regular daily rhythm. Korea's five-color tradition also ties the home to the seasons.",
+   "source": "EPA Indoor Air Quality guide; Obangsaek guide",
+   "label": "Education + tradition",
+   "verified": "Y"
+  }
+ ]
+}

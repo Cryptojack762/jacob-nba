@@ -1,0 +1,40 @@
+{
+ "slug": "healthy_aging",
+ "name": "Healthy Aging",
+ "kind": "wellness",
+ "sheet_tab": "LIB_Healthy_Aging",
+ "entries": [
+  {
+   "id": "healthy_aging-01",
+   "title": "Stress practices and cell aging",
+   "content": "Some studies link meditation with markers of healthy cell aging, such as telomere length. This research is early.",
+   "source": "Meditation and Its Mental and Physical Health Benefits in 2023 - PMC",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "healthy_aging-02",
+   "title": "Sleep and the aging brain",
+   "content": "Deep sleep helps the brain clear waste. Researchers are studying how long-term short sleep relates to memory as we age.",
+   "source": "The consequences of sleep deprivation on cognitive performance - PMC",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "healthy_aging-03",
+   "title": "Mind-body and stress genes",
+   "content": "Early research suggests mind-body practices may change how some stress-related genes are switched on. More study is needed.",
+   "source": "Meditation and Its Mental and Physical Health Benefits in 2023 - PMC",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "healthy_aging-04",
+   "title": "Green tea polyphenols",
+   "content": "Lab and population studies have looked at polyphenols in foods like green tea and memory. Results are mixed; enjoy them as part of a varied diet.",
+   "source": "The evidence for herbal and botanical remedies, Part 1",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  }
+ ]
+}

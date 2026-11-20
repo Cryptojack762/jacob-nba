@@ -1,0 +1,112 @@
+{
+ "slug": "ten_stems",
+ "name": "Ten Heavenly Stems",
+ "kind": "tradition",
+ "sheet_tab": "LIB_Ten_Stems",
+ "entries": [
+  {
+   "id": "ten_stems-01",
+   "title": "The ten stems",
+   "content": "The ten heavenly stems are yang and yin pairs of each element: Gap/Eul (Wood), Byeong/Jeong (Fire), Mu/Gi (Earth), Gyeong/Sin (Metal) and Im/Gye (Water). Stems are read as the 'heaven' or outward layer of a chart.",
+   "source": "How to Read Marital Harmony (Gunghap 3) - Korea Times",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "ten_stems-02",
+   "title": "Stem combinations",
+   "content": "Some yang-yin stem pairs are said to 'combine', such as Gap Wood with Gi Earth. These pairs are read as natural affinity in a chart.",
+   "source": "How to Read Marital Harmony (Gunghap 3) - Korea Times",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "ten_stems-03",
+   "title": "Yang and yin stems",
+   "content": "Yang stems are read as active and outward, yin stems as receptive and steady. The calendar alternates between them.",
+   "source": "Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "ten_stems-04",
+   "title": "Gap Wood - yang wood",
+   "content": "Pictured as a tall tree with deep roots. Traditionally linked with ambition and principle, and sometimes stubbornness.",
+   "source": "Four Pillars of Destiny - Wikipedia; The Five Elements (Ohaeng) in Korean Culture",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "ten_stems-05",
+   "title": "Eul Wood - yin wood",
+   "content": "Pictured as vines and flowers that bend and climb. Traditionally linked with gentleness, tact and resilience.",
+   "source": "Korea Times Gunghap 3; Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "ten_stems-06",
+   "title": "Byeong Fire - yang fire",
+   "content": "Pictured as the sun. Traditionally linked with warmth, openness and charisma, and sometimes impulsiveness.",
+   "source": "Four Pillars of Destiny - Wikipedia; The Five Elements (Ohaeng) in Korean Culture",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "ten_stems-07",
+   "title": "Jeong Fire - yin fire",
+   "content": "Pictured as a candle or hearth flame. Traditionally linked with thoughtfulness, attention and refinement.",
+   "source": "Korea Times Gunghap 3; Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "ten_stems-08",
+   "title": "Mu Earth - yang earth",
+   "content": "Pictured as a mountain. Traditionally linked with steadiness, reliability and calm.",
+   "source": "Korea Times Gunghap 3; Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "ten_stems-09",
+   "title": "Gi Earth - yin earth",
+   "content": "Pictured as garden soil. Traditionally linked with patience, practicality and caring for others.",
+   "source": "Korea Times Gunghap 3; Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "ten_stems-10",
+   "title": "Gyeong Metal - yang metal",
+   "content": "Pictured as raw iron or a sword. Traditionally linked with courage, decisiveness and a strong sense of justice.",
+   "source": "Korea Times Gunghap 3; Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "ten_stems-11",
+   "title": "Sin Metal - yin metal",
+   "content": "Pictured as polished gold or jewelry. Traditionally linked with precision, taste and high standards.",
+   "source": "Korea Times Gunghap 3; Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "ten_stems-12",
+   "title": "Im Water - yang water",
+   "content": "Pictured as the ocean or a big river. Traditionally linked with resourcefulness and strategic thinking.",
+   "source": "Korea Times Gunghap 3; Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "ten_stems-13",
+   "title": "Gye Water - yin water",
+   "content": "Pictured as rain or morning dew. Traditionally linked with intuition, sensitivity and quiet wisdom.",
+   "source": "Korea Times Gunghap 3; Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  }
+ ]
+}

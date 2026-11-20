@@ -7,5 +7,7 @@ export const SITE = {
   mode: 'waitlist',
   // Gunghap (compatibility) entry points on the main page. Off until after the Dec 15 launch (Dustin's spec). compat.html still works by direct link for testing.
   gunghap: false,
+  // Switch a feature on later by setting it to true.
+  features: { dailyPush: false, aiGuide: false, fullReport: false, proAudio: false, cloudSync: false },
   product: { id: 'year2027', name: '2027 Year Ahead + Love Reading', price: '$14.99' },
 };

@@ -151,7 +151,7 @@ $('form').addEventListener('submit', e => {
     chart.input.age = ageOn(Y, M, D);
   } catch (x) { console.error(x); return err('Something went wrong with that date. Please check it and try again.'); }
   CHART = chart;
-  try { sessionStorage.setItem('ksaju_chart', JSON.stringify(CHART)); } catch (x) { }
+  try { sessionStorage.setItem('ksaju_chart', JSON.stringify(CHART)); localStorage.setItem('ksaju_chart', JSON.stringify(CHART)); } catch (x) { }
   const ov = $('ov'); ov.classList.add('on');
   ov.querySelectorAll('.dot').forEach(d => { d.style.animation = 'none'; void d.offsetWidth; d.style.animation = ''; });
   const wait = matchMedia('(prefers-reduced-motion: reduce)').matches ? 300 : 1500;

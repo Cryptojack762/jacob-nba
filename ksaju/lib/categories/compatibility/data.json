@@ -1,0 +1,32 @@
+{
+ "slug": "compatibility",
+ "name": "Compatibility (Gunghap)",
+ "kind": "tradition",
+ "sheet_tab": "LIB_Compatibility",
+ "entries": [
+  {
+   "id": "compatibility-01",
+   "title": "Outer and inner gunghap",
+   "content": "Outer gunghap compares birth years and animals. Inner gunghap compares day and hour pillars and is considered the deeper match.",
+   "source": "Gunghap: Understanding Korean Marital Compatibility & Saju",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "compatibility-02",
+   "title": "Balance, not sameness",
+   "content": "Gunghap looks for charts that balance each other, such as a 'cold' Metal-Water chart paired with a 'warm' Wood-Fire chart. Opposites are not read as a bad sign.",
+   "source": "Korea Times Gunghap 3; Gunghap guide",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "compatibility-03",
+   "title": "A conversation starter",
+   "content": "Many young Koreans use gunghap to talk about differences and how they communicate. Friction is treated as something to understand, not a verdict.",
+   "source": "Gunghap: Understanding Korean Marital Compatibility & Saju",
+   "label": "Cultural practice",
+   "verified": "Y"
+  }
+ ]
+}

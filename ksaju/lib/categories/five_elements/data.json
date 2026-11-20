@@ -1,0 +1,40 @@
+{
+ "slug": "five_elements",
+ "name": "Five Elements & Obangsaek",
+ "kind": "tradition",
+ "sheet_tab": "LIB_Five_Elements",
+ "entries": [
+  {
+   "id": "five_elements-01",
+   "title": "The five elements (Ohaeng)",
+   "content": "East Asian tradition sorts the world into five phases: Wood, Fire, Earth, Metal and Water. Each is linked to seasons, directions, colors and personality pictures.",
+   "source": "Obangsaek: Korea's Five Color Philosophy in Daily Life",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "five_elements-02",
+   "title": "Feeding and controlling cycles",
+   "content": "In the feeding cycle Wood feeds Fire, Fire makes Earth, Earth bears Metal, Metal carries Water and Water feeds Wood. In the controlling cycle each element checks another, and balance between the two is the goal.",
+   "source": "Four Pillars of Destiny - Wikipedia; Gunghap guide",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "five_elements-03",
+   "title": "Obangsaek: Korea's five colors",
+   "content": "Korea's five traditional colors map to directions and seasons: blue-green East/spring, red South/summer, yellow center, white West/autumn and black North/winter. They appear in hanok homes, clothing and ceremonies.",
+   "source": "Obangsaek: Korea's Five Color Philosophy in Daily Life",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "five_elements-04",
+   "title": "Five-color food (Osaek)",
+   "content": "Korean cooking traditionally aims for five colors on the table, as in bibimbap. In practice it encourages a varied plate.",
+   "source": "Obangsaek: Korea's Five Color Philosophy in Daily Life",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  }
+ ]
+}

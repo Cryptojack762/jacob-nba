@@ -3,7 +3,7 @@
   "name": "K-Saju · Korean Birth Code",
   "short_name": "K-Saju",
   "description": "Your free Korean birth code: four pillars, five-element balance and your year ahead.",
-  "start_url": "./index.html?source=pwa",
+  "start_url": "./hub.html?source=pwa#today",
   "scope": "./",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone"],
@@ -19,7 +19,7 @@
   ],
   "shortcuts": [
     { "name": "Get my reading", "url": "./index.html?source=shortcut", "icons": [{ "src": "img/icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Compatibility", "url": "./compat.html?source=shortcut", "icons": [{ "src": "img/icons/icon-192.png", "sizes": "192x192" }] }
+    { "name": "Today", "url": "./hub.html?source=shortcut#today", "icons": [{ "src": "img/icons/icon-192.png", "sizes": "192x192" }] }
   ],
   "share_target": { "action": "./index.html", "method": "GET", "enctype": "application/x-www-form-urlencoded", "params": { "title": "title", "text": "text", "url": "url" } }
 }
