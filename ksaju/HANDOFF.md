@@ -34,3 +34,10 @@ Live: https://cryptojack762.github.io/jacob-nba/giun/ (separate installable app;
 - Today: day pillar message, good/careful day, morning/evening ritual card + streak, moon phase, solar term + Fire Goat countdown, tip.
 - Ritual: element breathing (animated), 5 element meditations with Listen, evening gratitude journal, sounds (rain/stream/temple bell made on the phone).
 - Library: all 28 sections + search + books with Listen. Ask: Haneul chat + compatibility. Me: chart, 5-week good-day calendar, share card + wallpaper, daily email, readings ("Soon"), help by state, light/dark.
+
+## Psychology layer (11/19 late)
+- NotebookLM: "K-Saju Library 5 - Psychology" (59 sources) and "K-Saju Library 6 - Psychology 2 (Elements, Korean, Moon)" (50 sources, 9 exact duplicates removed after asking NotebookLM).
+- Library now 34 sections / 198 entries. New: Psychology (20), Relationships & Family (10), Emotions & the Five Elements (7), Korean Emotion Words (6), The Moon: Myth & Science (4), Crystals: Tradition & Truth (8). Sheet tabs LIB_* added.
+- Giun "Talk it through" (#ask/mind): trouble type + text/mic -> chart lens (Ten God day, clash/combo, today's element emotion, missing element, moon) + 2 research tools + 3 "Did you" questions + next step + crystal ritual note; crisis words -> 988/911/DV hotline only.
+- Backend v5: ask_ with mode 'mind' uses SYSTEM_MIND (lens never blames stars/moon; Gottman/CBT/self-compassion; crisis-only reply on danger). Live-tested 11/19.
+- Rule: chart and moon are reflection lenses, never causes; crystals labeled tradition (placebo studies cited).
