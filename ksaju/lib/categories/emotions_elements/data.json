@@ -1,0 +1,64 @@
+{
+ "slug": "emotions_elements",
+ "name": "Emotions & the Five Elements",
+ "kind": "tradition",
+ "sheet_tab": "LIB_Emotions_Elements",
+ "entries": [
+  {
+   "id": "emotions_elements-01",
+   "title": "Wood and anger",
+   "content": "In traditional East Asian medicine, Wood is linked with the liver and with anger, frustration and resentment. Its healthy side is drive and growth.",
+   "source": "5 Elements (Wu Xing): The Five Elements Theory in Chinese Medicine",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "emotions_elements-02",
+   "title": "Fire and over-excitement",
+   "content": "Fire is linked with the heart and with 'joy' in the sense of agitation or over-excitement. Its healthy side is warmth and connection.",
+   "source": "5 Elements (Wu Xing): The Five Elements Theory in Chinese Medicine",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "emotions_elements-03",
+   "title": "Earth and worry",
+   "content": "Earth is linked with digestion and with overthinking and worry. Its healthy side is steadiness and care for others.",
+   "source": "5 Elements (Wu Xing): The Five Elements Theory in Chinese Medicine",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "emotions_elements-04",
+   "title": "Metal and grief",
+   "content": "Metal is linked with the lungs and breathing and with sadness and grief. Its healthy side is clarity and letting go.",
+   "source": "5 Elements (Wu Xing): The Five Elements Theory in Chinese Medicine",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "emotions_elements-05",
+   "title": "Water and fear",
+   "content": "Water is linked with the kidneys and with fear and dread. Its healthy side is courage and willpower.",
+   "source": "5 Elements (Wu Xing): The Five Elements Theory in Chinese Medicine",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "emotions_elements-06",
+   "title": "The balancing cycle",
+   "content": "The tradition says elements restrain each other: grief (Metal) cools anger (Wood), and fear (Water) calms too much joy (Fire). Some Chinese hospitals use this idea in 'five-element' talk therapy.",
+   "source": "Application of Psychotherapy Based on Five-Element Theory in TCM - PMC",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "emotions_elements-07",
+   "title": "How Giun uses this",
+   "content": "Talk it through pairs the feeling linked to today's element with a real psychology tool, like a cool-down break for anger or checking the evidence for worry. The tradition gives the lens; the tool is from research.",
+   "source": "K-Saju engine; Psychology library",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  }
+ ]
+}

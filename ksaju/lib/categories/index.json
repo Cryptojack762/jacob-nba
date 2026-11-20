@@ -48,6 +48,18 @@
   "count": 3
  },
  {
+  "slug": "emotions_elements",
+  "name": "Emotions & the Five Elements",
+  "kind": "tradition",
+  "count": 7
+ },
+ {
+  "slug": "crystals",
+  "name": "Crystals: Tradition & Truth",
+  "kind": "tradition",
+  "count": 8
+ },
+ {
   "slug": "hidden_stems",
   "name": "Hidden Stems",
   "kind": "tradition",
@@ -102,6 +114,12 @@
   "count": 5
  },
  {
+  "slug": "korean_emotion_words",
+  "name": "Korean Emotion Words",
+  "kind": "culture",
+  "count": 6
+ },
+ {
   "slug": "korean_names",
   "name": "Korean Names & Saju",
   "kind": "culture",
@@ -124,6 +142,12 @@
   "name": "Relationships & Family",
   "kind": "wellness",
   "count": 10
+ },
+ {
+  "slug": "moon_truth",
+  "name": "The Moon: Myth & Science",
+  "kind": "wellness",
+  "count": 4
  },
  {
   "slug": "sleep",

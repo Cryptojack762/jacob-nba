@@ -1,0 +1,56 @@
+{
+ "slug": "korean_emotion_words",
+ "name": "Korean Emotion Words",
+ "kind": "culture",
+ "sheet_tab": "LIB_Korean_Emotion_Words",
+ "entries": [
+  {
+   "id": "korean_emotion_words-01",
+   "title": "Han (한)",
+   "content": "Han is deep, long-held sorrow and resentment from past suffering or unfairness. It can also become a drive to overcome hard times.",
+   "source": "Conceptualization of Jeong and Dynamics of Hwabyung - Psychiatry Investigation",
+   "label": "Culture - education",
+   "verified": "Y"
+  },
+  {
+   "id": "korean_emotion_words-02",
+   "title": "Jeong (정)",
+   "content": "Jeong is the warm, sticky bond of affection that grows between people over time, even between people who argue. It explains why Koreans stay loyal to old friends, places and even rivals.",
+   "source": "Conceptualization of Jeong and Dynamics of Hwabyung - Psychiatry Investigation",
+   "label": "Culture - education",
+   "verified": "Y"
+  },
+  {
+   "id": "korean_emotion_words-03",
+   "title": "Nunchi (눈치)",
+   "content": "Nunchi means 'eye-measure': quickly reading the mood of a room and what people aren't saying. It keeps groups smooth but can feel like pressure around bosses or elders.",
+   "source": "Korean Nunchi and Well-Being - ResearchersLinks",
+   "label": "Culture - education",
+   "verified": "Y"
+  },
+  {
+   "id": "korean_emotion_words-04",
+   "title": "Chemyeon (체면)",
+   "content": "Chemyeon is social face: dignity and reputation, often shared by your family or group. It shapes how people avoid public embarrassment.",
+   "source": "'Chemyeon,' the Korean Face: Finalizing the Scale",
+   "label": "Culture - education",
+   "verified": "Y"
+  },
+  {
+   "id": "korean_emotion_words-05",
+   "title": "Heung (흥)",
+   "content": "Heung is spontaneous joy and excitement, the kind that builds at a party or a song. It's often described as the bright flip side of han.",
+   "source": "Min Han, May the Heung Be With You - Korea University",
+   "label": "Culture - education",
+   "verified": "Y"
+  },
+  {
+   "id": "korean_emotion_words-06",
+   "title": "Hwabyeong (화병)",
+   "content": "Hwabyeong, 'fire illness', is a Korean cultural syndrome from long-held suppressed anger, with heat, a racing heart and a felt lump in the chest. Studies show talk therapy helps; if this sounds like you, see a doctor or counselor.",
+   "source": "Hwa-Byung: a Korean culture-bound syndrome? - PubMed; Effectiveness of psychotherapy for Hwa-Byung: systematic review",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  }
+ ]
+}

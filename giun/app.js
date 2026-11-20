@@ -153,6 +153,11 @@ async function today() {
   <section class="hero today ink"><div class="seal-lg" aria-hidden="true">${tp.hanja}</div><div><div class="date">${now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</div>
     <h1>${tp.yang ? 'Yang' : 'Yin'} ${tp.el} ${tp.animal}</h1><p>${tp.name}-${AN[tp.b]} day · word for today: <b>${EL_WORD[tp.el]}</b></p></div></section>
   ${msg}${lk}${plan}
+  ${c && c.dayMaster ? (() => { const miss = (c.elements?.missing || [])[0], el = miss || ORDER[(ORDER.indexOf(c.dayMaster.element) + 4) % 5], e = EMO[el];
+    return `<div class="card frame ink"><div class="kick">Crystal of the week · tradition</div><div class="row" style="flex-wrap:nowrap;gap:14px"><span class="glyph" style="background:color-mix(in srgb,var(--${el}) 22%,var(--card));color:var(--${el})">玉</span>
+      <div><b>${e.crystal[0]}</b> <span class="muted">· ${el}</span><p style="margin:2px 0 0">${miss ? `Your chart is light on ${el}, linked with ${e.feel}.` : `${el} feeds your ${c.dayMaster.element}.`} Keep a ${e.crystal[1]} stone where you'll see it as your reminder: ${e.tool.split('.')[0].toLowerCase()}.</p>
+      <a class="muted" href="#library/crystals">What's true about crystals →</a></div></div></div>`; })() : ''}
+  <a class="tile ink" href="#ask/mind" style="min-height:0;margin:14px 0;border-left:5px solid var(--accent)"><span class="glyph">心</span><b>Something on your heart?</b><span>Talk it through: today's energy + real psychology</span></a>
   <div class="card frame ink"><div class="kick">${evening ? 'Evening' : 'Morning'} ritual</div>
     ${evening ? '<h2>Close the day</h2><p>Write three small things you\'re grateful for, then one slow breath.</p>'
       : `<h2>Set today's intention</h2><input id="intent" placeholder="Today I will…" value="${esc(intents[tk] || '')}"><p class="muted" id="imsg" style="margin-top:6px">${intents[tk] ? 'Saved ✓' : 'One line. It shows up in your evening journal.'}</p>`}
@@ -279,7 +284,7 @@ async function library(slug) {
     return;
   }
   const idx = await (await fetch(LIB + 'categories/index.json')).json(), q = ls.get('g_q', '');
-  const GL = { saju_basics: '柱', five_elements: '五', ten_stems: '干', twelve_branches: '支', ten_gods: '神', luck_pillars: '運', solar_terms: '節', compatibility: '合', hidden_stems: '藏', clashes_combos: '沖', shen_sha: '星', korean_almanac: '曆', dream_dictionary: '夢', love_saju: '愛', career_money_saju: '財', k_culture_saju: '韓', korean_names: '名', korean_holidays: '節', purple_star: '紫', sleep: '眠', nutrition_herb_safety: '草', mind_body: '心', oral_health: '齒', environment_home: '家', movement: '動', stress_breathing: '息', gut_health: '腸', healthy_aging: '壽' };
+  const GL = { saju_basics: '柱', five_elements: '五', ten_stems: '干', twelve_branches: '支', ten_gods: '神', luck_pillars: '運', solar_terms: '節', compatibility: '合', hidden_stems: '藏', clashes_combos: '沖', shen_sha: '星', korean_almanac: '曆', dream_dictionary: '夢', love_saju: '愛', career_money_saju: '財', k_culture_saju: '韓', korean_names: '名', korean_holidays: '節', purple_star: '紫', sleep: '眠', nutrition_herb_safety: '草', mind_body: '心', oral_health: '齒', environment_home: '家', movement: '動', stress_breathing: '息', gut_health: '腸', healthy_aging: '壽', psychology: '心', relationships_family: '和', emotions_elements: '情', korean_emotion_words: '恨', moon_truth: '月', crystals: '玉' };
   const tile = c => `<a class="tile" href="#library/${c.slug}"><span class="glyph">${GL[c.slug] || '書'}</span><b>${esc(c.name)}</b><span>${c.count} entries</span></a>`;
   const grp = (k, t) => `<h3 class="kick" style="margin:18px 0 8px">${t}</h3><div class="grid2">${idx.filter(c => c.kind === k).map(tile).join('')}</div>`;
   V.innerHTML = `<section class="hero ink"><div class="date">Library</div><h1>書</h1><p>Korean tradition, culture and plain-English wellness, every entry with its source.</p></section>
@@ -336,10 +341,10 @@ function ask() {
 // ---------- TALK IT THROUGH: chart energy as a lens + real psychology tools ----------
 // Element-emotion pairs come from traditional East Asian medicine (wu xing); the tools come from psychology research (see Library > Psychology).
 const EMO = {
-  Wood: { feel: 'anger and frustration', tool: 'Take a 20-minute cool-down before you answer. Your body needs that long to settle after it floods.', crystal: ['Green aventurine', 'green'] },
-  Fire: { feel: 'restlessness and overexcitement', tool: 'Ground yourself: slow breaths, feet on the floor, and an early night. Short sleep makes every feeling louder.', crystal: ['Carnelian', 'orange-red'] },
+  Wood: { feel: 'anger and frustration', tool: 'Take a 20-minute cool-down before you answer. Your body needs that long to settle after it floods.', crystal: ['Jade', 'green'] },
+  Fire: { feel: 'restlessness and overexcitement', tool: 'Ground yourself: slow breaths, feet on the floor, and an early night. Short sleep makes every feeling louder.', crystal: ['Amethyst', 'purple'] },
   Earth: { feel: 'worry and overthinking', tool: 'Check the thought: write the worry down, then the evidence for it and against it.', crystal: ['Citrine', 'golden yellow'] },
-  Metal: { feel: 'grief and letting go', tool: 'Write to yourself kindly for 10 to 15 minutes about what you lost, like you would to a friend.', crystal: ['Clear quartz', 'clear'] },
+  Metal: { feel: 'grief and letting go', tool: 'Write to yourself kindly for 10 to 15 minutes about what you lost, like you would to a friend.', crystal: ['Rose quartz', 'pink'] },
   Water: { feel: 'fear and insecurity', tool: 'Slow breathing with a long exhale, then one small brave step you can do today.', crystal: ['Black tourmaline', 'black'] } };
 const TROUBLE = {
   relationship: { label: 'Relationship', lib: 'relationships_family',
@@ -405,7 +410,7 @@ function mind() {
         <p><b>For your ${c.dayMaster.element} nature:</b> ${dm.tool}</p><a class="muted" href="#library/${t.lib}">Read the research →</a></div>
       <div class="card frame ink"><div class="kick">3 · Ask yourself</div>${t.qs.map(q => `<label style="display:flex;gap:10px;align-items:flex-start;font-weight:400"><input type="checkbox" style="width:auto;margin-top:4px"> ${q}</label>`).join('')}</div>
       <div class="card acc frame ink"><div class="kick">4 · One small next step</div><p>${t.step}</p>
-        <p class="muted">Ritual idea: hold a ${cr[1]} stone like ${cr[0].toLowerCase()} while you do it, as a reminder of your intention. Crystals are tradition; studies found the calm comes from the ritual itself.</p></div>
+        <p class="muted">Ritual idea: hold a ${cr[1]} stone like ${cr[0].toLowerCase()} while you do it, as a reminder of your intention. Crystals are tradition; studies found the calm comes from the ritual itself. <a href="#library/crystals">Why</a></p></div>
       <button class="btn block" id="hn" type="button">Talk it through with Haneul</button><p class="muted" id="hmsg"></p><div id="hans"></div>
       <p class="muted">Not therapy. If this feels heavy for more than two weeks, a counselor can help. In a crisis call or text 988.</p>`;
     $('#hn').onclick = async () => {

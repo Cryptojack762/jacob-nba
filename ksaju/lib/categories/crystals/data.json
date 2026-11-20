@@ -1,0 +1,72 @@
+{
+ "slug": "crystals",
+ "name": "Crystals: Tradition & Truth",
+ "kind": "tradition",
+ "sheet_tab": "LIB_Crystals",
+ "entries": [
+  {
+   "id": "crystals-01",
+   "title": "What the science says",
+   "content": "In Christopher French's studies, people holding real quartz or fake glass reported the same tingles and calm. That points to suggestion and belief, not the stone itself.",
+   "source": "Crystal Therapy - Asian Journal of Nursing Education and Research; French (Goldsmiths) studies",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "crystals-02",
+   "title": "Why rituals still help",
+   "content": "Simple rituals, like holding an object while setting an intention, can lower anxiety and help people feel in control. A crystal can be that kind of reminder.",
+   "source": "Psychology of rituals research; Crystal Healing: What the Science Actually Shows",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "crystals-03",
+   "title": "Jade (Wood)",
+   "content": "Jade has been a protective, long-life stone in Chinese and Korean tradition for thousands of years. Giun pairs it with Wood and anger: hold it during your cool-down break.",
+   "source": "Crystal Healing: What the Science Actually Shows; Korean jade tradition",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "crystals-04",
+   "title": "Amethyst (Fire)",
+   "content": "Its Greek name means 'not intoxicated'; it was believed to keep the mind clear. Giun pairs it with Fire and over-excitement: a wind-down ritual before sleep.",
+   "source": "Crystal Therapy - Asian Journal of Nursing Education and Research",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "crystals-05",
+   "title": "Citrine (Earth)",
+   "content": "Citrine is traditionally used for brightness and positivity. Giun pairs it with Earth and worry: hold it while you write the evidence for and against a worry.",
+   "source": "Crystal Therapy - Asian Journal of Nursing Education and Research",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "crystals-06",
+   "title": "Rose quartz (Metal)",
+   "content": "Rose quartz is the traditional stone for heartache. Giun pairs it with Metal and grief: hold it while you write kindly to yourself.",
+   "source": "Crystal Therapy - Asian Journal of Nursing Education and Research",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "crystals-07",
+   "title": "Black tourmaline (Water)",
+   "content": "Black tourmaline is traditionally a grounding, protective stone. Giun pairs it with Water and fear: hold it during slow breathing before one brave step.",
+   "source": "Crystal Healing: What the Science Actually Shows",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "crystals-08",
+   "title": "Buy wisely",
+   "content": "Crystals are for ritual and beauty, not treatment. Don't pay extra for healing claims, and never use them in place of medical care.",
+   "source": "Crystal healing evidence reviews",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  }
+ ]
+}

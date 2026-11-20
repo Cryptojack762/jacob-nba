@@ -1,0 +1,40 @@
+{
+ "slug": "moon_truth",
+ "name": "The Moon: Myth & Science",
+ "kind": "wellness",
+ "sheet_tab": "LIB_Moon_Truth",
+ "entries": [
+  {
+   "id": "moon_truth-01",
+   "title": "Moon and hospital visits",
+   "content": "Studies of thousands of psychiatric admissions and emergency visits found no link to the moon's phases. Visits and stays were the same at full moon.",
+   "source": "Is it the moon? Effects of the lunar cycle on psychiatric admissions - PubMed",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "moon_truth-02",
+   "title": "Moon and births",
+   "content": "Research on hundreds of thousands of births found no real lunar effect on birth rates or complications.",
+   "source": "No Evidence of Purported Lunar Effect on Hospital Admission Rates or Birth Rates",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "moon_truth-03",
+   "title": "Why the myth lasts",
+   "content": "Reviews of dozens of studies find the moon explains almost none of the change in behavior. The belief lasts because we remember the wild full-moon nights and forget the quiet ones.",
+   "source": "The Moon Was Full and Nothing Happened: A Review of Studies on the Moon and Human Behavior",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "moon_truth-04",
+   "title": "How Giun uses the moon",
+   "content": "We use moon phases as ritual timing: an intention at the new moon, a check-in at the full moon. We never blame the moon for how you or anyone else acts.",
+   "source": "K-Saju; the studies above",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  }
+ ]
+}
