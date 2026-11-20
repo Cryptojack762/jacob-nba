@@ -42,10 +42,10 @@ var FREE_BOOKS = 3, FREE_Q = 3;
 var SEED = {
  categories:[
   {category_id:'C01',name:'Herbalism',tier:'Free'},{category_id:'C02',name:'Immunology',tier:'Free'},
-  {category_id:'C03',name:'Energy Medicine',tier:'Paid'},{category_id:'C04',name:'Clinical Nutrition',tier:'Free'},
-  {category_id:'C05',name:'Mind-Body',tier:'Free'},{category_id:'C06',name:'Environmental Detox',tier:'Paid'},
-  {category_id:'C07',name:'Biological Dentistry / Biohacking',tier:'Paid'},{category_id:'C08',name:'Business',tier:'Paid'},
-  {category_id:'C09',name:'Systems',tier:'Paid'}],
+  {category_id:'C03',name:'Energy Medicine',tier:'Free'},{category_id:'C04',name:'Clinical Nutrition',tier:'Free'},
+  {category_id:'C05',name:'Mind-Body',tier:'Free'},{category_id:'C06',name:'Environmental Detox',tier:'Free'},
+  {category_id:'C07',name:'Biological Dentistry / Biohacking',tier:'Free'},{category_id:'C08',name:'Business',tier:'Free'},
+  {category_id:'C09',name:'Systems',tier:'Free'}],
  books:[
   {id:'B001',title:'The Complete Herbal',author:'Nicholas Culpeper',category_id:'C01',tier:'Free',source_url:'https://www.gutenberg.org/ebooks/49513',notes:'Historical herbal - read as history, not medical advice'},
   {id:'B002',title:'Notes on Nursing',author:'Florence Nightingale',category_id:'C02',tier:'Free',source_url:'https://www.gutenberg.org/ebooks/12439',notes:'Home care basics: air, light, cleanliness'},
@@ -104,6 +104,8 @@ function syncNow(){
   if(!SYNC_URL) return;
   fetch(SYNC_URL).then(function(r){return r.json()}).then(function(d){
     ['categories','books','tips','states'].forEach(function(k){ if(d[k]&&d[k].length) LIB[k]=d[k]; });
+    // sheet headers -> app fields: Categories_27 uses "ID" and "Category"; a blank Tier counts as Free
+    LIB.categories=LIB.categories.map(function(c){return {category_id:c.category_id||c.id,name:c.name||c.category,tier:c.tier||'Free'}});
     put('lib',LIB); render();
   }).catch(function(){});
 }
