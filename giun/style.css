@@ -135,3 +135,5 @@ nav.tabs a.on i{background:color-mix(in srgb,var(--accent) 16%,transparent);bord
 @media (max-width:380px){.hero h1{font-size:38px}.seal-lg{width:76px;height:76px;font-size:24px}}
 .brand{white-space:nowrap}#ks-dl,.chip{white-space:nowrap}
 @media (max-width:420px){.brand small{display:none}#ks-dl{padding:8px 12px!important}}
+.hero{display:block}.hero.today{display:flex}
+.mountains{height:170px;opacity:.55}

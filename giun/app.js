@@ -150,7 +150,7 @@ async function today() {
   }
   const ipchun = new Date(2027, 1, 4), toGoat = Math.ceil((ipchun - now) / 864e5);
   V.innerHTML = `
-  <section class="hero ink"><div class="seal-lg" aria-hidden="true">${tp.hanja}</div><div><div class="date">${now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</div>
+  <section class="hero today ink"><div class="seal-lg" aria-hidden="true">${tp.hanja}</div><div><div class="date">${now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</div>
     <h1>${tp.yang ? 'Yang' : 'Yin'} ${tp.el} ${tp.animal}</h1><p>${tp.name}-${AN[tp.b]} day · word for today: <b>${EL_WORD[tp.el]}</b></p></div></section>
   ${msg}${lk}${plan}
   <div class="card frame ink"><div class="kick">${evening ? 'Evening' : 'Morning'} ritual</div>
