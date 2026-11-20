@@ -102,6 +102,7 @@ var SEED = {
   {state:'New York',resource_name:'NY.gov - Mental Health and Addiction Help (HOPEline 1-877-8-HOPENY)',type:'hotline',url:'https://ny.gov/topic/mental-health-and-addiction-help'},
   {state:'Pennsylvania',resource_name:'DHS - Find County Mental Health Services',type:'guide',url:'https://www.pa.gov/agencies/dhs/resources/mental-health-substance-use-disorder/find-services.html'},
   {state:'Illinois',resource_name:'HFS - Find a Behavioral Health Provider (crisis: CARES 1-800-345-9049)',type:'guide',url:'https://hfs.illinois.gov/medicalclients/behavioral/findaprovider.html'},
+  {state:'Ohio',resource_name:'Ohio Crisis Text Line - text 4hope to 741741',type:'hotline',url:'https://dam.assets.ohio.gov/image/upload/mha.ohio.gov/AboutUs/MediaCenter/PublicationsandFactSheets/CTL-fact-sheet.pdf'},
   {state:'Georgia',resource_name:'Georgia Crisis and Access Line (GCAL) 1-800-715-4225',type:'hotline',url:'https://dbhdd.georgia.gov/node/17071'},
   {state:'North Carolina',resource_name:'NCDHHS - Mental Health and Substance Use Help',type:'guide',url:'https://www.ncdhhs.gov/assistance/mental-health-and-substance-abuse'},
   {state:'Michigan',resource_name:'MDHHS - Get Help Now',type:'guide',url:'https://www.michigan.gov/mdhhs/keep-mi-healthy/mentalhealth/mentalhealth/get-help-now'}]
@@ -124,7 +125,7 @@ function syncNow(){
 
 /* ---------- Saju (five elements) ----------
    Year element from the year's heavenly stem (last digit: 4-5 Wood, 6-7 Fire, 8-9 Earth, 0-1 Metal, 2-3 Water).
-   Day element from the 60-day cycle, anchored on 1900-01-01 = Jia-Xu (stem index 0). Anchor to verify before launch.
+   Day element from the 60-day cycle, anchored on 1900-01-01 = Jia-Xu (stem index 0). Checked 11/19: gives 1949-10-01 = Jia-Zi, matching Wikipedia's worked example.
    Note: the Saju year starts around Feb 4, so births in Jan to early Feb use the year before. */
 var EL=['Wood','Fire','Earth','Metal','Water'], COL={Wood:'var(--wood)',Fire:'var(--fire)',Earth:'var(--earth)',Metal:'var(--metal)',Water:'var(--water)'};
 var STEM_EL=[0,0,1,1,2,2,3,3,4,4]; // stem index -> element index
