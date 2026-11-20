@@ -114,6 +114,12 @@
   "count": 6
  },
  {
+  "slug": "psychology",
+  "name": "Psychology",
+  "kind": "wellness",
+  "count": 12
+ },
+ {
   "slug": "sleep",
   "name": "Sleep",
   "kind": "wellness",

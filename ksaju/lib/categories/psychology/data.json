@@ -1,0 +1,104 @@
+{
+ "slug": "psychology",
+ "name": "Psychology",
+ "kind": "wellness",
+ "sheet_tab": "LIB_Psychology",
+ "entries": [
+  {
+   "id": "psychology-01",
+   "title": "Why readings feel so accurate",
+   "content": "The Barnum (or Forer) effect: people rate general statements like 'you can be hard on yourself' as a perfect fit. In 1949 psychologist Bertram Forer gave students the same 'personal' profile and they rated it 4.3 out of 5. Use saju as a mirror for reflection, not proof.",
+   "source": "Forer (1949), Journal of Abnormal and Social Psychology; Barnum effect - Wikipedia",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "psychology-02",
+   "title": "Habits take about 66 days",
+   "content": "A University College London study followed people building a new habit. On average it took 66 days to feel automatic, with a range of 18 to 254 days. Missing one day didn't ruin progress.",
+   "source": "Lally et al. (2010), European Journal of Social Psychology",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "psychology-03",
+   "title": "Gratitude and mood",
+   "content": "In a 10-week study, people who wrote down things they were grateful for each week felt more positive about their lives than people who listed hassles. Small and regular beats big and rare.",
+   "source": "Emmons & McCullough (2003), Journal of Personality and Social Psychology",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "psychology-04",
+   "title": "Catch, check, change (reframing)",
+   "content": "A core tool from cognitive behavioral therapy: catch the thought ('they ignored me, they hate me'), check the evidence for and against it, then change it to something more balanced ('they might be busy').",
+   "source": "American Psychological Association: What is cognitive behavioral therapy?",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "psychology-05",
+   "title": "Self-compassion",
+   "content": "Research by Kristin Neff and others links treating yourself like a good friend would with less anxiety and more motivation, not less. Being harsh with yourself tends to backfire.",
+   "source": "Neff (2003), Self and Identity; self-compassion research overview",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "psychology-06",
+   "title": "When you feel flooded",
+   "content": "In heated arguments the body can 'flood' with stress, making it hard to listen. Relationship researcher John Gottman recommends a break of at least 20 minutes to calm down before talking again.",
+   "source": "The Gottman Institute: flooding and taking breaks",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "psychology-07",
+   "title": "Say it with 'I' statements",
+   "content": "'I feel hurt when plans change last minute, because I was looking forward to it' lands better than 'you always cancel'. It names your feeling and need without blaming.",
+   "source": "Communication research summaries; APA relationship tips",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "psychology-08",
+   "title": "The four relationship warning signs",
+   "content": "Gottman's research names four patterns that predict trouble: criticism, contempt, defensiveness and stonewalling. Each has an antidote, like a gentle start-up instead of criticism.",
+   "source": "The Gottman Institute: The Four Horsemen",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "psychology-09",
+   "title": "Personality science vs saju",
+   "content": "Psychologists measure personality with the Big Five: openness, conscientiousness, extraversion, agreeableness and neuroticism. These are tested with questionnaires; birth charts are a cultural tradition and haven't been shown to predict personality.",
+   "source": "American Psychological Association; Carlson (1985), Nature",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "psychology-10",
+   "title": "Sleep and mood",
+   "content": "Short sleep makes emotions feel bigger and patience shorter the next day. A regular sleep time is one of the simplest mood tools there is.",
+   "source": "NIH NHLBI: Sleep deprivation and deficiency",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "psychology-11",
+   "title": "Stress is a signal, not a verdict",
+   "content": "Studies suggest that seeing stress as your body getting ready to act, rather than as harm, can improve how you perform under pressure.",
+   "source": "Jamieson et al. (2012), Journal of Experimental Psychology: General",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "psychology-12",
+   "title": "When to talk to a professional",
+   "content": "If low mood, worry or anger lasts more than two weeks, gets in the way of work or relationships, or you feel unsafe, talk to a doctor or counselor. In a crisis call or text 988 (US).",
+   "source": "NIMH: Tips for talking with a health care provider; 988 Suicide & Crisis Lifeline",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  }
+ ]
+}
