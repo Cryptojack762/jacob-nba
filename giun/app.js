@@ -2,6 +2,8 @@
 // Shares the chart engine (../ksaju/js/saju.js), library (../ksaju/lib) and backend (SITE.api) with K-Saju.
 import { SITE } from '../ksaju/js/config.js?v=9';
 
+// Shared by two apps: Giun (/giun/) and K-Saju's hub (/ksaju/hub.html). Each page sets window.APP_CFG before loading this file.
+const CFG = Object.assign({ brand: 'Giun', start: '#start', home: './', classic: '../ksaju/', siteUrl: 'cryptojack762.github.io/jacob-nba/giun', share: 'A calm daily ritual from your Korean birth chart. Free.', cardTag: '기운 · Giun', src: 'giun' }, window.APP_CFG || {});
 const $ = s => document.querySelector(s), V = $('#view');
 const esc = t => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const ls = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (_) { return d; } },
@@ -103,8 +105,8 @@ function say(text, btn) {
 }
 function needChart() {
   return `<div class="card acc ink"><div class="kick">Start here</div><h2>Find your Korean birth energy</h2>
-    <p>Your birth date and time make your saju, the four pillars. Giun turns it into a calm ritual for each day.</p>
-    <a class="btn block" href="#start">Make my chart (free, 30 seconds)</a></div>`;
+    <p>Your birth date and time make your saju, the four pillars. ${CFG.brand} turns it into a calm ritual for each day.</p>
+    <a class="btn block" href="${CFG.start}">Make my chart (free, 30 seconds)</a></div>`;
 }
 function streak() {
   const st = ls.get('ks_streak', { last: null, n: 0, best: 0 }), t = dkey(new Date()), y = dkey(new Date(Date.now() - 864e5));
@@ -198,8 +200,8 @@ function ics(time) {   // daily repeating calendar reminder, made on the phone (
   const ds = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}T${h}${mi}00`;
   const url = new URL('./#today', location.href).href;
   const body = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Giun//Daily Ritual//EN', 'BEGIN:VEVENT', `UID:giun-daily-${Date.now()}@giun`, `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`,
-    `DTSTART:${ds}`, 'DURATION:PT5M', 'RRULE:FREQ=DAILY', 'SUMMARY:Giun · your daily ritual', `DESCRIPTION:Breathe\, read today's energy and set an intention. ${url}`, `URL:${url}`,
-    'BEGIN:VALARM', 'TRIGGER:PT0M', 'ACTION:DISPLAY', 'DESCRIPTION:Giun · your daily ritual', 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+    `DTSTART:${ds}`, 'DURATION:PT5M', 'RRULE:FREQ=DAILY', `SUMMARY:${CFG.brand} · your daily ritual`, `DESCRIPTION:Breathe\, read today's energy and set an intention. ${url}`, `URL:${url}`,
+    'BEGIN:VALARM', 'TRIGGER:PT0M', 'ACTION:DISPLAY', `DESCRIPTION:${CFG.brand} · your daily ritual`, 'END:VALARM', 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([body], { type: 'text/calendar' })); a.download = 'giun-daily-ritual.ics'; a.click();
 }
 function breathe(el) {
@@ -449,26 +451,26 @@ async function me(sub) {
   <div class="card frame ink"><div class="kick">Coming soon</div><div class="chips">${['Friends & compare', 'Holiday readings', 'Narrated meditations', 'Account backup', 'Phone notifications', 'Full-year calendar'].map(x => `<span class="chip soonchip">${x}</span>`).join('')}</div></div>
   <div class="card ink"><div class="kick">Help near you</div><p>In a crisis call or text <a href="tel:988">988</a>. In danger call <a href="tel:911">911</a>. Food, housing and services: <a href="tel:211">211</a>.</p>
     <select id="st"><option value="">Pick your state…</option>${states.map(s => `<option>${esc(s)}</option>`).join('')}</select><div id="stout"></div></div>
-  <div class="card ink"><div class="kick">Settings</div><div class="seg">${['auto', 'light', 'dark'].map(t => `<button class="btn ghost ${ls.get('g_theme', 'auto') === t ? 'on' : ''}" data-th="${t}" type="button">${t[0].toUpperCase() + t.slice(1)}</button>`).join('')}</div>
-    <a class="btn ghost block" href="#start">Change birth details</a><a class="btn ghost block" href="../ksaju/">Open classic K-Saju</a>
+  <div class="card ink"><div class="kick">Settings</div>${CFG.themes === false ? '' : `<div class="seg">${['auto', 'light', 'dark'].map(t => `<button class="btn ghost ${ls.get('g_theme', 'auto') === t ? 'on' : ''}" data-th="${t}" type="button">${t[0].toUpperCase() + t.slice(1)}</button>`).join('')}</div>`}
+    <a class="btn ghost block" href="${CFG.start}">Change birth details</a>${CFG.classic ? `<a class="btn ghost block" href="${CFG.classic}">${CFG.classicLabel || 'Open classic K-Saju'}</a>` : ''}
     <button class="btn ghost block" id="wipe" type="button">Clear my data on this phone</button></div>`;
   $('#st').onchange = e => { $('#stout').innerHTML = L.states.filter(s => s.state === e.target.value).map(s => `<p><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.resource_name)}</a></p>`).join(''); };
   V.querySelectorAll('[data-th]').forEach(b => b.onclick = () => { ls.set('g_theme', b.dataset.th); applyTheme(); me(); });
   $('#wipe').onclick = () => { if (!$('#wipe').dataset.sure) { $('#wipe').dataset.sure = 1; $('#wipe').textContent = 'Tap again to clear everything'; return; }
-    ['ksaju_chart', 'ks_streak', 'ks_chat', 'ks_email', 'ks_time', 'g_journal', 'g_q'].forEach(k => { try { localStorage.removeItem(k); } catch (_) {} }); location.hash = '#start'; };
+    ['ksaju_chart', 'ks_streak', 'ks_chat', 'ks_email', 'ks_time', 'g_journal', 'g_q'].forEach(k => { try { localStorage.removeItem(k); } catch (_) {} }); location.href = CFG.start; };
   $('#mics').onclick = () => { ls.set('ks_time', $('#dtime').value || '08:00'); ics($('#dtime').value || '08:00'); };
   const wl = $('#wl'); if (wl) wl.onclick = async () => {
     const em = $('#wem').value.trim(), msg = $('#wmsg');
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { msg.textContent = 'Please enter a real email.'; return; }
     wl.disabled = true; ls.set('ks_email', em);
-    try { const r = await api({ action: 'waitlist', email: em, dm: c?.dayMaster?.label || '', title: c?.dayMaster?.title || '', element: c?.elements?.strongest || '', src: 'giun' });
+    try { const r = await api({ action: 'waitlist', email: em, dm: c?.dayMaster?.label || '', title: c?.dayMaster?.title || '', element: c?.elements?.strongest || '', src: CFG.src });
       msg.textContent = r.ok ? (r.dup ? 'You\'re already on the list.' : 'You\'re on the list. We\'ll email you at launch.') : 'Could not add you. Try again soon.'; } catch (_) { msg.textContent = 'Could not reach the server. Try again soon.'; }
     wl.disabled = false;
   };
   $('#dsub').onclick = async () => {
     const em = $('#dem').value.trim(), msg = $('#dmsg');
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { msg.textContent = 'Please enter a real email.'; return; }
-    if (!c) { msg.innerHTML = '<a href="#start">Make your chart</a> first so the email is about you.'; return; }
+    if (!c) { msg.innerHTML = `<a href="${CFG.start}">Make your chart</a> first so the email is about you.`; return; }
     ls.set('ks_email', em); ls.set('ks_time', $('#dtime').value || '08:00'); msg.textContent = 'Signing you up…';
     try { const r = await api({ action: 'daily_signup', email: em, time: $('#dtime').value || '08:00', tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
       dm: { element: c.dayMaster.element, hanja: c.dayMaster.hanja, title: c.dayMaster.title, label: c.dayMaster.label }, dayBranch: c.pillars?.day?.branch?.hanja || '' });
@@ -476,7 +478,7 @@ async function me(sub) {
   };
 }
 function reading() {
-  const c = chart(); if (!c) { location.hash = '#start'; return; }
+  const c = chart(); if (!c) { location.href = CFG.start; return; }
   setTheme(c.dayMaster.element);
   const P = c.pillars, cols = [['hour', 'Hour'], ['day', 'Day'], ['month', 'Month'], ['year', 'Year']];
   const pct = c.elements?.pct || {};
@@ -488,7 +490,7 @@ function reading() {
   <div class="row"><a class="btn" href="../ksaju/index.html#mine">Full reading</a><a class="btn ghost" href="#card">Share card</a><a class="btn ghost" href="#calendar">Good days</a></div>`;
 }
 function calendar() {
-  const c = chart(); if (!c) { location.hash = '#start'; return; }
+  const c = chart(); if (!c) { location.href = CFG.start; return; }
   setTheme(c.dayMaster.element);
   const start = new Date(); start.setDate(start.getDate() - start.getDay()); const cells = [];
   for (let i = 0; i < 35; i++) { const d = new Date(start); d.setDate(start.getDate() + i); const l = luck(c, dayPillar(d));
@@ -499,7 +501,7 @@ function calendar() {
   ${soon('Full year calendar + lucky dates for weddings and moves', 'The full-year calendar opens with the Lucky Dates reading.')}`;
 }
 async function card() {
-  const c = chart(); if (!c) { location.hash = '#start'; return; }
+  const c = chart(); if (!c) { location.href = CFG.start; return; }
   setTheme(c.dayMaster.element);
   V.innerHTML = `<a class="back" href="#me">← Me</a><section class="hero ink"><h1 class="brush" style="font-size:44px">Your cards</h1><p>Share your Day Master, or save a lock-screen wallpaper in your element's colors.</p></section>
   <div class="card"><div class="seg"><button class="btn ghost on" data-k="post" type="button">Share card</button><button class="btn ghost" data-k="wall" type="button">Wallpaper</button></div>
@@ -515,15 +517,15 @@ async function card() {
     g.fillStyle = '#1F1B16'; g.font = '130px "Nanum Brush Script"'; g.fillText(c.dayMaster.title, W / 2, cy + 470);
     g.font = '600 44px Inter, sans-serif'; g.fillStyle = '#4A4238'; g.fillText(`${c.dayMaster.label} · ${ELKO[c.dayMaster.element]}`, W / 2, cy + 570);
     g.font = '600 36px Inter, sans-serif'; g.fillStyle = '#7C7266';
-    g.fillText(kind === 'post' ? 'My Korean birth energy · what\'s yours?' : '기운 · Giun', W / 2, Hh - (kind === 'post' ? 110 : 220));
-    if (kind === 'post') { g.font = '600 30px Inter, sans-serif'; g.fillText('cryptojack762.github.io/jacob-nba/giun', W / 2, Hh - 60); }
+    g.fillText(kind === 'post' ? 'My Korean birth energy · what\'s yours?' : CFG.cardTag, W / 2, Hh - (kind === 'post' ? 110 : 220));
+    if (kind === 'post') { g.font = '600 30px Inter, sans-serif'; g.fillText(CFG.siteUrl, W / 2, Hh - 60); }
   };
   draw();
   V.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { kind = b.dataset.k; V.querySelectorAll('[data-k]').forEach(x => x.classList.toggle('on', x === b)); draw(); });
   const blob = () => new Promise(r => $('#cv').toBlob(r, 'image/png'));
   $('#csave').onclick = async () => { const a = document.createElement('a'); a.href = URL.createObjectURL(await blob()); a.download = `giun-${kind}.png`; a.click(); };
   $('#cshare').onclick = async () => { const f = new File([await blob()], `giun-${kind}.png`, { type: 'image/png' });
-    try { if (navigator.canShare?.({ files: [f] })) await navigator.share({ files: [f], title: 'My Korean birth energy', text: 'Find yours free:', url: new URL('./', location.href).href }); else $('#csave').click(); } catch (_) {} };
+    try { if (navigator.canShare?.({ files: [f] })) await navigator.share({ files: [f], title: 'My Korean birth energy', text: 'Find yours free:', url: new URL(CFG.home, location.href).href }); else $('#csave').click(); } catch (_) {} };
 }
 
 // ---------- START (birth form) ----------
@@ -561,13 +563,14 @@ function start() {
 // ---------- router ----------
 function applyTheme() { const t = ls.get('g_theme', 'auto'); if (t === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.dataset.theme = t; }
 async function share() {
-  const data = { title: 'Giun', text: 'A calm daily ritual from your Korean birth chart. Free.', url: new URL('./', location.href).href };
+  const data = { title: CFG.brand, text: CFG.share, url: new URL(CFG.home, location.href).href };
   try { if (navigator.share) return await navigator.share(data); await navigator.clipboard.writeText(data.url); $('#share').textContent = 'Link copied'; } catch (_) {}
 }
 $('#share').onclick = share;
 document.addEventListener('click', e => { const s = e.target.closest('[data-soon]'); if (s) s.querySelector('.tag').textContent = s.dataset.soon; });
 function route() {
   const [t, a] = (location.hash.slice(1) || (chart() ? 'today' : 'start')).split('/');
+  if (t === 'start' && CFG.start !== '#start') { location.href = CFG.start; return; }
   document.querySelectorAll('#tabs a').forEach(x => x.classList.toggle('on', x.dataset.t === t || (t === 'calendar' || t === 'card' || t === 'start') && x.dataset.t === 'me'));
   try { speechSynthesis?.cancel(); } catch (_) {} stopSound(); clearTimeout(breathTimer); clearInterval(medTimer); scrollTo(0, 0);
   const fn = { today, ritual: () => ritual(a), library: () => library(a), ask: () => a === 'mind' ? mind() : ask(), me: () => me(a), calendar, card, start }[t] || today;

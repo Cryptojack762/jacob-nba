@@ -1,0 +1,32 @@
+/* K-Saju look for the shared app screens (../giun/app.js + ../giun/style.css): Dustin's night sky, gold and Haneul colors. */
+:root, :root[data-theme="light"], :root[data-theme="dark"]{
+  --paper:#14132B; --paper2:#1E1C3D; --card:#24224A; --ink:#F4F1EA; --ink2:#C9C4DE; --mute:#9E98BC; --line:#38355F;
+  --Wood:#3CB89A; --Fire:#E2453C; --Earth:#F2C230; --Metal:#E8E4F0; --Water:#5B8DEF; --gold:#F2C230;
+  --shadow:0 1px 0 #0003, 0 10px 30px #0007;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --paper:#14132B; --paper2:#1E1C3D; --card:#24224A; --ink:#F4F1EA; --ink2:#C9C4DE; --mute:#9E98BC; --line:#38355F; --Water:#5B8DEF } }
+body{font-family:Inter,-apple-system,Segoe UI,Roboto,sans-serif;background:radial-gradient(900px 500px at 50% -160px,#2B2865 0%,#14132B 65%) no-repeat,#14132B!important;color:var(--ink)}
+.mountains{display:none}
+header.top{background:linear-gradient(#14132B 70%,transparent)}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink);font-weight:800}
+.logo b{font-family:'Noto Serif KR',serif;color:var(--gold);font-size:22px}
+.brush,.hero h1{font-family:'Noto Serif KR',serif!important;font-weight:700!important;letter-spacing:-.01em}
+.hero h1{font-size:34px!important;color:var(--ink)}
+.hero.today h1{color:var(--accent)}
+.hero .brush{font-size:34px!important}
+.card h2{font-family:Inter,sans-serif;font-weight:800}
+p, .card p{font-family:Inter,sans-serif}
+.btn{color:#14132B;font-weight:800}
+.btn.ghost{color:var(--ink)}
+.chip.solid{color:#14132B}
+.seal-lg{background:radial-gradient(circle,var(--card) 58%,transparent 59%),conic-gradient(#3CB89A 0 20%,#E2453C 0 40%,#F2C230 0 60%,#E8E4F0 0 80%,#2F5FC4 0)}
+.glyph{background:color-mix(in srgb,var(--accent) 20%,var(--card))}
+.card.frame::after{border-color:#ffffff14}
+input,select,textarea{background:var(--paper2);color:var(--ink)}
+.msg.u{background:var(--paper2)}
+.cal .d,.wd,.elchip,.pillar{background:var(--paper2)}
+nav.tabs{background:#14132Bf2}
+nav.tabs a.on{color:var(--gold)}
+nav.tabs a.on i{background:#F2C23026}
+#ks-dl{background:var(--gold)!important;color:#14132B!important}
+.tabs a{font-size:10px}

@@ -41,3 +41,8 @@ Live: https://cryptojack762.github.io/jacob-nba/giun/ (separate installable app;
 - Giun "Talk it through" (#ask/mind): trouble type + text/mic -> chart lens (Ten God day, clash/combo, today's element emotion, missing element, moon) + 2 research tools + 3 "Did you" questions + next step + crystal ritual note; crisis words -> 988/911/DV hotline only.
 - Backend v5: ask_ with mode 'mind' uses SYSTEM_MIND (lens never blames stars/moon; Gottman/CBT/self-compassion; crisis-only reply on danger). Live-tested 11/19.
 - Rule: chart and moon are reflection lenses, never causes; crystals labeled tradition (placebo studies cited).
+
+## 11/19 night: K-Saju hub now runs the shared Giun screens
+- ksaju/hub.html loads ../giun/app.js + ../giun/style.css, then css/hub2.css (Dustin's night/gold look). Settings via window.APP_CFG in hub.html (brand, start page = index.html, share text, card tag).
+- So K-Saju now has everything Giun has: Today plan, Ritual (breathe, meditate, timer, journal, sounds, calendar reminder), Talk it through, library search + today's pick, good-day calendar, share card + wallpaper, waitlist. One code base: fix giun/app.js once, both apps update.
+- Tabs on index + hub: Reading · Today · Ritual · Library · Ask · Me. js/hub.js is no longer used (kept for reference).
