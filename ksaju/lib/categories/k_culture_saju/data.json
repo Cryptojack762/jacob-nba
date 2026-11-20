@@ -1,0 +1,48 @@
+{
+ "slug": "k_culture_saju",
+ "name": "K-Culture & Saju",
+ "kind": "culture",
+ "sheet_tab": "LIB_K_Culture_Saju",
+ "entries": [
+  {
+   "id": "k_culture_saju-01",
+   "title": "Saju cafes",
+   "content": "In Seoul neighborhoods like Hongdae, saju and tarot cafes let friends get readings over coffee. It's a social outing, like a photo booth.",
+   "source": "Best of Korea: Saju reading guide",
+   "label": "Culture - education",
+   "verified": "Y"
+  },
+  {
+   "id": "k_culture_saju-02",
+   "title": "Saju in K-dramas",
+   "content": "K-dramas often use gunghap (compatibility) and fortune tellers as plot twists, such as a family checking a couple's charts before a wedding.",
+   "source": "Sajumuse blog: K-Pop and K-Drama Saju",
+   "label": "Culture - education",
+   "verified": "Y"
+  },
+  {
+   "id": "k_culture_saju-03",
+   "title": "'Palja' in everyday speech",
+   "content": "Saju is short for saju palja, 'four pillars, eight characters'. Koreans say 'palja ga joa' (lucky in life) in daily talk.",
+   "source": "Korean language",
+   "label": "Culture - education",
+   "verified": "Y"
+  },
+  {
+   "id": "k_culture_saju-04",
+   "title": "Tojeong Bigyeol (토정비결)",
+   "content": "A New Year fortune book from the 1500s. Many Koreans read their Tojeong Bigyeol for fun around Lunar New Year.",
+   "source": "Korean custom",
+   "label": "Culture - education",
+   "verified": "Y"
+  },
+  {
+   "id": "k_culture_saju-05",
+   "title": "Your 'tti' (띠)",
+   "content": "Koreans often ask 'what's your tti?' (your birth animal) to compare ages. It's the year pillar's animal, starting at Ipchun.",
+   "source": "Korean custom; Solar terms",
+   "label": "Culture - education",
+   "verified": "Y"
+  }
+ ]
+}

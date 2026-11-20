@@ -1,0 +1,56 @@
+{
+ "slug": "career_money_saju",
+ "name": "Career & Money Saju",
+ "kind": "tradition",
+ "sheet_tab": "LIB_Career_Money_Saju",
+ "entries": [
+  {
+   "id": "career_money_saju-01",
+   "title": "Wealth stars",
+   "content": "Wealth is the element your Day Master controls. Direct Wealth is read as steady pay; Indirect Wealth as deals, side hustles and risk.",
+   "source": "Traditional Ten Gods reading",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "career_money_saju-02",
+   "title": "Output makes money",
+   "content": "Eating God and Hurting Officer (the element you create) are read as skills and creativity that turn into income.",
+   "source": "Traditional Ten Gods reading",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "career_money_saju-03",
+   "title": "Officer and structure",
+   "content": "The element that controls your Day Master is the Officer: jobs, bosses, rules and titles. Strong Officer charts are often read as suited to big organizations.",
+   "source": "Traditional Ten Gods reading",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "career_money_saju-04",
+   "title": "Resource and study",
+   "content": "The element that feeds you is Resource: school, credentials, mentors and rest. Resource years are read as good for learning.",
+   "source": "Traditional Ten Gods reading",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "career_money_saju-05",
+   "title": "Element and work fields",
+   "content": "Traditional pairings: Wood - education, growth, plants; Fire - media, food, energy; Earth - real estate, care, logistics; Metal - finance, law, tools, tech; Water - trade, travel, communication.",
+   "source": "Traditional five-element associations",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "career_money_saju-06",
+   "title": "Money is your call",
+   "content": "Saju is for reflection, not financial advice. Make money decisions with real numbers and, for big ones, a licensed advisor.",
+   "source": "K-Saju",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  }
+ ]
+}

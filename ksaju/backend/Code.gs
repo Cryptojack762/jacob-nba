@@ -12,12 +12,19 @@
  *  3. Deploy > New deployment > Web app, Execute as: Me, Who has access: Anyone.
  *  4. Paste the web app URL into js/config.js (SITE.api).
  * Secret keys live only here, never in the website.
+ *  5. Daily emails: run installTriggers() once (sends each subscriber's reading at their chosen hour).
+ *     Optional properties: CHAT_FREE (default 1 free Haneul answer per phone), CHAT_DAILY_CAP (default 300 answers/day, protects the AI bill),
+ *     MAIL_FOOTER (your mailing address line, needed for US email law before marketing emails).
  */
 
 var PRODUCTS = {
   year2027: { name: '2027 Year Ahead + Love Reading', cents: 1499 },
   compat: { name: 'Compatibility Reading', cents: 1999 },
-  bundle: { name: 'Compatibility + 2027 Year Ahead Bundle', cents: 2999 }
+  bundle: { name: 'Compatibility + 2027 Year Ahead Bundle', cents: 2999 },
+  // Added 11/19 (placeholders until Jacob + Dustin approve prices; fulfilment not built yet)
+  q_money: { name: 'Money Reading', cents: 499 }, q_career: { name: 'Career Reading', cents: 499 },
+  q_love: { name: 'Love Reading', cents: 499 }, q_dates: { name: 'Lucky Dates (3 months)', cents: 499 },
+  couple: { name: 'Couple Report', cents: 2999 }, gift: { name: 'Gift Reading', cents: 1499 }, chat10: { name: '10 Haneul Answers', cents: 499 }
 };
 
 function P_(k, d) { return PropertiesService.getScriptProperties().getProperty(k) || d || ''; }
@@ -30,7 +37,9 @@ function setup() {
   var tabs = {
     Waitlist: ['time', 'email', 'day_master', 'title', 'strongest', 'source'],
     Orders: ['time', 'order_id', 'status', 'product', 'email', 'stripe_session', 'token', 'chart_json', 'reading', 'emailed', 'error'],
-    Events: ['time', 'step', 'source']
+    Events: ['time', 'step', 'source'],
+    Daily: ['time', 'email', 'send_time', 'tz', 'dm_element', 'dm_hanja', 'dm_title', 'day_branch', 'token', 'active', 'last_sent'],
+    Chat: ['time', 'device', 'question', 'answer']
   };
   Object.keys(tabs).forEach(function (n) {
     var sh = ss.getSheetByName(n) || ss.insertSheet(n);
@@ -43,7 +52,11 @@ function setup() {
   return ss.getUrl();
 }
 
-function doGet() { return out_({ ok: true, service: 'k-saju', time: new Date().toISOString() }); }
+function doGet(e) {
+  var t = e && e.parameter && e.parameter.unsub;
+  if (t) { unsub_(t); return HtmlService.createHtmlOutput('<p style="font:16px sans-serif;padding:30px">You are unsubscribed from K-Saju daily emails.</p>'); }
+  return out_({ ok: true, service: 'k-saju', time: new Date().toISOString() });
+}
 
 function doPost(e) {
   var b;
@@ -53,6 +66,8 @@ function doPost(e) {
     if (b.action == 'event') return out_(event_(b));
     if (b.action == 'checkout') return out_(checkout_(b));
     if (b.action == 'reading') return out_(reading_(b));
+    if (b.action == 'daily_signup') return out_(dailySignup_(b));
+    if (b.action == 'ask') return out_(ask_(b));
     return out_({ ok: false, err: 'unknown action' });
   } catch (x) {
     console.error(x);
@@ -312,4 +327,91 @@ function SAMPLE_() {
     animal: { color: 'White', name: 'Horse' },
     luck: { current: { hanja: '甲申', age: 27, ageEnd: 36, stem: { element: 'Wood' }, branch: { element: 'Metal' } } }
   };
+}
+
+
+// ---------- daily email (added 11/19) ----------
+var D_BR = '子丑寅卯辰巳午未申酉戌亥', D_ST = '甲乙丙丁戊己庚辛壬癸';
+var D_EL = ['Wood', 'Wood', 'Fire', 'Fire', 'Earth', 'Earth', 'Metal', 'Metal', 'Water', 'Water'];
+var D_AN = ['Rat', 'Ox', 'Tiger', 'Rabbit', 'Dragon', 'Snake', 'Horse', 'Goat', 'Monkey', 'Rooster', 'Dog', 'Pig'];
+var D_ORDER = ['Wood', 'Fire', 'Earth', 'Metal', 'Water'];
+var D_GOD = [['Friend day', 'Your own element is strong today. Good for teamwork and standing your ground. Watch for stubbornness.'],
+  ['Expression day', 'Your energy flows outward. Good for making, teaching, cooking and speaking up. Rest before you run dry.'],
+  ['Wealth day', 'You have the upper hand on what you go after. Good for money tasks, errands and finishing. Don\'t overreach.'],
+  ['Pressure day', 'Outside demands are stronger today. Good for discipline and rules. Pick your battles and breathe.'],
+  ['Support day', 'Today feeds you. Good for learning, asking for help and recovering. Say yes to support.']];
+function dayPillar_(y, m, d) {   // day index = days since 1900-01-01 + 10, mod 60 (1900-01-01 was 甲戌)
+  var days = Math.round((Date.UTC(y, m - 1, d) - Date.UTC(1900, 0, 1)) / 864e5), i = ((days + 10) % 60 + 60) % 60;
+  return { hanja: D_ST[i % 10] + D_BR[i % 12], s: i % 10, b: i % 12 };
+}
+function dailySignup_(b) {
+  var em = clean_(b.email, 120).toLowerCase(); if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) return { ok: false, err: 'bad email' };
+  if (!b.dm || D_ORDER.indexOf(b.dm.element) < 0) return { ok: false, err: 'missing chart' };
+  var time = /^\d\d:\d\d$/.test(b.time) ? b.time : '08:00', tz = clean_(b.tz, 60) || 'America/Chicago';
+  var sh = ss_().getSheetByName('Daily'), last = sh.getLastRow();
+  if (last > 1) {
+    var em_ = sh.getRange(2, 2, last - 1, 1).getValues();
+    for (var i = 0; i < em_.length; i++) if (em_[i][0] == em) {
+      sh.getRange(i + 2, 3, 1, 6).setValues([[time, tz, b.dm.element, clean_(b.dm.hanja, 4), clean_(b.dm.title, 40), clean_(b.dayBranch, 2)]]);
+      sh.getRange(i + 2, 10).setValue('yes'); return { ok: true, updated: true };
+    }
+  }
+  sh.appendRow([new Date(), em, time, tz, b.dm.element, clean_(b.dm.hanja, 4), clean_(b.dm.title, 40), clean_(b.dayBranch, 2), Utilities.getUuid().replace(/-/g, ''), 'yes', '']);
+  return { ok: true };
+}
+function unsub_(t) {
+  var sh = ss_().getSheetByName('Daily'), last = sh.getLastRow(); if (last < 2) return;
+  var v = sh.getRange(2, 9, last - 1, 1).getValues();
+  for (var i = 0; i < v.length; i++) if (v[i][0] == t) sh.getRange(i + 2, 10).setValue('no');
+}
+function installTriggers() {
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() == 'sendDailyEmails') ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('sendDailyEmails').timeBased().everyHours(1).create();
+}
+function sendDailyEmails() {
+  var sh = ss_().getSheetByName('Daily'), last = sh.getLastRow(); if (last < 2) return;
+  var rows = sh.getRange(2, 1, last - 1, 11).getValues(), now = new Date(), brand = P_('BRAND', 'K-Saju'), site = P_('SITE_URL', 'https://cryptojack762.github.io/jacob-nba/ksaju/');
+  var api = ScriptApp.getService().getUrl();
+  rows.forEach(function (r, i) {
+    if (r[9] != 'yes' || MailApp.getRemainingDailyQuota() < 1) return;
+    var tz = r[3] || 'America/Chicago', day = Utilities.formatDate(now, tz, 'yyyy-MM-dd'), hr = +Utilities.formatDate(now, tz, 'H');
+    if (r[10] == day || hr != +String(r[2]).split(':')[0]) return;
+    var p = day.split('-').map(Number), tp = dayPillar_(p[0], p[1], p[2]);
+    var k = (D_ORDER.indexOf(D_EL[tp.s]) - D_ORDER.indexOf(r[4]) + 5) % 5, g = D_GOD[k];
+    var html = '<div style="font:16px/1.5 sans-serif;max-width:520px;margin:auto;color:#222">' +
+      '<p style="color:#888;margin:0">' + brand + ' · ' + day + '</p><h2 style="margin:4px 0">Today ' + tp.hanja + ' · ' + g[0] + '</h2>' +
+      '<p>' + (r[6] ? r[6] + ' (' + r[4] + '): ' : '') + g[1] + '</p>' +
+      '<p><a href="' + site + 'hub.html#today">Open Today for your good-day check, streak and journal</a></p>' +
+      '<p style="color:#888;font-size:12px">For reflection and entertainment. Not medical, legal or financial advice. In a crisis call or text 988.<br>' +
+      (P_('MAIL_FOOTER') ? P_('MAIL_FOOTER') + '<br>' : '') + '<a href="' + api + '?unsub=' + r[8] + '">Unsubscribe</a></p></div>';
+    MailApp.sendEmail({ to: r[1], subject: 'Today ' + tp.hanja + ': ' + g[0], htmlBody: html, name: brand, replyTo: P_('REPLY_TO') || undefined });
+    sh.getRange(i + 2, 11).setValue(day);
+  });
+}
+
+// ---------- Ask Haneul (added 11/19). Free answers per phone, daily cap protects the AI bill. ----------
+var SYSTEM_CHAT = 'You are Haneul, a warm young Korean saju guide in the K-Saju app. Answer the user\'s question from THEIR calculated chart only (given below). ' +
+  'Plain, kind English, 120-220 words. Be specific to their Day Master, element balance and timing. One practical suggestion. ' +
+  'Never predict death, illness, disasters or exact events; never give medical, legal, financial or mental-health advice; never use fear to sell. ' +
+  'If the user mentions self-harm, abuse or danger, reply only: Please call or text 988 now, or 911 if you are in danger. ' +
+  'End with: For reflection and entertainment.';
+function ask_(b) {
+  var q = clean_(b.question, 600), dev = clean_(b.device, 40); if (!q || !dev) return { ok: false, err: 'missing' };
+  if (!b.chart || !b.chart.dayMaster) return { ok: false, err: 'missing chart' };
+  var sh = ss_().getSheetByName('Chat'), last = sh.getLastRow(), rows = last > 1 ? sh.getRange(2, 1, last - 1, 2).getValues() : [];
+  var today = new Date().toDateString(), usedToday = rows.filter(function (r) { return new Date(r[0]).toDateString() == today; }).length;
+  if (usedToday >= +P_('CHAT_DAILY_CAP', '300')) return { ok: false, err: 'busy' };
+  if (rows.filter(function (r) { return r[1] == dev; }).length >= +P_('CHAT_FREE', '1')) return { ok: false, err: 'limit' };
+  var key = P_('ANTHROPIC_KEY'); if (!key) return { ok: false, err: 'not ready' };
+  var hist = (b.history || []).slice(-6).map(function (m) { return (m.who == 'h' ? 'Haneul: ' : 'User: ') + clean_(m.t, 800); }).join('\n');
+  var r = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
+    method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+    headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+    payload: JSON.stringify({ model: P_('MODEL', 'claude-sonnet-5-5'), max_tokens: 600, system: SYSTEM_CHAT,
+      messages: [{ role: 'user', content: 'Chart:\n' + chartBrief_(b.chart) + (hist ? '\n\nEarlier chat:\n' + hist : '') + '\n\nQuestion: ' + q }] })
+  });
+  var j = JSON.parse(r.getContentText()); if (r.getResponseCode() >= 300) throw new Error('AI: ' + (j.error && j.error.message));
+  var a = (j.content || []).filter(function (x) { return x.type == 'text'; }).map(function (x) { return x.text; }).join('\n').trim();
+  sh.appendRow([new Date(), dev, q, a]);
+  return { ok: true, answer: a };
 }

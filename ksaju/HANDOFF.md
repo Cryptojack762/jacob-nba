@@ -11,6 +11,13 @@ Live: https://cryptojack762.github.io/jacob-nba/ksaju/  (GitHub Pages, branch `m
   - Me: chart, help by state + 988/911/211, share, clear data.
 - Installable app (PWA): manifest.webmanifest, sw.js (offline page, cached engine), js/pwa.js (install button + iPhone hint), img/icons, img/og.png share image. Chrome installability check: 0 errors.
 
+## Added 11/19 night (from competitor scan: Sajumuse, Master Sean Chan, Skillon, Co-Star)
+- Today: "Good day or careful day" card (six clashes/combos/harms vs user's day branch + Nobleman, Peach Blossom, Travel Horse stars). Daily email sign-up.
+- Ask Haneul chat (hub.html#ask): 1 free answer per phone, backend action `ask` (Claude API, daily cap CHAT_DAILY_CAP).
+- Me: free compatibility score (compat.html), sample report (sample-report.html), Readings menu ($4.99 quick readings, couple, gift, chat credits = "Soon" until payments live; list in config.shop, prices in Code.gs PRODUCTS are placeholders).
+- Library: 11 new categories (28 total, 143 entries): hidden stems, clashes/combos, shinsal, Korean almanac, dream dictionary, love, career/money, K-culture, Korean names, holidays, Purple Star. Each has a sheet tab (LIB_*) in "K-Saju Wellness Library - Master Data".
+- Backend (backend/Code.gs) needs redeploy for daily email + chat: paste code → run setup() (adds Daily + Chat tabs) → run installTriggers() → Script Properties ANTHROPIC_KEY (+ optional MAIL_FOOTER mailing address) → Deploy > Manage deployments > edit > New version. Until then the app shows "opens soon" messages.
+
 ## Switched off (buttons show "Soon") — turn on in js/config.js
 - `mode: 'waitlist'` → 'live' turns on Stripe checkout (backend/Code.gs; needs live key in Script Properties).
 - `gunghap: false` → compatibility.

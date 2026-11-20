@@ -1,0 +1,56 @@
+{
+ "slug": "korean_holidays",
+ "name": "Korean Holidays & Customs",
+ "kind": "culture",
+ "sheet_tab": "LIB_Korean_Holidays",
+ "entries": [
+  {
+   "id": "korean_holidays-01",
+   "title": "Seollal (설날)",
+   "content": "Lunar New Year. Families bow to elders (sebae), eat rice-cake soup (tteokguk) and say you are 'one year older' after the bowl.",
+   "source": "Korean custom",
+   "label": "Culture - education",
+   "verified": "Y"
+  },
+  {
+   "id": "korean_holidays-02",
+   "title": "Daeboreum (정월대보름)",
+   "content": "The first full moon of the lunar year. People crack nuts (bureom) for healthy teeth and watch the moon rise.",
+   "source": "Korean custom",
+   "label": "Culture - education",
+   "verified": "Y"
+  },
+  {
+   "id": "korean_holidays-03",
+   "title": "Dano (단오)",
+   "content": "Lunar May 5. Traditional swings, wrestling (ssireum) and washing hair in iris water.",
+   "source": "Korean custom",
+   "label": "Culture - education",
+   "verified": "Y"
+  },
+  {
+   "id": "korean_holidays-04",
+   "title": "Chuseok (추석)",
+   "content": "Harvest festival on lunar August 15. Families make half-moon rice cakes (songpyeon) and honor ancestors.",
+   "source": "Korean custom",
+   "label": "Culture - education",
+   "verified": "Y"
+  },
+  {
+   "id": "korean_holidays-05",
+   "title": "Dongji (동지)",
+   "content": "Winter solstice. Red bean porridge (patjuk) is eaten to keep bad luck away.",
+   "source": "Korean custom; Solar terms",
+   "label": "Culture - education",
+   "verified": "Y"
+  },
+  {
+   "id": "korean_holidays-06",
+   "title": "2027: the Fire Goat year",
+   "content": "The saju year 2027 is Jeong-mi 丁未, Yin Fire over Goat (Earth). It starts at Ipchun, about Feb 4, 2027.",
+   "source": "Sexagenary cycle - Wikipedia",
+   "label": "Culture - education",
+   "verified": "Y"
+  }
+ ]
+}

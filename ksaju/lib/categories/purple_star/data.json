@@ -1,0 +1,40 @@
+{
+ "slug": "purple_star",
+ "name": "Purple Star Astrology (Jamidusu)",
+ "kind": "tradition",
+ "sheet_tab": "LIB_Purple_Star",
+ "entries": [
+  {
+   "id": "purple_star-01",
+   "title": "What it is",
+   "content": "Purple Star astrology (Jamidusu 자미두수, Chinese Zi Wei Dou Shu) is a sister system to saju. It maps stars onto a 12-palace chart from your lunar birth date and two-hour birth period.",
+   "source": "Master Sean Chan: BaZi and Zi Wei Dou Shu",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "purple_star-02",
+   "title": "The 12 palaces",
+   "content": "Life, Siblings, Spouse, Children, Wealth, Health, Travel, Friends, Career, Property, Mind and Parents. Each palace covers one area of life.",
+   "source": "Zi Wei Dou Shu references",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "purple_star-03",
+   "title": "The 14 main stars",
+   "content": "Fourteen main stars, led by Zi Wei (the Emperor star), are placed in the palaces. Their mix describes strengths in each area.",
+   "source": "Zi Wei Dou Shu references",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "purple_star-04",
+   "title": "Saju vs Purple Star",
+   "content": "Saju reads elements and timing; Purple Star reads life areas in detail. Many readers use both side by side.",
+   "source": "Master Sean Chan: BaZi and Zi Wei Dou Shu",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  }
+ ]
+}

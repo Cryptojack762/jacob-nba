@@ -1,0 +1,48 @@
+{
+ "slug": "korean_almanac",
+ "name": "Korean Almanac & Good Days",
+ "kind": "tradition",
+ "sheet_tab": "LIB_Korean_Almanac",
+ "entries": [
+  {
+   "id": "korean_almanac-01",
+   "title": "Days without spirits (손 없는 날)",
+   "content": "Koreans often move house on 'son eomneun nal': lunar days 9, 10, 19, 20, 29 and 30, when wandering spirits are said to be away. Moving companies charge more on these days.",
+   "source": "Korean folk tradition",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "korean_almanac-02",
+   "title": "The 12 day officers",
+   "content": "The almanac gives each day one of 12 'officers' (Establish, Remove, Full, Balance, Stable, Initiate, Destruction, Danger, Success, Receive, Open, Close). Each suits different tasks, like Open for starting or Destruction for clearing out.",
+   "source": "Skillon: Chinese Almanac and the 12 Day Officers",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "korean_almanac-03",
+   "title": "Picking a wedding date (택일)",
+   "content": "Families often ask a reader to pick a wedding day that combines well with both partners' charts and avoids clash days.",
+   "source": "Skillon: Marriage Date Selection; Korean custom",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "korean_almanac-04",
+   "title": "Ipchun posters (입춘대길)",
+   "content": "At the start of spring (about Feb 4), many homes post 'Ipchundaegil' (great luck at spring's start) on the door. This is also the day the saju year begins.",
+   "source": "Korean custom; Solar terms",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "korean_almanac-05",
+   "title": "Your personal good days",
+   "content": "A good day for you is one whose animal combines with your day animal, or brings your Nobleman star. The Today tab checks this for you each day.",
+   "source": "K-Saju engine; traditional tables",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  }
+ ]
+}

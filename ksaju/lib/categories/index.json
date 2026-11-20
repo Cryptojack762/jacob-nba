@@ -48,6 +48,72 @@
   "count": 3
  },
  {
+  "slug": "hidden_stems",
+  "name": "Hidden Stems",
+  "kind": "tradition",
+  "count": 6
+ },
+ {
+  "slug": "clashes_combos",
+  "name": "Clashes, Combinations & Harms",
+  "kind": "tradition",
+  "count": 7
+ },
+ {
+  "slug": "shen_sha",
+  "name": "Lucky & Special Stars (Shinsal)",
+  "kind": "tradition",
+  "count": 6
+ },
+ {
+  "slug": "korean_almanac",
+  "name": "Korean Almanac & Good Days",
+  "kind": "tradition",
+  "count": 5
+ },
+ {
+  "slug": "dream_dictionary",
+  "name": "Korean Dream Dictionary",
+  "kind": "tradition",
+  "count": 7
+ },
+ {
+  "slug": "love_saju",
+  "name": "Love & Marriage Saju",
+  "kind": "tradition",
+  "count": 6
+ },
+ {
+  "slug": "career_money_saju",
+  "name": "Career & Money Saju",
+  "kind": "tradition",
+  "count": 6
+ },
+ {
+  "slug": "purple_star",
+  "name": "Purple Star Astrology (Jamidusu)",
+  "kind": "tradition",
+  "count": 4
+ },
+ {
+  "slug": "k_culture_saju",
+  "name": "K-Culture & Saju",
+  "kind": "culture",
+  "count": 5
+ },
+ {
+  "slug": "korean_names",
+  "name": "Korean Names & Saju",
+  "kind": "culture",
+  "count": 4
+ },
+ {
+  "slug": "korean_holidays",
+  "name": "Korean Holidays & Customs",
+  "kind": "culture",
+  "count": 6
+ },
+ {
   "slug": "sleep",
   "name": "Sleep",
   "kind": "wellness",

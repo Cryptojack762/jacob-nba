@@ -26,3 +26,5 @@ input[type=time]{width:auto}
 .tabs a i{font-style:normal;font-family:'Noto Serif KR',serif;font-size:18px}
 .tabs a.on{color:var(--gold2)}
 #ks-install{bottom:calc(80px + env(safe-area-inset-bottom))!important}
+.card.luck.good{border-color:var(--Wood)}.card.luck.care{border-color:var(--Earth)}
+.card.h{border-color:var(--gold)}.card.u{background:var(--ink2)}

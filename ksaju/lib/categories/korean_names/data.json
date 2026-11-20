@@ -1,0 +1,40 @@
+{
+ "slug": "korean_names",
+ "name": "Korean Names & Saju",
+ "kind": "culture",
+ "sheet_tab": "LIB_Korean_Names",
+ "entries": [
+  {
+   "id": "korean_names-01",
+   "title": "Naming by saju (작명)",
+   "content": "Some Korean parents ask a naming expert to pick a name whose Hanja meanings and elements balance the baby's saju, such as adding Water if Water is missing.",
+   "source": "Korean custom; Sajumuse readings",
+   "label": "Culture - education",
+   "verified": "Y"
+  },
+  {
+   "id": "korean_names-02",
+   "title": "Generation names (돌림자)",
+   "content": "Many families share one syllable across siblings or cousins of the same generation, chosen from a family register.",
+   "source": "Korean naming custom",
+   "label": "Culture - education",
+   "verified": "Y"
+  },
+  {
+   "id": "korean_names-03",
+   "title": "Family name first",
+   "content": "Korean names put the family name first, then usually a two-syllable given name, like Kim Min-jun.",
+   "source": "Korean naming custom",
+   "label": "Culture - education",
+   "verified": "Y"
+  },
+  {
+   "id": "korean_names-04",
+   "title": "Hanja meanings",
+   "content": "Most given names have Chinese characters (Hanja) behind them. The same sound can carry very different meanings depending on the character.",
+   "source": "Korean language",
+   "label": "Culture - education",
+   "verified": "Y"
+  }
+ ]
+}

@@ -1,0 +1,56 @@
+{
+ "slug": "love_saju",
+ "name": "Love & Marriage Saju",
+ "kind": "tradition",
+ "sheet_tab": "LIB_Love_Saju",
+ "entries": [
+  {
+   "id": "love_saju-01",
+   "title": "The spouse palace",
+   "content": "The animal under your Day Master (your day branch) is called the spouse palace. It is read as the kind of partnership you feel at home in.",
+   "source": "Four Pillars of Destiny - Wikipedia; Sajumuse blog",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "love_saju-02",
+   "title": "Partner stars",
+   "content": "In tradition, a woman's partner star is her Officer (Power) element and a man's is his Wealth element. Years that bring that element are read as active for love.",
+   "source": "Traditional Ten Gods reading",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "love_saju-03",
+   "title": "Peach Blossom years",
+   "content": "When a year's animal matches your Peach Blossom star, people say you'll notice more attention and chances to meet someone.",
+   "source": "Traditional shinsal tables",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "love_saju-04",
+   "title": "When the spouse palace is clashed",
+   "content": "If the year's animal clashes your day animal, tradition reads change in relationships: a move-in, a breakup, or a big decision.",
+   "source": "Sajumuse blog: Spouse Palace clashed by the year",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "love_saju-05",
+   "title": "Gunghap (궁합)",
+   "content": "Korean compatibility compares two charts: elements that balance each other, animals that combine, and clashes to work around. Many couples check it before marriage.",
+   "source": "Gunghap guides; Korean custom",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "love_saju-06",
+   "title": "Healthy love first",
+   "content": "No chart decides who you should love. If a relationship feels unsafe, call the National Domestic Violence Hotline: 1-800-799-7233.",
+   "source": "K-Saju; NDVH",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  }
+ ]
+}

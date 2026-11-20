@@ -1,0 +1,56 @@
+{
+ "slug": "hidden_stems",
+ "name": "Hidden Stems",
+ "kind": "tradition",
+ "sheet_tab": "LIB_Hidden_Stems",
+ "entries": [
+  {
+   "id": "hidden_stems-01",
+   "title": "What hidden stems are",
+   "content": "Each of the 12 animal branches carries one to three heavenly stems inside it, called hidden stems (jijanggan, 지장간). They show the deeper energies a branch brings to a chart.",
+   "source": "Four Pillars of Destiny - Wikipedia; Master Sean Chan BaZi calculator",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "hidden_stems-02",
+   "title": "Rat 子 and Rabbit 卯",
+   "content": "Rat holds Gye 癸 Water. Rabbit holds Eul 乙 Wood. These two are 'pure' branches with one main hidden stem.",
+   "source": "Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "hidden_stems-03",
+   "title": "Horse 午 and Rooster 酉",
+   "content": "Horse holds Jeong 丁 Fire with Gi 己 Earth. Rooster holds Sin 辛 Metal.",
+   "source": "Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "hidden_stems-04",
+   "title": "Tiger 寅, Snake 巳, Monkey 申, Pig 亥",
+   "content": "Tiger holds Gap 甲 Wood, Byeong 丙 Fire, Mu 戊 Earth. Snake holds Byeong 丙 Fire, Mu 戊 Earth, Gyeong 庚 Metal. Monkey holds Gyeong 庚 Metal, Im 壬 Water, Mu 戊 Earth. Pig holds Im 壬 Water and Gap 甲 Wood.",
+   "source": "Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "hidden_stems-05",
+   "title": "Ox 丑, Dragon 辰, Goat 未, Dog 戌",
+   "content": "These four Earth branches are 'storage' branches. Ox: Gi 己, Gye 癸, Sin 辛. Dragon: Mu 戊, Eul 乙, Gye 癸. Goat: Gi 己, Jeong 丁, Eul 乙. Dog: Mu 戊, Sin 辛, Jeong 丁.",
+   "source": "Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "hidden_stems-06",
+   "title": "Why they matter",
+   "content": "An element can look missing on the surface but still be hidden inside a branch. Readers check hidden stems before calling an element truly absent.",
+   "source": "Master Sean Chan BaZi calculator guide",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  }
+ ]
+}

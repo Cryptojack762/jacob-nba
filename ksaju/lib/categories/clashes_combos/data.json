@@ -1,0 +1,64 @@
+{
+ "slug": "clashes_combos",
+ "name": "Clashes, Combinations & Harms",
+ "kind": "tradition",
+ "sheet_tab": "LIB_Clashes_Combos",
+ "entries": [
+  {
+   "id": "clashes_combos-01",
+   "title": "Six clashes (충)",
+   "content": "Opposite animals clash: Rat-Horse, Ox-Goat, Tiger-Monkey, Rabbit-Rooster, Dragon-Dog, Snake-Pig. A clash is read as movement and change: moves, job shifts, breakups or breakthroughs.",
+   "source": "Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "clashes_combos-02",
+   "title": "Six combinations (육합)",
+   "content": "Pairs that bond: Rat-Ox, Tiger-Pig, Rabbit-Dog, Dragon-Rooster, Snake-Monkey, Horse-Goat. Read as attraction, teamwork and easy cooperation.",
+   "source": "Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "clashes_combos-03",
+   "title": "Three harmonies (삼합)",
+   "content": "Groups of three that form one strong element: Monkey-Rat-Dragon (Water), Pig-Rabbit-Goat (Wood), Tiger-Horse-Dog (Fire), Snake-Rooster-Ox (Metal).",
+   "source": "Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "clashes_combos-04",
+   "title": "Six harms (육해)",
+   "content": "Pairs that quietly drain each other: Rat-Goat, Ox-Horse, Tiger-Snake, Rabbit-Dragon, Monkey-Pig, Rooster-Dog. Read as small frictions and misunderstandings.",
+   "source": "Sajumuse blog: Six Harms Star; Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "clashes_combos-05",
+   "title": "Punishments (형)",
+   "content": "Tiger-Snake-Monkey, Ox-Dog-Goat, and Rat-Rabbit are 'punishment' groups; Dragon, Horse, Rooster and Pig can punish themselves. Read as tension that teaches a lesson.",
+   "source": "Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "clashes_combos-06",
+   "title": "Stem combinations (천간합)",
+   "content": "Heavenly stems also pair up: Gap-Gi (Earth), Eul-Gyeong (Metal), Byeong-Sin (Water), Jeong-Im (Wood), Mu-Gye (Fire).",
+   "source": "Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "clashes_combos-07",
+   "title": "How the app uses this",
+   "content": "Your Today card compares today's animal with your day pillar's animal. A combination day is marked smooth; a clash day is marked 'go slow, double-check plans'.",
+   "source": "K-Saju engine",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  }
+ ]
+}

@@ -1,0 +1,64 @@
+{
+ "slug": "dream_dictionary",
+ "name": "Korean Dream Dictionary",
+ "kind": "tradition",
+ "sheet_tab": "LIB_Dream_Dictionary",
+ "entries": [
+  {
+   "id": "dream_dictionary-01",
+   "title": "Pig dreams (돼지꿈)",
+   "content": "A pig dream is the classic money dream in Korea; some people buy a lottery ticket the next day.",
+   "source": "Korean folklore",
+   "label": "Folklore - for fun and reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "dream_dictionary-02",
+   "title": "Pregnancy dreams (태몽)",
+   "content": "Taemong are dreams said to announce a pregnancy. Dragons, tigers, fruit and jewels are common, and families retell them for years.",
+   "source": "Korean folklore",
+   "label": "Folklore - for fun and reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "dream_dictionary-03",
+   "title": "Fire dreams",
+   "content": "A big fire in a dream is usually read as prosperity and rising fortune, not danger.",
+   "source": "Korean folklore",
+   "label": "Folklore - for fun and reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "dream_dictionary-04",
+   "title": "Poop dreams",
+   "content": "Odd but true: dreaming of poop is read as incoming money or good luck.",
+   "source": "Korean folklore",
+   "label": "Folklore - for fun and reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "dream_dictionary-05",
+   "title": "Teeth falling out",
+   "content": "Read as worry about family or health in folklore. Most dream experts see it as everyday stress.",
+   "source": "Korean folklore",
+   "label": "Folklore - for fun and reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "dream_dictionary-06",
+   "title": "Clear water",
+   "content": "Clean, flowing water is read as a smooth path ahead; muddy water as confusion to sort out.",
+   "source": "Korean folklore",
+   "label": "Folklore - for fun and reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "dream_dictionary-07",
+   "title": "A note on dreams",
+   "content": "Dream meanings are folklore for fun and reflection. They don't predict the future.",
+   "source": "K-Saju",
+   "label": "Folklore - for fun and reflection",
+   "verified": "Y"
+  }
+ ]
+}

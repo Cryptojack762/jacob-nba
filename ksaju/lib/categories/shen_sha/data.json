@@ -1,0 +1,56 @@
+{
+ "slug": "shen_sha",
+ "name": "Lucky & Special Stars (Shinsal)",
+ "kind": "tradition",
+ "sheet_tab": "LIB_Shen_Sha",
+ "entries": [
+  {
+   "id": "shen_sha-01",
+   "title": "What shinsal are",
+   "content": "Shinsal (신살, Chinese shen sha) are special 'stars' found by matching branches in a chart. They add color to a reading but never outweigh the five elements and Ten Gods.",
+   "source": "Master Sean Chan BaZi calculator; Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "shen_sha-02",
+   "title": "Peach Blossom (도화살)",
+   "content": "The charm and romance star. From your year or day animal: Monkey/Rat/Dragon → Rooster; Tiger/Horse/Dog → Rabbit; Snake/Rooster/Ox → Horse; Pig/Rabbit/Goat → Rat.",
+   "source": "Traditional shinsal tables",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "shen_sha-03",
+   "title": "Travel Horse (역마살)",
+   "content": "The star of movement, travel and moving homes. Monkey/Rat/Dragon → Tiger; Tiger/Horse/Dog → Monkey; Snake/Rooster/Ox → Pig; Pig/Rabbit/Goat → Snake.",
+   "source": "Traditional shinsal tables",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "shen_sha-04",
+   "title": "Nobleman (천을귀인)",
+   "content": "The helper star: people who show up when you need them. Found from your day stem: Gap/Mu/Gyeong → Ox or Goat; Eul/Gi → Rat or Monkey; Byeong/Jeong → Pig or Rooster; Im/Gye → Snake or Rabbit; Sin → Tiger or Horse.",
+   "source": "Traditional shinsal tables",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "shen_sha-05",
+   "title": "Flower Canopy (화개살)",
+   "content": "The star of art, spirituality and solitude. Monkey/Rat/Dragon → Dragon; Tiger/Horse/Dog → Dog; Snake/Rooster/Ox → Ox; Pig/Rabbit/Goat → Goat.",
+   "source": "Traditional shinsal tables",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "shen_sha-06",
+   "title": "Samjae (삼재)",
+   "content": "A traditional three-year 'careful' period by birth animal. Pig, Rabbit and Goat people are in their last Samjae year in 2027 (the Goat year). Koreans treat it as a time to be careful, not a curse.",
+   "source": "Korean folk tradition",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  }
+ ]
+}
