@@ -1,0 +1,23 @@
+{
+  "id": "./",
+  "name": "Giun · Korean Daily Ritual",
+  "short_name": "Giun",
+  "description": "A calm daily ritual from your Korean birth chart: your day's energy, breathing, meditation, moon and seasons, a free library, and Haneul.",
+  "start_url": "./?source=pwa#today",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F3ECDF",
+  "theme_color": "#F3ECDF",
+  "lang": "en",
+  "categories": ["lifestyle", "health", "entertainment"],
+  "icons": [
+    { "src": "img/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "img/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "img/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Breathe", "url": "./#ritual/breathe", "icons": [{ "src": "img/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Evening journal", "url": "./#ritual/evening", "icons": [{ "src": "img/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

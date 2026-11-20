@@ -26,3 +26,11 @@ Live: https://cryptojack762.github.io/jacob-nba/ksaju/  (GitHub Pages, branch `m
 ## Open decisions (Jacob + Dustin)
 - Brand name + domain, prices, Stripe account owner, narrated-audio source, launch Dec 15.
 - On every deploy: bump VERSION in ksaju/sw.js.
+
+## Giun (기운) — Claude's own version (11/19 night)
+Live: https://cryptojack762.github.io/jacob-nba/giun/ (separate installable app; K-Saju untouched)
+- Same engine (ksaju/js/saju.js), same library (ksaju/lib), same backend (SITE.api). Chart saved on the phone is shared with K-Saju (same site).
+- New look: hanji paper + ink-brush lettering; colors follow the day's element. Tabs: Today · Ritual · Library · Ask · Me.
+- Today: day pillar message, good/careful day, morning/evening ritual card + streak, moon phase, solar term + Fire Goat countdown, tip.
+- Ritual: element breathing (animated), 5 element meditations with Listen, evening gratitude journal, sounds (rain/stream/temple bell made on the phone).
+- Library: all 28 sections + search + books with Listen. Ask: Haneul chat + compatibility. Me: chart, 5-week good-day calendar, share card + wallpaper, daily email, readings ("Soon"), help by state, light/dark.
