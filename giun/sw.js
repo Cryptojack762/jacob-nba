@@ -1,7 +1,7 @@
 // Giun service worker: offline ritual, library and engine. Bump VERSION on each deploy.
-const VERSION = 'giun-v9';
+const VERSION = 'giun-v10';
 const SHELL = ['./', './index.html', './style.css?v=1', './app.js?v=2', './manifest.webmanifest', './img/icon-192.png',
-  '../ksaju/js/config.js?v=9', '../ksaju/js/saju.js?v=8', '../ksaju/js/pwa.js?v=4', '../ksaju/lib/library.json', '../ksaju/lib/categories/index.json'];
+  '../ksaju/js/config.js?v=10', '../ksaju/js/saju.js?v=8', '../ksaju/js/pwa.js?v=4', '../ksaju/lib/library.json', '../ksaju/lib/categories/index.json'];
 self.addEventListener('install', e => e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())));
 self.addEventListener('activate', e => e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith('giun-') && k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim())));
 self.addEventListener('fetch', e => {

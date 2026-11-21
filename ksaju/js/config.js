@@ -8,8 +8,8 @@ export const SITE = {
   // Gunghap (compatibility) entry points on the main page. Off until after the Dec 15 launch (Dustin's spec). compat.html still works by direct link for testing.
   gunghap: false,
   // Switch a feature on later by setting it to true.
-  features: { dailyEmail: true, dailyPush: false, aiGuide: true, chatCredits: false, fullReport: false, proAudio: false, cloudSync: false },
-  chatFree: 1,   // free Haneul answers per phone
+  features: { dailyEmail: true, dailyPush: false, aiGuide: true, chatCredits: true, fullReport: false, proAudio: false, cloudSync: false },
+  chatFree: 999999,   // UNLIMITED until launch (set back to 1 at launch)
   // Readings menu (buttons show "Soon" until payments are live; prices are placeholders for Jacob + Dustin to approve)
   shop: [
     { id: 'q_money', name: 'Money reading', price: '$4.99' },

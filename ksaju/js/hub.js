@@ -1,5 +1,5 @@
 // K-Saju hub: Today · Library · Books · Me. Features not built yet show a "Soon" button (switch on in config.js → features).
-import { SITE } from './config.js?v=9';
+import { SITE } from './config.js?v=10';
 const $ = s => document.querySelector(s), V = $('#view');
 const esc = t => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const ls = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (_) { return d; } },

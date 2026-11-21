@@ -407,8 +407,8 @@ function ask_(b) {
   if (!b.chart || !b.chart.dayMaster) return { ok: false, err: 'missing chart' };
   var sh = ss_().getSheetByName('Chat'), last = sh.getLastRow(), rows = last > 1 ? sh.getRange(2, 1, last - 1, 2).getValues() : [];
   var today = new Date().toDateString(), usedToday = rows.filter(function (r) { return new Date(r[0]).toDateString() == today; }).length;
-  if (usedToday >= +P_('CHAT_DAILY_CAP', '300')) return { ok: false, err: 'busy' };
-  if (rows.filter(function (r) { return r[1] == dev; }).length >= +P_('CHAT_FREE', '1')) return { ok: false, err: 'limit' };
+  if (usedToday >= +P_('CHAT_DAILY_CAP', '5000')) return { ok: false, err: 'busy' };
+  if (rows.filter(function (r) { return r[1] == dev; }).length >= +P_('CHAT_FREE', '999999')) return { ok: false, err: 'limit' };
   var key = P_('ANTHROPIC_KEY'); if (!key) return { ok: false, err: 'not ready' };
   var hist = (b.history || []).slice(-6).map(function (m) { return (m.who == 'h' ? 'Haneul: ' : 'User: ') + clean_(m.t, 800); }).join('\n');
   var r = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {

@@ -1,6 +1,6 @@
 // Giun (기운) — a calm daily ritual built on the K-Saju engine and library.
 // Shares the chart engine (../ksaju/js/saju.js), library (../ksaju/lib) and backend (SITE.api) with K-Saju.
-import { SITE } from '../ksaju/js/config.js?v=9';
+import { SITE } from '../ksaju/js/config.js?v=10';
 
 // Shared by two apps: Giun (/giun/) and K-Saju's hub (/ksaju/hub.html). Each page sets window.APP_CFG before loading this file.
 const CFG = Object.assign({ brand: 'Giun', start: '#start', home: './', classic: '../ksaju/', siteUrl: 'cryptojack762.github.io/jacob-nba/giun', share: 'A calm daily ritual from your Korean birth chart. Free.', cardTag: '기운 · Giun', src: 'giun' }, window.APP_CFG || {});
