@@ -1,0 +1,40 @@
+{
+ "slug": "saju_basics",
+ "name": "Saju Basics",
+ "kind": "tradition",
+ "sheet_tab": "LIB_Saju_Basics",
+ "entries": [
+  {
+   "id": "saju_basics-01",
+   "title": "The Four Pillars (Saju Palja)",
+   "content": "Saju turns your birth year, month, day and hour into four 'pillars' made of eight characters. Traditionally it is read as a map of the moment you were born.",
+   "source": "Four Pillars of Destiny - Wikipedia; Gunghap: Understanding Korean Marital Compatibility & Saju",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "saju_basics-02",
+   "title": "A tool for self-reflection",
+   "content": "Classical Saju study (Ziping) treats the chart as a personality framework for reflection, not a fixed fate. It is used to think about your tendencies and friction points.",
+   "source": "leekyuhaiambox-ops/saju-platform (GitHub)",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "saju_basics-03",
+   "title": "True solar time",
+   "content": "Accurate charts adjust clock time to the sun's real position at your birth city (longitude and the equation of time). Near the edge of a two-hour block this can change the hour pillar.",
+   "source": "True Solar Time in Bazi: When Correction Changes a Pillar; BaziInsight hour pillar guide",
+   "label": "Calculation rule",
+   "verified": "Y"
+  },
+  {
+   "id": "saju_basics-04",
+   "title": "The Day Master",
+   "content": "The heavenly stem of your day pillar is called the Day Master and represents your core self. The rest of the chart is read in relation to it.",
+   "source": "How to Read Marital Harmony (Gunghap 3) - Korea Times; Saju Cafe in Seoul guide",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  }
+ ]
+}

@@ -1,0 +1,32 @@
+{
+ "slug": "luck_pillars",
+ "name": "Luck Pillars (Daeun)",
+ "kind": "tradition",
+ "sheet_tab": "LIB_Luck_Pillars",
+ "entries": [
+  {
+   "id": "luck_pillars-01",
+   "title": "10-year luck cycles",
+   "content": "Daeun are 10-year periods that step forward or back from your month pillar. Each decade is read as a different 'climate' for your chart.",
+   "source": "Four Pillars of Destiny - Wikipedia; Luck Pillars (dayun)",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "luck_pillars-02",
+   "title": "Helpful and unhelpful elements",
+   "content": "Readers ask whether a decade brings the element your chart needs for balance or one it already has too much of. Hard decades are read as times to move carefully, not as fixed bad luck.",
+   "source": "Luck Pillars (dayun)",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "luck_pillars-03",
+   "title": "The twelve-stage cycle",
+   "content": "Tradition describes a 12-stage life curve, from birth through peak to rest, that a stem moves through. It is used to talk about rising and falling energy over time.",
+   "source": "Luck Pillars (dayun)",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  }
+ ]
+}

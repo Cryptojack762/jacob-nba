@@ -1,0 +1,40 @@
+{
+ "slug": "gut_health",
+ "name": "Gut Health",
+ "kind": "wellness",
+ "sheet_tab": "LIB_Gut_Health",
+ "entries": [
+  {
+   "id": "gut_health-01",
+   "title": "Probiotics and the gut",
+   "content": "Probiotics may help some people's digestion, for example after antibiotics, but effects depend on the strain. Ask a doctor or pharmacist before starting one.",
+   "source": "Probiotics: Usefulness and Safety - NCCIH (NIH)",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "gut_health-02",
+   "title": "Who should be careful",
+   "content": "NCCIH and FDA warn probiotics can cause serious infections in premature infants and people with weak immune systems. Check with a doctor first.",
+   "source": "Probiotics: Usefulness and Safety - NCCIH (NIH)",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "gut_health-03",
+   "title": "Mouth to gut",
+   "content": "Stomach acid kills many swallowed mouth bacteria. Good oral care supports the whole digestive tract.",
+   "source": "Oral microbiology - Wikipedia",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "gut_health-04",
+   "title": "Fiber and gut variety",
+   "content": "Diets high in refined carbs are linked with less variety in gut microbes. Fiber-rich whole foods support a diverse gut.",
+   "source": "Oral microbiology - Wikipedia; MedlinePlus healthy eating",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  }
+ ]
+}

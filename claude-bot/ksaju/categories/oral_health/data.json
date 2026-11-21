@@ -1,0 +1,32 @@
+{
+ "slug": "oral_health",
+ "name": "Oral Health",
+ "kind": "wellness",
+ "sheet_tab": "LIB_Oral_Health",
+ "entries": [
+  {
+   "id": "oral_health-01",
+   "title": "Your mouth's ecosystem",
+   "content": "The mouth is home to many microbes that form a natural film on teeth. When the balance is off, cavities and gum problems are more likely.",
+   "source": "Oral microbiology - Wikipedia",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "oral_health-02",
+   "title": "Gums and whole-body health",
+   "content": "Research links long-term gum inflammation with other health conditions. Daily brushing, cleaning between teeth and dental checkups matter.",
+   "source": "Oral microbiology - Wikipedia",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "oral_health-03",
+   "title": "Probiotics and gums",
+   "content": "Some early studies look at probiotics for gum health, but the evidence is mixed. Brushing and cleaning between teeth come first.",
+   "source": "Probiotics: Usefulness and Safety - NCCIH (NIH)",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  }
+ ]
+}

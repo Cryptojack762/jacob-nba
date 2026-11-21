@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0c0a18">
+<title>K-Saju</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="ks-180.png">
+<style>
+:root{--bg:#0c0a18;--card:#16132a;--line:#2a2546;--ink:#f1ede4;--quiet:#a9a3bd;--acc:#c9a04c;
+--wood:#4caf50;--fire:#ef5350;--earth:#c9a04c;--metal:#bdbdbd;--water:#4285f4}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:0 16px calc(84px + env(safe-area-inset-bottom));max-width:640px;margin:auto}
+h1{font-size:22px;margin:18px 0 4px}h2{font-size:17px;margin:18px 0 8px}
+.q{color:var(--quiet);font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0}
+.tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:99px;border:1px solid var(--line);color:var(--quiet);margin-right:6px}
+.lock{color:var(--acc)}
+button,select,input{font:inherit;color:var(--ink);background:#1e1a38;border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px}
+button.pri{background:var(--acc);color:#1a1405;border:0;font-weight:600}
+input,select{width:100%;margin:6px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;min-height:84px}
+.tile b{display:block;font-size:15px}
+nav{position:fixed;left:0;right:0;bottom:0;background:#0f0c20;border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:6px 0 calc(6px + env(safe-area-inset-bottom))}
+nav button{background:none;border:0;font-size:12px;color:var(--quiet);display:flex;flex-direction:column;align-items:center;gap:2px;min-width:60px}
+nav button.on{color:var(--acc)}nav span{font-size:20px}
+.el{font-weight:700}.foot{font-size:12px;color:var(--quiet);margin:18px 0;text-align:center}
+.hide{display:none}a{color:var(--acc)}
+.pv{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;align-items:center;gap:8px;padding:10px 0 6px;font-size:13px;color:var(--quiet)}
+.pv .seg{display:flex;border:1px solid var(--line);border-radius:99px;overflow:hidden}
+.pv .seg button{border:0;border-radius:0;min-height:34px;padding:6px 16px;background:none;color:var(--quiet)}
+.pv .seg button.on{background:var(--acc);color:#1a1405;font-weight:600}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<nav id="nav"></nav>
+<script>
+/* K-Saju v1 - phone web app. Data: SYNC_URL (Apps Script web app) when set, else the built-in seed below. */
+var SYNC_URL = ''; // paste the "K-Saju Library Sync" web app link here after Jacob deploys it
+var FREE_BOOKS = 3, FREE_Q = 3;
+
+var SEED = {
+ categories:[
+  {category_id:'C01',name:'Herbalism',tier:'Free'},{category_id:'C02',name:'Immunology',tier:'Free'},
+  {category_id:'C03',name:'Energy Medicine',tier:'Free'},{category_id:'C04',name:'Clinical Nutrition',tier:'Free'},
+  {category_id:'C05',name:'Mind-Body',tier:'Free'},{category_id:'C06',name:'Environmental Detox',tier:'Free'},
+  {category_id:'C07',name:'Biological Dentistry / Biohacking',tier:'Free'},{category_id:'C08',name:'Business',tier:'Free'},
+  {category_id:'C09',name:'Systems',tier:'Free'}],
+ books:[
+  {id:'B001',title:'The Complete Herbal',author:'Nicholas Culpeper',category_id:'C01',tier:'Free',source_url:'https://www.gutenberg.org/ebooks/49513',notes:'Historical herbal - read as history, not medical advice'},
+  {id:'B002',title:'Notes on Nursing',author:'Florence Nightingale',category_id:'C02',tier:'Free',source_url:'https://www.gutenberg.org/ebooks/12439',notes:'Home care basics: air, light, cleanliness'},
+  {id:'B005',title:'Meditations',author:'Marcus Aurelius',category_id:'C05',tier:'Free',source_url:'https://www.gutenberg.org/ebooks/2680',notes:'Emotional fitness and resilience'},
+  {id:'B003',title:'Letter on Corpulence',author:'William Banting',category_id:'C04',tier:'Paid',source_url:'https://www.gutenberg.org/ebooks/57545',notes:'Early low-carb diet history'},
+  {id:'B004',title:'Discourses on the Sober and Temperate Life',author:'Luigi Cornaro',category_id:'C04',tier:'Paid',source_url:'https://www.gutenberg.org/ebooks/30660',notes:'Longevity classic'},
+  {id:'B006',title:'The Gospel of Relaxation',author:'William James',category_id:'C05',tier:'Paid',source_url:'https://www.gutenberg.org/ebooks/16287',notes:'Nervous system and relaxation'},
+  {id:'B007',title:'Walden',author:'Henry David Thoreau',category_id:'C05',tier:'Paid',source_url:'https://www.gutenberg.org/ebooks/205',notes:'Nature connection'},
+  {id:'B008',title:'My First Summer in the Sierra',author:'John Muir',category_id:'C06',tier:'Paid',source_url:'https://www.gutenberg.org/ebooks/32540',notes:'Nature immersion'},
+  {id:'B009',title:'The Genuine Works of Hippocrates',author:'Hippocrates',category_id:'C04',tier:'Paid',source_url:'https://www.gutenberg.org/ebooks/72583',notes:'Airs, Waters, Places - environment and health'},
+  {id:'B010',title:'Self-Help',author:'Samuel Smiles',category_id:'C08',tier:'Paid',source_url:'https://www.gutenberg.org/ebooks/935',notes:'Habits and work'}],
+ tips:[
+  "Before checking your phone in the morning, take a few slow, deep breaths.",
+  "Choose water instead of a sugary drink with your meals.",
+  "Spend some time outside every day, ideally in the morning daylight.",
+  "Fill half your plate with fruits and vegetables.",
+  "Pick a set wake-up time and keep it on weekends too.",
+  "Choose whole grains over refined grains. They have more fiber.",
+  "Try a gratitude journal: write down one thing you're thankful for today.",
+  "Crack a window for a few minutes to bring in fresh air, if it's safe and comfortable to do so.",
+  "Take a 10-minute walk today. Some activity is better than none.",
+  "Chamomile tea can be a caffeine-free evening drink. Skip it if you're allergic to ragweed or daisies, and ask your doctor or pharmacist if you take medications.",
+  "Put screens away (or set Do Not Disturb) for the last hour before bed.",
+  "Mix up your protein: beans, nuts, eggs, fish and lean meat.",
+  "Rinse fruit and vegetables under running water before you peel or cut them.",
+  "Get up and move for a minute every hour you sit. Move more, sit less.",
+  "Brush twice a day and clean between your teeth once a day.",
+  "When stressed, take a few minutes for slow, deep breathing.",
+  "Swap one sugary drink a day for water or sparkling water.",
+  "Wash your hands for 20 seconds with soap, especially before eating.",
+  "Spend time outside in nature with a friend or family member this week.",
+  "Ask your doctor which vaccines are recommended for you.",
+  "Make a plan with one small goal for tomorrow and the specific step you'll take.",
+  "Call or text one friend or family member today just to check in.",
+  "Pack a healthy snack from home so the healthy choice is the easy choice.",
+  "Keep a battery carbon monoxide detector near every sleeping area. Check the batteries when the clocks change.",
+  "Keep your bedroom cool, dark and quiet for better sleep.",
+  "Try progressive relaxation: tense, then relax, each muscle group from head to toe.",
+  "Put healthy foods where you see them first. Make the healthy choice the easy choice.",
+  "Track one habit in a notebook or phone app. Keeping a record helps.",
+  "If you're struggling, talk to a doctor or counselor. In a crisis, call or text 988.",
+  "Once a week, look back at your record: what worked, what got in the way, one small change."
+ ].map(function(t,i){return {id:'TIP'+String(i+1).padStart(3,'0'),tip_trick:t}}),
+ states:[
+  {state:'Texas',resource_name:'Texas HHS - Mental Health Crisis Services',type:'hotline',url:'https://hhs.texas.gov/services/mental-health-substance-use/mental-health-crisis-services'},
+  {state:'Texas',resource_name:'Local Mental Health Authority directory (by county)',type:'guide',url:'https://resources.hhs.texas.gov/directories/lmha'},
+  {state:'Texas',resource_name:"Governor's Office - Mental Health Resources and Protections",type:'guide',url:'https://gov.texas.gov/organization/disabilities/mental_health_protections'},
+  {state:'California',resource_name:'DHCS - County Behavioral Health Directory',type:'guide',url:'https://www.dhcs.ca.gov/services/mental-health-services-division-default/california-county-program-administrators-directory/'},
+  {state:'Florida',resource_name:'DCF - Find Local Mental Health and Substance Use Services',type:'guide',url:'https://myflfamilies.com/SAMH-Get-Help'},
+  {state:'New York',resource_name:'NY.gov - Mental Health and Addiction Help (HOPEline 1-877-8-HOPENY)',type:'hotline',url:'https://ny.gov/topic/mental-health-and-addiction-help'},
+  {state:'Pennsylvania',resource_name:'DHS - Find County Mental Health Services',type:'guide',url:'https://www.pa.gov/agencies/dhs/resources/mental-health-substance-use-disorder/find-services.html'},
+  {state:'Illinois',resource_name:'HFS - Find a Behavioral Health Provider (crisis: CARES 1-800-345-9049)',type:'guide',url:'https://hfs.illinois.gov/medicalclients/behavioral/findaprovider.html'},
+  {state:'Ohio',resource_name:'Ohio Crisis Text Line - text 4hope to 741741',type:'hotline',url:'https://dam.assets.ohio.gov/image/upload/mha.ohio.gov/AboutUs/MediaCenter/PublicationsandFactSheets/CTL-fact-sheet.pdf'},
+  {state:'Georgia',resource_name:'Georgia Crisis and Access Line (GCAL) 1-800-715-4225',type:'hotline',url:'https://dbhdd.georgia.gov/node/17071'},
+  {state:'North Carolina',resource_name:'NCDHHS - Mental Health and Substance Use Help',type:'guide',url:'https://www.ncdhhs.gov/assistance/mental-health-and-substance-abuse'},
+  {state:"Alabama",resource_name:"Alabama Department of Mental Health (state agency)",type:'guide',url:"https://mh.alabama.gov"},
+  {state:"Alaska",resource_name:"Alaska Division of Behavioral Health (state agency)",type:'guide',url:"https://health.alaska.gov/en/division-of-behavioral-health"},
+  {state:"Arizona",resource_name:"Arizona Health Care Cost Containment System (AHCCCS) (state agency)",type:'guide',url:"https://www.azahcccs.gov"},
+  {state:"Arkansas",resource_name:"Arkansas DHS - Office of Substance Abuse and Mental Health (state agency)",type:'guide',url:"https://humanservices.arkansas.gov/divisions-shared-services/shared-services/office-of-substance-abuse-and-mental-health"},
+  {state:"Colorado",resource_name:"Colorado Behavioral Health Administration (state agency)",type:'guide',url:"https://bha.colorado.gov"},
+  {state:"Connecticut",resource_name:"Connecticut Department of Mental Health and Addiction Services (state agency)",type:'guide',url:"https://portal.ct.gov/dmhas"},
+  {state:"Delaware",resource_name:"Delaware Division of Substance Abuse and Mental Health (state agency)",type:'guide',url:"https://dhss.delaware.gov/dsamh"},
+  {state:"Hawaii",resource_name:"Hawaii Department of Health - Behavioral Health Administration (state agency)",type:'guide',url:"https://health.hawaii.gov/substance-abuse"},
+  {state:"Idaho",resource_name:"Idaho Health and Welfare - Division of Behavioral Health (state agency)",type:'guide',url:"https://healthandwelfare.idaho.gov/services-programs/behavioral-health"},
+  {state:"Indiana",resource_name:"Indiana Family and Social Services Administration (state agency)",type:'guide',url:"https://www.in.gov/fssa"},
+  {state:"Iowa",resource_name:"Iowa Department of Health and Human Services (state agency)",type:'guide',url:"https://hhs.iowa.gov"},
+  {state:"Kansas",resource_name:"Kansas KDADS - Behavioral Health (state agency)",type:'guide',url:"https://www.kdads.ks.gov/services-programs/behavioral-health"},
+  {state:"Kentucky",resource_name:"Kentucky Cabinet for Health and Family Services (state agency)",type:'guide',url:"https://www.chfs.ky.gov/Pages/index.aspx"},
+  {state:"Louisiana",resource_name:"Louisiana Office of Behavioral Health (state agency)",type:'guide',url:"https://ldh.la.gov/office-of-behavioral-health"},
+  {state:"Maine",resource_name:"Maine DHHS - Office of Behavioral Health (state agency)",type:'guide',url:"https://www.maine.gov/dhhs/obh"},
+  {state:"Maryland",resource_name:"Maryland Behavioral Health Administration (state agency)",type:'guide',url:"https://health.maryland.gov/bha/Pages/Index.aspx"},
+  {state:"Massachusetts",resource_name:"Massachusetts Department of Mental Health (state agency)",type:'guide',url:"https://www.mass.gov/orgs/massachusetts-department-of-mental-health"},
+  {state:"Minnesota",resource_name:"Minnesota DHS - Behavioral Health (state agency)",type:'guide',url:"https://www.dhs.state.mn.us/main/idcplg?IdcService=GET_DYNAMIC_CONVERSION&RevisionSelectionMethod=LatestReleased&dDocName=id_008949"},
+  {state:"Mississippi",resource_name:"Mississippi Department of Mental Health (state agency)",type:'guide',url:"https://www.dmh.ms.gov"},
+  {state:"Missouri",resource_name:"Missouri Department of Mental Health (state agency)",type:'guide',url:"https://dmh.mo.gov/behavioral-health"},
+  {state:"Montana",resource_name:"Montana Department of Public Health and Human Services (state agency)",type:'guide',url:"https://dphhs.mt.gov"},
+  {state:"Nebraska",resource_name:"Nebraska DHHS - Division of Behavioral Health (state agency)",type:'guide',url:"https://dhhs.ne.gov/Pages/default.aspx"},
+  {state:"Nevada",resource_name:"Nevada Division of Public and Behavioral Health (state agency)",type:'guide',url:"https://www.dpbh.nv.gov"},
+  {state:"New Hampshire",resource_name:"New Hampshire DHHS - Bureau of Drug and Alcohol Services (state agency)",type:'guide',url:"https://www.dhhs.nh.gov/bureau-drug-alcohol-services-bdas"},
+  {state:"New Jersey",resource_name:"New Jersey Division of Mental Health and Addiction Services (state agency)",type:'guide',url:"https://www.nj.gov/humanservices/dmhas"},
+  {state:"New Mexico",resource_name:"New Mexico Health Care Authority (state agency)",type:'guide',url:"https://www.hca.nm.gov"},
+  {state:"Oklahoma",resource_name:"Oklahoma Department of Mental Health and Substance Abuse Services (state agency)",type:'guide',url:"https://oklahoma.gov/odmhsas.html"},
+  {state:"Oregon",resource_name:"Oregon Health Authority - Health Systems Division (state agency)",type:'guide',url:"https://www.oregon.gov/oha/hsd/pages/index.aspx"},
+  {state:"Rhode Island",resource_name:"Rhode Island BHDDH (state agency)",type:'guide',url:"https://bhddh.ri.gov"},
+  {state:"South Carolina",resource_name:"South Carolina Department of Behavioral Health and Developmental Disabilities (state agency)",type:'guide',url:"https://bhdd.sc.gov"},
+  {state:"South Dakota",resource_name:"South Dakota Department of Social Services (state agency)",type:'guide',url:"https://dss.sd.gov"},
+  {state:"Tennessee",resource_name:"Tennessee Department of Mental Health and Substance Abuse Services (state agency)",type:'guide',url:"https://www.tn.gov/behavioral-health.html"},
+  {state:"Vermont",resource_name:"Vermont Department of Health - Substance Use Programs (state agency)",type:'guide',url:"https://www.healthvermont.gov/alcohol-drugs"},
+  {state:"Virginia",resource_name:"Virginia Department of Behavioral Health and Developmental Services (state agency)",type:'guide',url:"https://dbhds.virginia.gov"},
+  {state:"Washington",resource_name:"Washington Health Care Authority - Behavioral Health and Recovery (state agency)",type:'guide',url:"https://www.hca.wa.gov/about-hca/programs-and-initiatives/behavioral-health-and-recovery"},
+  {state:"West Virginia",resource_name:"West Virginia Bureau for Behavioral Health (state agency)",type:'guide',url:"https://dohs.wv.gov"},
+  {state:"Wisconsin",resource_name:"Wisconsin DHS - Prevention, Treatment and Recovery (state agency)",type:'guide',url:"https://www.dhs.wisconsin.gov/dcts/index.htm"},
+  {state:"Wyoming",resource_name:"Wyoming Department of Health (state agency)",type:'guide',url:"https://health.wyo.gov"},
+  {state:'North Dakota',resource_name:'North Dakota HHS - Behavioral Health (state agency)',type:'guide',url:'https://www.hhs.nd.gov/behavioral-health'},
+  {state:'Texas',resource_name:'2-1-1 Texas - food, housing, health and other services (dial 211)',type:'hotline',url:'https://www.211texas.org'},
+  {state:'Utah',resource_name:'Utah DHHS - Office of Substance Use and Mental Health (state agency)',type:'guide',url:'https://sumh.utah.gov'},
+  {state:'Michigan',resource_name:'MDHHS - Get Help Now',type:'guide',url:'https://www.michigan.gov/mdhhs/keep-mi-healthy/mentalhealth/mentalhealth/get-help-now'}]
+};
+var STATES='Alabama,Alaska,Arizona,Arkansas,California,Colorado,Connecticut,Delaware,Florida,Georgia,Hawaii,Idaho,Illinois,Indiana,Iowa,Kansas,Kentucky,Louisiana,Maine,Maryland,Massachusetts,Michigan,Minnesota,Mississippi,Missouri,Montana,Nebraska,Nevada,New Hampshire,New Jersey,New Mexico,New York,North Carolina,North Dakota,Ohio,Oklahoma,Oregon,Pennsylvania,Rhode Island,South Carolina,South Dakota,Tennessee,Texas,Utah,Vermont,Virginia,Washington,West Virginia,Wisconsin,Wyoming'.split(',');
+
+/* ---------- storage (phone only) ---------- */
+function get(k,d){try{var v=localStorage.getItem('ks_'+k);return v==null?d:JSON.parse(v)}catch(e){return d}}
+function put(k,v){try{localStorage.setItem('ks_'+k,JSON.stringify(v))}catch(e){}}
+var LIB = get('lib', SEED);
+function syncNow(){
+  // library.json = server copy of the verified sheet rows (same site, cached for offline); SYNC_URL = live sheet when deployed
+  fetch(SYNC_URL||'library.json',{cache:'no-cache'}).then(function(r){return r.json()}).then(function(d){
+    ['categories','books','tips','states'].forEach(function(k){ if(d[k]&&d[k].length) LIB[k]=d[k]; }); LIB.updated=d.updated;
+    // sheet headers -> app fields: Categories_27 uses "ID" and "Category"; a blank Tier counts as Free
+    LIB.categories=LIB.categories.map(function(c){return {category_id:c.category_id||c.id,name:c.name||c.category,tier:c.tier||'Free'}});
+    put('lib',LIB); render();
+  }).catch(function(){});
+}
+
+/* ---------- Saju (five elements) ----------
+   Year element from the year's heavenly stem (last digit: 4-5 Wood, 6-7 Fire, 8-9 Earth, 0-1 Metal, 2-3 Water).
+   Day element from the 60-day cycle, anchored on 1900-01-01 = Jia-Xu (stem index 0). Checked 11/19: gives 1949-10-01 = Jia-Zi, matching Wikipedia's worked example.
+   Note: the Saju year starts around Feb 4, so births in Jan to early Feb use the year before. */
+var EL=['Wood','Fire','Earth','Metal','Water'], COL={Wood:'var(--wood)',Fire:'var(--fire)',Earth:'var(--earth)',Metal:'var(--metal)',Water:'var(--water)'};
+var STEM_EL=[0,0,1,1,2,2,3,3,4,4]; // stem index -> element index
+function yearEl(dateStr){var d=new Date(dateStr+'T12:00:00'),y=d.getFullYear();if(d.getMonth()==0||(d.getMonth()==1&&d.getDate()<4))y--;return EL[STEM_EL[((y-4)%10+10)%10]]}
+function dayEl(dt){var days=Math.floor((Date.UTC(dt.getFullYear(),dt.getMonth(),dt.getDate())-Date.UTC(1900,0,1))/864e5);return EL[STEM_EL[((days%10)+10)%10]]}
+var MSG={
+ same:['Kindred day','Today shares your element. A good day to do what you already do well and keep a steady pace.'],
+ feeds:['Giving day','Your element feeds today\'s. You may feel generous; protect some energy for yourself.'],
+ fed:['Supported day','Today\'s element feeds yours. A good day to start something or ask for help.'],
+ control:['Steering day','Your element shapes today\'s. Good for planning, sorting and making decisions.'],
+ checked:['Testing day','Today\'s element checks yours. Go slower, rest, and keep plans simple.']};
+function relation(me,day){var a=EL.indexOf(me),b=EL.indexOf(day);if(a==b)return'same';if((a+1)%5==b)return'feeds';if((b+1)%5==a)return'fed';if((a+2)%5==b)return'control';return'checked'}
+
+/* ---------- screens ---------- */
+var qp=new URLSearchParams(location.search);
+if(qp.get('preview')==='1') put('pv',true); if(qp.get('preview')==='0') put('pv',false);
+var PREVIEW=get('pv',false); // testers only; real users never see the switch and stay Free until payments exist
+var TAB=get('tab','home'), PAID=PREVIEW&&get('paid',false);
+function locked(tier){return tier==='Paid'&&!PAID}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+var HIST='<span class="tag" style="border-color:var(--earth);color:var(--earth)">Historical text · not medical advice</span>';
+var FOOT='<p class="foot">For education only. Not medical advice. Talk to a licensed professional.</p>';
+
+function home(){
+  var p=get('profile',null);
+  if(!p) return '<h1>Welcome to K-Saju</h1><p class="q">Your birth date stays on this phone.</p><div class="card"><label>Birth date<input id="bd" type="date"></label><label>Birth city (optional)<input id="bc" placeholder="San Antonio"></label><button class="pri" onclick="saveP()">Start</button></div>'+FOOT;
+  var now=new Date(), me=yearEl(p.bd), dy=dayEl(now), r=MSG[relation(me,dy)];
+  var doy=Math.floor((now-new Date(now.getFullYear(),0,0))/864e5), tip=LIB.tips[doy%LIB.tips.length]||{};
+  var freeBooks=LIB.books.filter(function(b){return b.tier!=='Paid'}), book=freeBooks[doy%Math.max(1,freeBooks.length)];
+  return '<h1>Today</h1><p class="q">'+now.toDateString()+'</p>'+
+   '<div class="card"><span class="tag">Saju</span><h2><span class="dot" style="background:'+COL[dy]+'"></span>'+r[0]+'</h2>'+
+   '<p>You are <span class="el" style="color:'+COL[me]+'">'+me+'</span>. Today is <span class="el" style="color:'+COL[dy]+'">'+dy+'</span>.</p><p>'+r[1]+'</p><p class="q" style="margin-top:6px">For reflection and entertainment.</p></div>'+
+   '<div class="card"><span class="tag">Tip of the day</span><p style="margin-top:6px">'+esc(tip.tip_trick)+'</p></div>'+
+   (book?'<div class="card"><span class="tag">Read today</span>'+HIST+'<h2>'+esc(book.title)+'</h2><p class="q">'+esc(book.author)+'</p><p>'+esc(book.notes)+'</p><a href="'+esc(book.source_url)+'" target="_blank" rel="noopener">Open the free book</a></div>':'')+FOOT;
+}
+function saveP(){var bd=document.getElementById('bd').value;if(!bd){alertBox('Pick your birth date first.');return}put('profile',{bd:bd,city:document.getElementById('bc').value});render()}
+function alertBox(t){var a=document.getElementById('app');a.insertAdjacentHTML('afterbegin','<div class="card" style="border-color:var(--fire)">'+esc(t)+'</div>')}
+
+var OPEN_CAT=null, OPEN_LIB=null, LIBS=get('libs',null), LIBDATA={};
+function loadLibs(){fetch('categories/index.json',{cache:'no-cache'}).then(function(r){return r.json()}).then(function(d){LIBS=d;put('libs',d);if(TAB==='library')render()}).catch(function(){})}
+var H={entries:function(d){return d.entries.filter(function(e){return e.verified==='Y'}).map(function(e){return '<div class="card"><span class="tag">'+esc(e.label)+'</span><h2>'+esc(e.title)+'</h2><p>'+esc(e.content)+'</p><p class="q" style="margin-top:6px">Source: '+esc(e.source)+'</p></div>'}).join('')}};
+function openLib(slug){OPEN_LIB=slug;OPEN_CAT=null;
+  if(LIBDATA[slug]){render();return}
+  fetch('categories/'+slug+'/data.json',{cache:'no-cache'}).then(function(r){return r.json()}).then(function(d){LIBDATA[slug]=d;
+    if(window.KS_VIEWS&&window.KS_VIEWS[slug]){render();return}
+    var sc=document.createElement('script');sc.src='categories/'+slug+'/view.js';sc.onload=render;sc.onerror=render;document.head.appendChild(sc);render()}).catch(function(){alertBox('This library needs a connection the first time.')});render()}
+function libView(){var d=LIBDATA[OPEN_LIB], meta=(LIBS||[]).find(function(x){return x.slug===OPEN_LIB})||{};
+  var back='<p><a href="#" onclick="OPEN_LIB=null;render();return false">‹ All libraries</a></p><h1>'+esc(meta.name||'')+'</h1>';
+  if(!d) return back+'<p class="q">Loading…</p>';
+  var v=(window.KS_VIEWS&&window.KS_VIEWS[OPEN_LIB])?window.KS_VIEWS[OPEN_LIB](d,H):H.entries(d);
+  return back+(meta.kind==='tradition'?'<p class="q">Korean tradition, shared for reflection and culture.</p>':'<p class="q">Plain-language summaries of health research. Education only.</p>')+v+FOOT}
+function libTiles(kind){return (LIBS||[]).filter(function(c){return c.kind===kind}).map(function(c){return '<div class="tile" onclick="openLib(\''+c.slug+'\')"><b>'+esc(c.name)+'</b><span class="q">'+c.count+' entries</span></div>'}).join('')}
+function library(){
+  if(OPEN_LIB) return libView();
+  if(OPEN_CAT){var c=LIB.categories.find(function(x){return x.category_id===OPEN_CAT})||{};
+    var bs=LIB.books.filter(function(b){return b.category_id===OPEN_CAT});
+    return '<p><a href="#" onclick="OPEN_CAT=null;render();return false">‹ All categories</a></p><h1>'+esc(c.name)+'</h1>'+
+     (bs.length?bs.map(bookCard).join(''):'<p class="q">Books for this category are coming soon.</p>')+FOOT}
+  return '<h1>Library</h1><p class="q">'+LIB.categories.length+' of 27 categories ready</p><div class="grid">'+
+   LIB.categories.map(function(c){var l=locked(c.tier);return '<div class="tile" onclick="'+(l?'go(\'me\')':'OPEN_CAT=\''+c.category_id+'\';render()')+'"><b>'+esc(c.name)+'</b><span class="q">'+(l?'<span class="lock">🔒 Paid</span>':'Free')+'</span></div>'}).join('')+
+   '</div>'+(LIBS?'<h2>Saju library</h2><div class="grid">'+libTiles('tradition')+'</div><h2>Wellness library</h2><div class="grid">'+libTiles('wellness')+'</div>':'')+FOOT;
+}
+function bookCard(b){var l=locked(b.tier);
+  var sm=b.summary?(l?esc(b.summary.split('. ')[0])+'.':esc(b.summary)):esc(b.notes);
+  return '<div class="card">'+HIST+'<h2>'+esc(b.title)+'</h2><p class="q">'+esc(b.author)+'</p><p>'+sm+'</p>'+
+   (l?'<p class="lock">🔒 Paid - <a href="#" onclick="go(\'me\');return false">see plans</a></p>':'<a href="'+esc(b.source_url)+'" target="_blank" rel="noopener">Open the book</a> <span class="q">· audio summary coming soon</span>')+'</div>'}
+
+function resources(){
+  var st=get('state','Texas'), rows=LIB.states.filter(function(r){return r.state===st});
+  return '<h1>Help near you</h1><select onchange="put(\'state\',this.value);render()">'+STATES.map(function(s){return '<option'+(s===st?' selected':'')+'>'+s+'</option>'}).join('')+'</select>'+
+   '<div class="card" style="border-color:var(--fire)"><b>In a crisis:</b> call or text <a href="tel:988">988</a>. In danger: <a href="tel:911">911</a>. Food, housing and services: dial <a href="tel:211">211</a>.</div>'+
+   (rows.length?rows.map(function(r){return '<div class="card"><span class="tag">'+esc(r.type)+'</span><h2>'+esc(r.resource_name)+'</h2><a href="'+esc(r.url)+'" target="_blank" rel="noopener">Open</a></div>'}).join(''):'<p class="q">Checked resources for '+esc(st)+' are coming soon.</p>')+FOOT;
+}
+
+function preloadLibs(){(LIBS||[]).forEach(function(c){if(!LIBDATA[c.slug])fetch('categories/'+c.slug+'/data.json').then(function(r){return r.json()}).then(function(d){LIBDATA[c.slug]=d}).catch(function(){})})}
+function guide(){ preloadLibs();
+  var used=get('qs',0), left=PAID?'∞':Math.max(0,FREE_Q-used);
+  return '<h1>Ask the guide</h1><p class="q">Answers come only from the K-Saju library, with sources. Free questions left: '+left+'</p>'+
+   '<div class="card"><input id="q" placeholder="e.g. tips for better sleep"><button class="pri" onclick="ask()">Ask</button></div><div id="ans"></div>'+FOOT;
+}
+var CRISIS=/suicid|kill (my ?self|me)|end (it|my life|the pain|things)|want to die|wanna die|better off dead|no reason to live|don.?t want to (live|be here|wake up)|can.?t go on|hurt (my ?self|me)|self.?harm|cut(ting)? myself|overdos|take all (my|the) pills|jump off|emergency|being (abused|hurt)|not safe/i;
+var BLOCK=/\b(dose|dosage|mg|pregnan|prescri|medication|symptom|pain|diagnos|suicid|kill myself|self.?harm|overdose|emergency)\b/i;
+function ask(){
+  var q=document.getElementById('q').value.trim(), out=document.getElementById('ans'); if(!q) return;
+  if(CRISIS.test(q)){out.innerHTML='<div class="card" style="border-color:var(--fire)">Please call or text <a href="tel:988">988</a> now, or call <a href="tel:911">911</a> if you are in danger.</div>';return}
+  if(BLOCK.test(q)){out.innerHTML='<div class="card">I can\'t help with that. Please talk to a doctor or pharmacist.</div>';return}
+  var used=get('qs',0); if(!PAID&&used>=FREE_Q){go('me');return} put('qs',used+1);
+  var words=q.toLowerCase().split(/\W+/).filter(function(w){return w.length>3});
+  var libPool=[];Object.keys(LIBDATA).forEach(function(k){LIBDATA[k].entries.forEach(function(e){libPool.push({id:e.id,text:e.title+' - '+e.content})})});
+  var pool=LIB.tips.map(function(t){return {id:t.id,text:t.tip_trick}}).concat(libPool).concat(LIB.books.map(function(b){return {id:b.id,text:b.title+' - '+(b.summary||b.notes),url:b.source_url,hist:1}}));
+  var hits=pool.map(function(p){var s=0;words.forEach(function(w){if(p.text.toLowerCase().indexOf(w.slice(0,5))>-1)s++});return {p:p,s:s}}).filter(function(x){return x.s>0}).sort(function(a,b){return b.s-a.s}).slice(0,3);
+  out.innerHTML=hits.length?'<div class="card">'+hits.map(function(h){return '<p>• '+esc(h.p.text.length>260?h.p.text.slice(0,260)+'…':h.p.text)+' <span class="q">('+h.p.id+(h.p.hist?', historical text':'')+')</span></p>'}).join('')+'<p class="q" style="margin-top:8px">For education only. Not medical advice.</p></div>':'<div class="card">I don\'t have that in the library yet.</div>';
+}
+
+function me(){
+  var p=get('profile',null);
+  return '<h1>Me</h1>'+
+   '<div class="card"><h2>K-Saju Plus</h2><p>Every category and book, audio summaries, unlimited guide questions, full chart and weekly forecast.</p>'+(PAID?'<p class="lock">✓ You are previewing the Paid version.</p>':'<p class="q">Price coming soon.</p>'+(PREVIEW?'<button class="pri" onclick="setPaid(true)">Preview Paid</button>':'<button class="pri" disabled>Coming soon</button>'))+'</div>'+
+   (p?'<div class="card"><p>Birth date: '+esc(p.bd)+'</p><p>Your element: <b style="color:'+COL[yearEl(p.bd)]+'">'+yearEl(p.bd)+'</b></p><button onclick="if(confirm(\'Delete your birth data from this phone?\')){localStorage.clear();location.reload()}">Delete my data</button></div>':'')+
+   '<div class="card"><h2>Disclaimer</h2><p class="q">K-Saju is for education and reflection only. It is not medical, mental health, or legal advice, and it does not diagnose or treat any condition. Always talk to a licensed professional before changing your health routine, diet, or medications. Saju readings are for reflection and entertainment. In an emergency, call 911. For crisis support, call or text 988.</p></div>'+
+   '<div class="card"><h2>Privacy</h2><p class="q">Your birth date and city stay on this phone. We don\'t sell your data. You can delete everything above at any time.</p></div>'+
+   '<p class="foot">K-Saju v1 · '+(SYNC_URL?'live library':'library updated '+esc((LIB.updated||'').slice(0,10)||'built-in'))+'</p>';
+}
+
+var TABS=[['home','☀️','Today',home],['library','📚','Library',library],['resources','🧭','Help',resources],['guide','💬','Guide',guide],['me','👤','Me',me]];
+function setPaid(v){if(!PREVIEW)return;PAID=v;put('paid',v);render()}
+function go(t){TAB=t;put('tab',t);OPEN_CAT=null;OPEN_LIB=null;render();scrollTo(0,0)}
+function render(){
+  var t=TABS.find(function(x){return x[0]===TAB})||TABS[0];
+  var bar=!PREVIEW?'':'<div class="pv">Preview<div class="seg"><button class="'+(PAID?'':'on')+'" onclick="setPaid(false)">Free</button><button class="'+(PAID?'on':'')+'" onclick="setPaid(true)">Paid</button></div></div>';
+  document.getElementById('app').innerHTML=bar+t[3]();
+  document.getElementById('nav').innerHTML=TABS.map(function(x){return '<button class="'+(x[0]===TAB?'on':'')+'" onclick="go(\''+x[0]+'\')"><span>'+x[1]+'</span>'+x[2]+'</button>'}).join('');
+}
+render(); syncNow(); loadLibs();
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+</script>
+</body>
+</html>
