@@ -324,7 +324,7 @@ function ask() {
     ${c && !log.length ? `<div class="chips">${['What is my biggest strength?', 'When is a good month for love in 2027?', 'What kind of work suits me?', 'What should I watch out for this year?'].map(x => `<button class="chip" data-q="${esc(x)}" type="button">${esc(x)}</button>`).join('')}</div>` : ''}
     <div class="card"><textarea id="q" rows="3" placeholder="What's on your mind?" ${c ? '' : 'disabled'}></textarea>
     <button class="btn block" id="send" type="button" ${c ? '' : 'disabled'}>${used < free ? 'Ask Haneul (free)' : 'Ask Haneul'}</button>
-    <p class="muted" id="amsg">${used < free ? `${free - used} free answer left` : 'Your free answer is used. More answers open at launch.'}</p></div>
+    <p class="muted" id="amsg">${used < free ? `${free > 1000 ? "Unlimited answers" : (free - used) + " free answer left"}` : 'Your free answer is used. More answers open at launch.'}</p></div>
     <a class="tile ink" href="#ask/mind" style="min-height:0;margin-bottom:12px;border-left:5px solid var(--accent)"><span class="glyph">心</span><b>Talk it through</b><span>Something on your heart? Chart energy + real psychology</span></a>
     <div class="grid2"><a class="tile" href="../ksaju/compat.html"><span class="ic">❤</span><b>Compatibility</b><span>Free score with anyone</span></a>
     <a class="tile" href="#library/love_saju"><span class="ic">💌</span><b>Love & saju</b><span>Library</span></a></div>`;

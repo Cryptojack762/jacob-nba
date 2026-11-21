@@ -173,7 +173,7 @@ async function ask() {
     <div id="chat">${log.map(m => `<div class="card ${m.who === 'h' ? 'h' : 'u'}"><div class="kick">${m.who === 'h' ? 'Haneul' : 'You'}</div><p>${esc(m.t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>')}</p></div>`).join('')}</div>
     <div class="card"><textarea id="q" rows="3" placeholder="What do you want to ask?" ${chart ? '' : 'disabled'}></textarea>
     <button class="btn" id="send" type="button" ${chart ? '' : 'disabled'}>${used < free ? 'Ask (free)' : 'Ask'}</button>
-    <div class="micro" id="amsg">${used < free ? `${free - used} free answer left` : 'Your free answer is used. More answers open at launch.'}</div></div>
+    <div class="micro" id="amsg">${used < free ? `${free > 1000 ? "Unlimited answers" : (free - used) + " free answer left"}` : 'Your free answer is used. More answers open at launch.'}</div></div>
     <p class="micro">For reflection and entertainment. Not medical, legal, financial or mental health advice.</p>`;
   const send = $('#send'); if (!send) return;
   send.onclick = async () => {
