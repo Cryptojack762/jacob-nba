@@ -8,6 +8,7 @@ const UA = navigator.userAgent;
 const iOS = /iphone|ipad|ipod/i.test(UA) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const iOSChrome = iOS && /crios/i.test(UA), iOSOther = iOS && /fxios|edgios|opios/i.test(UA);
 const samsung = /samsungbrowser/i.test(UA);
+const APP = /\/giun(\/|$)/i.test(location.pathname) ? 'Giun' : 'K-Saju';   // name shown in the install pop-up
 
 function css() {
   if (document.getElementById('ks-dl-css')) return;
@@ -28,7 +29,7 @@ function help() {
     : samsung ? '<li>Tap the menu <b>☰</b> (bottom right).</li><li>Tap <b>Add page to</b> → <b>Home screen</b>, then <b>Add</b>.</li>'
     : '<li>Tap Chrome\'s menu <b>⋮</b> (top right).</li><li>Tap <b>Install app</b> (or <b>Add to Home screen</b> → <b>Install</b>).</li>';
   const d = document.createElement('div'); d.id = 'ks-dl-help';
-  d.innerHTML = `<div class="box" role="dialog" aria-label="Download K-Saju"><h3>Download K-Saju</h3><ol>${steps}</ol><p style="color:#C9C4DE;margin:0 0 14px">It opens like a normal app from your home screen. Free, no app store.</p><button type="button" id="ks-now" style="display:none;margin-bottom:10px">⬇ Install now</button><button type="button">Got it</button></div>`;
+  d.innerHTML = `<div class="box" role="dialog" aria-label="Download ${APP}"><h3>Download ${APP}</h3><ol>${steps}</ol><p style="color:#C9C4DE;margin:0 0 14px">It opens like a normal app from your home screen. Free, no app store.</p><button type="button" id="ks-now" style="display:none;margin-bottom:10px">⬇ Install now</button><button type="button">Got it</button></div>`;
   d.onclick = e => { if (e.target.id === 'ks-now') { d.remove(); download(); return; } if (e.target === d || e.target.tagName === 'BUTTON') d.remove(); };
   document.body.appendChild(d); if (deferred) d.querySelector('#ks-now').style.display = 'block';
 }
