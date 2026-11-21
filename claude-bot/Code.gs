@@ -17,7 +17,7 @@
 
 var BOT = {
   base: 'https://api-contract.weex.com',
-  coins: ['BTC', 'ETH', 'SOL', 'XRP', 'DOGE', 'ADA', 'AVAX', 'LINK', 'LTC', 'BCH', 'BNB', 'TRX', 'XLM', 'NEAR', 'UNI', 'SUI', 'HYPE', 'XMR', 'ZEC'],
+  coins: ['BTC', 'ETH', 'SOL', 'XRP', 'DOGE', 'ADA', 'AVAX', 'LINK', 'LTC', 'BCH', 'BNB', 'TRX', 'XLM', 'NEAR', 'UNI', 'SUI', 'HYPE', 'XMR', 'ZEC', 'ARB'],
   fee: 0.0016,           // WEEX taker 0.08% x 2 (exchangeInfo, Nov 17 2026)
   version: 'v1.0 (Nov 17, 2026)'
 };
@@ -36,6 +36,9 @@ var DEFAULTS = [
   ['L_ST', 'ON', 'Long: SuperTrend 30/5 flip up + BTC up (4H)'],
   ['S_FUND', 'ON', 'Short: funding top 5% of last 90 + BTC down, 72h hold'],
   ['S_BBRSI', 'ON', 'Short: close above upper BB + RSI<70, BTC down, below EMA200'],
+  ['HW_4H', 'ON', 'Long+Short: 4H High-Win (backtested Nov 21): RSI-2 dip/rip, coin above/below its EMA50 and EMA200, BTC above/below its EMA300. Target 0.75 ATR, stop 3 ATR, max 30 candles. Only the coins in HW coins'],
+  ['HW coins', 'ETH,DOGE,SUI,UNI,AVAX,LTC,ARB,NEAR,BCH,ADA,HYPE,SOL,BTC', 'Coins the High-Win rule may trade (all passed the 4H test, profit factor 1.1+). Skipped: XRP, LINK, BNB, TRX, XLM'],
+  ['HW risk %', 1, 'High-Win trades size margin so a stop-out loses about this % of equity (suggested 1, not backtested)'],
   ['L_FUND', 'OFF', 'Long: funding bottom 5% + BTC up, 72h hold (weak extra edge)'],
   ['S_BTCFLIP', 'OFF', 'Watch list: short coins below EMA200 when BTC just lost its EMA200; cover when BTC regains it'],
   ['Bottom alert', 'ON', 'Alert when BTC funding is -0.01% or lower (shorts crowded = market bottom zone). Alert only, no trade'],
@@ -72,7 +75,7 @@ var DEFAULTS = [
   ['Auto total stop $', 5, 'Auto entry stops for good after the pot loses this much (restart in Atlas)'],
   ['Event pause (min)', 60, 'Bot opens no new trades this many minutes before/after a HIGH-impact US report (FOMC, CPI, jobs). 0 = off'],
 ];
-var STRAT_NAMES = { AUTOE: 'Auto entry', WATCH: 'Watch list', L_TPI: 'TPI breakout long', L_ST: 'SuperTrend long', S_FUND: 'Funding-extreme short', S_BBRSI: 'BB + RSI short', L_FUND: 'Funding-extreme long', S_BTCFLIP: 'BTC-breakdown short', M_BOTTOM: 'Market-bottom long', L_RSI20: 'Washout bounce long', CHAT: 'Atlas chat plan', CARD: 'Jacob trade card' };
+var STRAT_NAMES = { AUTOE: 'Auto entry', WATCH: 'Watch list', L_TPI: 'TPI breakout long', L_ST: 'SuperTrend long', S_FUND: 'Funding-extreme short', S_BBRSI: 'BB + RSI short', L_FUND: 'Funding-extreme long', S_BTCFLIP: 'BTC-breakdown short', M_BOTTOM: 'Market-bottom long', L_RSI20: 'Washout bounce long', HW_4H: 'High-Win 4H', CHAT: 'Atlas chat plan', CARD: 'Jacob trade card' };
 var TABS = {
   Signals: ['Time (CT)', 'Coin', 'Strategy', 'Side', 'Price', 'Why', 'Action', 'Claude notes'],
   Orders: ['ID', 'Time (CT)', 'Coin', 'Strategy', 'Side', 'Qty', 'Ref price', 'Protective stop', 'Margin $', 'Leverage', 'Status', 'Token', 'Result', 'Claude notes'],
@@ -165,7 +168,7 @@ function ind_(d) {
   var win = function (k, f) { var m = f == 'h' ? -Infinity : Infinity; for (var j = i - k; j < i; j++) m = f == 'h' ? Math.max(m, d[j].h) : Math.min(m, d[j].l); return m; };
   var bb = (function () { var s = 0, q = 0; for (var j = i - 19; j <= i; j++) { s += c[j]; q += c[j] * c[j]; } var m = s / 20, sd = Math.sqrt(Math.max(q / 20 - m * m, 0)); return { u: m + 2 * sd, l: m - 2 * sd }; })();
   var r = rsi_(c), st = supertrend_(d);
-  return { c: c[i], e200: ema_(c, 200)[i], rsi: r[i], rsiPrev: r[i - 1], atr: atr_(d, 14)[i], hh40: win(40, 'h'), ll20: win(20, 'l'), bbu: bb.u, bbl: bb.l, st: st[i], stPrev: st[i - 1], t: d[i].t };
+  return { c: c[i], e200: ema_(c, 200)[i], e50: ema_(c, 50)[i], rsi2: rsi_(c, 2)[i], rsi: r[i], rsiPrev: r[i - 1], atr: atr_(d, 14)[i], hh40: win(40, 'h'), ll20: win(20, 'l'), bbu: bb.u, bbl: bb.l, st: st[i], stPrev: st[i - 1], t: d[i].t };
 }
 
 // ---------------- the hourly scan ----------------
@@ -177,11 +180,13 @@ function scan() {
     var newBar = String(lastBar) != p.getProperty('LAST_BAR');
     var be = ema_(btcD.map(function (x) { return x.c; }), 200), nB = btcD.length, btcUp = btcD[nB - 1].c > be[nB - 1];
     var btcFlipDown = !btcUp && btcD[nB - 2].c > be[nB - 2];
+    var btcUp300 = btcD[nB - 1].c > ema_(btcD.map(function (x) { return x.c; }), 300)[nB - 1];   // High-Win BTC gate
     try { health_(); } catch (e) { }
     try { reportLog_(); } catch (e) { log_('ERROR', 'report log: ' + e.message); }
     try { backup_(); } catch (e) { log_('ERROR', 'backup: ' + e.message); }
     expireApprovals_();
     try { reconcile_(); } catch (e) { log_('ERROR', 'reconcile: ' + e.message); }
+    try { hwTargets_(); } catch (e) { log_('ERROR', 'High-Win targets: ' + e.message); }
     try { manageTP_(); } catch (e) { log_('ERROR', 'take-profit check: ' + e.message); }
     try { watchCheck_(); } catch (e) { log_('ERROR', 'watch list: ' + e.message); }
     try { manageAuto_(); } catch (e) { log_('ERROR', 'auto exits: ' + e.message); }
@@ -209,7 +214,7 @@ function scan() {
       try {
         if (!DX[coin]) return;
         var d = DX[coin].d, x = DX[coin].x;
-        x.btcUp = btcUp; x.breadth = breadth;
+        x.btcUp = btcUp; x.btcUp300 = btcUp300; x.breadth = breadth;
         manage_(coin, d, x, open);
         if (busy[coin]) return;
         var sig = signal_(coin, x, btcUp, btcFlipDown, bottom);
@@ -235,6 +240,10 @@ function signal_(coin, x, btcUp, btcFlipDown, bottom) {
     var f = fundingSignal_(coin, x.t);
     if (f == 'HIGH' && !btcUp && on_('S_FUND')) S.push({ strategy: 'S_FUND', side: 'SHORT', why: 'Funding in its top 5% of the last 90 settlements (longs crowded), BTC down' });
     if (f == 'LOW' && btcUp && on_('L_FUND')) S.push({ strategy: 'L_FUND', side: 'LONG', why: 'Funding in its bottom 5% of the last 90 settlements (shorts crowded), BTC up' });
+  }
+  if (on_('HW_4H') && String(set_('HW coins')).toUpperCase().split(/[\s,]+/).indexOf(coin) >= 0 && isFinite(x.rsi2) && x.e50) {
+    if (x.btcUp300 && x.c > x.e200 && x.c > x.e50 && x.rsi2 < 10) S.push({ strategy: 'HW_4H', side: 'LONG', stopAtr: 3, why: 'High-Win dip: RSI-2 ' + x.rsi2.toFixed(1) + ' (<10), above EMA50 and EMA200, BTC above its EMA300. Target 0.75 ATR, stop 3 ATR' });
+    if (!x.btcUp300 && x.c < x.e200 && x.c < x.e50 && x.rsi2 > 90) S.push({ strategy: 'HW_4H', side: 'SHORT', stopAtr: 3, why: 'High-Win rip: RSI-2 ' + x.rsi2.toFixed(1) + ' (>90), below EMA50 and EMA200, BTC below its EMA300. Target 0.75 ATR, stop 3 ATR' });
   }
   return S[0] || null;   // one trade per coin
 }
@@ -263,6 +272,9 @@ function manage_(coin, d, x, open) {
     if (strat == 'S_BBRSI' && !reason && x.st === 1 && x.stPrev === -1) reason = 'Long trigger: SuperTrend flipped up';
     if (strat == 'S_BTCFLIP' && x.btcUp) reason = 'BTC back above EMA200';
     if (strat == 'M_BOTTOM' && bars >= 18) reason = '72h hold done';
+    if (strat == 'HW_4H') { var htp = Number(r[5]) + (Number(r[5]) - stop) / 4;   // target = entry + 0.75 ATR (stop is 3 ATR away)
+      if (d.filter(function (c) { return c.t >= opened; }).some(function (c) { return side > 0 ? c.h >= htp : c.l <= htp; })) return closePos_(r, r[10] == 'PAPER' ? htp : null, 'Target 0.75 ATR', bars);
+      if (bars >= 30) reason = '30 candles'; }
     if (strat == 'L_RSI20') { var tgt = 2 * Number(r[5]) - stop;   // target = entry + 2 ATR (same distance as the 2 ATR stop)
       if (d.filter(function (c) { return c.t >= opened; }).some(function (c) { return c.h >= tgt; })) return closePos_(r, r[10] == 'PAPER' ? tgt : null, 'Target 2 ATR', bars);
       if (bars >= 12) reason = '2-day hold done'; }
@@ -298,6 +310,7 @@ function act_(coin, sig, x) {
   if (action.indexOf('Skipped') === 0) return;
   var lev = num_('Leverage', 1, 5), margin = equity_() * num_('Margin per trade %', 1, 50) / 100;
   var sa = sig.stopAtr || num_('Protective stop (ATR x)', 1, 10), stop = sig.stopPx || (sig.side == 'LONG' ? x.c - sa * x.atr : x.c + sa * x.atr);
+  if (sig.strategy == 'HW_4H') { var rk = num_('HW risk %', 0.1, 5) / 100, mr = equity_() * rk / ((Math.abs(x.c - stop) / x.c) * lev); if (mr > 0 && mr < margin) margin = mr; }   // risk-based size: a stop-out loses about HW risk % of equity
   var o = { id: 'CB' + Date.now().toString(36).toUpperCase() + coin, coin: coin, strategy: sig.strategy, side: sig.side, ref: x.c, stop: stop, margin: margin, lev: lev, why: sig.why };
   if (action == 'BOT-AUTO') { var bo = autoOrder_(o, num_('Bot $ per trade', 0, 50), 'BOT-AUTO'); if (bo) sendLive_(bo, 'AUTO'); return; }   // own small sizing + its own minimum check
   o.qty = qty_(coin, margin * lev / x.c);
@@ -823,6 +836,15 @@ function setTrigger15() {
   log_('SETUP', 'scan trigger now every 15 minutes');
 }
 function testReconcile() { Logger.log('closed ' + reconcile_()); }
+
+// High-Win targets: checked every scan (15 min) so the 0.75 ATR target is taken as soon as price touches it, not only at the next 4H close
+function hwTargets_() {
+  rows_('Positions').forEach(function (r) {
+    if (r[2] != 'HW_4H' || r[11] != 'OPEN') return;
+    var side = r[3] == 'LONG' ? 1 : -1, entry = Number(r[5]), stop = Number(r[9]), tgt = entry + (entry - stop) / 4, px = priceNow_(r[1]);
+    if (side * (px - tgt) >= 0) closePos_(r, r[10] == 'PAPER' ? tgt : null, 'Target 0.75 ATR', '');
+  });
+}
 
 // ---------------- take-profit ladder + trailing stop for Jacob's own trades (CARD / CHAT) ----------------
 // Bot strategies keep their backtested exits. Jacob's trades: R = entry-to-stop distance.
