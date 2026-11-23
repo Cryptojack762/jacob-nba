@@ -3,6 +3,7 @@ import { buildChart, ELEMENTS, EL_HANJA, EL_KO } from './saju.js?v=8';
 import { DM_READS, EL_MEANING, teaser, TYPES, PILLAR_INFO } from './content.js?v=9';
 import { SITE } from './config.js?v=8';
 import { encode } from './match.js?v=8';
+import { findCities } from './geo.js?v=1';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -95,8 +96,8 @@ $('city').addEventListener('input', () => {
   if (q.length < 2) { $('sug').style.display = 'none'; $('cityfb').style.display = 'none'; return; }
   tmr = setTimeout(async () => {
     try {
-      const j = await (await fetch('https://geocoding-api.open-meteo.com/v1/search?count=6&language=en&format=json&name=' + encodeURIComponent(q))).json();
-      list = (j.results || []).filter(x => x.timezone); sel = -1;
+      const j = { results: await findCities(q) };
+      list = j.results; sel = -1;
       $('sug').innerHTML = list.map((x, i) => `<div data-i="${i}">${esc(x.name)} <small>${esc([x.admin1, x.country].filter(Boolean).join(', '))}</small></div>`).join('');
       $('sug').style.display = list.length ? 'block' : 'none';
       $('cityfb').style.display = list.length ? 'none' : 'block';

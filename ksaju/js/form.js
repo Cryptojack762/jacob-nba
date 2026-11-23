@@ -1,4 +1,5 @@
 // Reusable birth form: city search (Open-Meteo, free) + validation. Returns buildChart() input.
+import { findCities } from './geo.js?v=1';
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 export function birthForm(root, prefix) {
@@ -21,8 +22,8 @@ export function birthForm(root, prefix) {
     if (q.length < 2) { $('sug').style.display = 'none'; return; }
     tmr = setTimeout(async () => {
       try {
-        const j = await (await fetch('https://geocoding-api.open-meteo.com/v1/search?count=6&language=en&format=json&name=' + encodeURIComponent(q))).json();
-        list = (j.results || []).filter(x => x.timezone);
+        const j = { results: await findCities(q) };
+        list = j.results;
         $('sug').innerHTML = list.map((x, i) => `<div data-i="${i}">${esc(x.name)} <small>${esc([x.admin1, x.country].filter(Boolean).join(', '))}</small></div>`).join('') || '<div>No match, try a bigger nearby city</div>';
         $('sug').style.display = 'block';
       } catch (e) { $('sug').innerHTML = '<div>Search unavailable</div>'; $('sug').style.display = 'block'; }

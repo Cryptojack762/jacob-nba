@@ -1,6 +1,6 @@
 // Gunghap page. Follows 2026-11-17_gunghap-spec-v2: invite link is the main path, direct entry is the smaller link.
 import { buildChart, DAY_MASTERS } from './saju.js?v=8';
-import { birthForm } from './form.js?v=8';
+import { birthForm } from './form.js?v=9';
 import { encode, decode, compare, side } from './match.js?v=8';
 import { SITE } from './config.js?v=8';
 

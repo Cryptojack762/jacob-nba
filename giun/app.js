@@ -1,6 +1,7 @@
 // Giun (기운) — a calm daily ritual built on the K-Saju engine and library.
 // Shares the chart engine (../ksaju/js/saju.js), library (../ksaju/lib) and backend (SITE.api) with K-Saju.
 import { SITE } from '../ksaju/js/config.js?v=10';
+import { findCities } from '../ksaju/js/geo.js?v=1';
 
 // Shared by two apps: Giun (/giun/) and K-Saju's hub (/ksaju/hub.html). Each page sets window.APP_CFG before loading this file.
 const CFG = Object.assign({ brand: 'Giun', start: '#start', home: './', classic: '../ksaju/', siteUrl: 'cryptojack762.github.io/jacob-nba/giun', share: 'A calm daily ritual from your Korean birth chart. Free.', cardTag: '기운 · Giun', src: 'giun' }, window.APP_CFG || {});
@@ -540,8 +541,8 @@ function start() {
     <button class="btn block" id="make" type="button">Reveal my energy</button><p class="muted" id="ferr"></p></div>`;
   let list = [], tm;
   $('#city').oninput = e => { clearTimeout(tm); const q = e.target.value.trim(); place = null; if (q.length < 2) { $('#sug').style.display = 'none'; return; }
-    tm = setTimeout(async () => { try { const j = await (await fetch('https://geocoding-api.open-meteo.com/v1/search?count=6&language=en&format=json&name=' + encodeURIComponent(q))).json();
-      list = (j.results || []).filter(x => x.timezone); $('#sug').innerHTML = list.map((x, i) => `<div data-i="${i}">${esc(x.name)} <small>${esc([x.admin1, x.country].filter(Boolean).join(', '))}</small></div>`).join('') || '<div>No match, try a bigger nearby city</div>';
+    tm = setTimeout(async () => { try { const j = { results: await findCities(q) };
+      list = j.results; $('#sug').innerHTML = list.map((x, i) => `<div data-i="${i}">${esc(x.name)} <small>${esc([x.admin1, x.country].filter(Boolean).join(', '))}</small></div>`).join('') || '<div>No match, try a bigger nearby city</div>';
     } catch (_) { $('#sug').innerHTML = '<div>City search is offline. We\'ll use your phone\'s time zone.</div>'; } $('#sug').style.display = 'block'; }, 250); };
   $('#sug').onmousedown = e => { const d = e.target.closest('[data-i]'); if (!d) return; e.preventDefault(); const x = list[+d.dataset.i];
     place = { label: `${x.name}, ${x.admin1 || x.country}`, tz: x.timezone, lon: x.longitude }; $('#city').value = place.label; $('#sug').style.display = 'none'; };
@@ -550,6 +551,12 @@ function start() {
     const d = $('#bd').value, t = $('#bt').value, unk = $('#bu').checked, err = $('#ferr');
     if (!d) { err.textContent = 'Please pick your birth date.'; return; }
     if (!t && !unk) { err.textContent = 'Add your birth time, or tick "I don\'t know".'; return; }
+    // Typed a city but didn't tap a suggestion: use the top match instead of silently falling back to the phone's time zone
+    if (!place && $('#city').value.trim().length >= 2) {
+      if (!list.length) { try { list = await findCities($('#city').value); } catch (_) {} }
+      if (list.length) { const x = list[0]; place = { label: `${x.name}, ${x.admin1 || x.country}`, tz: x.timezone, lon: x.longitude }; $('#city').value = place.label; }
+      else { err.textContent = 'City not found. Try just the city name (e.g. San Antonio), or a bigger nearby city.'; return; }
+    }
     const [Y, M, D] = d.split('-').map(Number), [hh, mm] = (t || '').split(':');
     const tz = place?.tz || Intl.DateTimeFormat().resolvedOptions().timeZone;
     try {
