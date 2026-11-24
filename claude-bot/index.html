@@ -639,7 +639,7 @@ function nload(){if(!WAPI||!WPIN){$('ncal').innerHTML='<div class="why">Connect 
       return '<div class="hl" style="opacity:'+(past&&!e.act?'.55':'1')+'"><i class="chip s-'+(hi?'AVOID':'WAIT')+'">'+(hi?'HIGH':'MED')+'</i><span><b>'+esc(e.t)+'</b> · '+esc(when)+' CT<br>'+(e.act?'<b>Actual '+esc(e.act)+'</b> · ':'')+'Forecast '+esc(e.fc||'-')+' · Prior '+esc(e.prev||'-')+(nexp(e.t)?'<br><span class="why">'+esc(nexp(e.t))+'</span>':'')+'</span></div>'}).join(''):'<div class="why">No US reports found'+((j.err||[]).length?': '+esc(j.err.join('; ')):'')+'</div>';
     $('nbanner').innerHTML=soon?'<div class="card" style="border-color:#5b1d20;background:var(--dnb)"><b>⚠ '+esc(soon.t)+'</b> in '+Math.max(1,Math.round((soon.d-now)/36e5))+'h ('+esc(soon.d.toLocaleString([], {weekday:'short',hour:'numeric',minute:'2-digit'}))+' CT). Expect big moves; size down or wait until after.</div>':'';
     $('nhead').innerHTML=(j.head||[]).map(function(h){return '<div class="hl"><i>📰</i><span><a href="'+esc(h.link)+'" target="_blank" style="color:inherit">'+esc(h.t)+'</a><br><span class="why">'+esc(h.src)+' · '+esc(new Date(h.when).toLocaleString([], {weekday:'short',hour:'numeric',minute:'2-digit'}))+'</span></span></div>'}).join('')||'<div class="why">No headlines right now.</div>';
-  }).catch(function(){$('ncal').innerHTML='<div class="why">News not reachable right now.</div>'})}
+  }).catch(function(e){$('ncal').innerHTML='<div class="why">News not reachable: '+esc(String(e&&e.message||e))+'</div>';$('nhead').innerHTML=''})}
 nload();setInterval(function(){if(!document.hidden)nload()},900000);
 // ---------- Atlas chat (small BloFin-AI style) ----------
 var CHS=[],CH=null;try{CHS=JSON.parse(localStorage.getItem('atlas_chats')||'[]')}catch(e){}
