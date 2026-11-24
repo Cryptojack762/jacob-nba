@@ -631,6 +631,7 @@ var NEXP={'CPI':'Hot = bad for BTC (fewer cuts). Cool = good.','Core CPI':'Hot =
 function nexp(t){for(var k in NEXP)if(t.indexOf(k)>-1)return NEXP[k];return ''}
 function nload(){if(!WAPI||!WPIN){$('ncal').innerHTML='<div class="why">Connect the bot (Trade → WEEX) to load news.</div>';$('nhead').innerHTML='';return}
   fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+'&news=1',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+    if(j.ok===false||typeof j.err==='string'){$('ncal').innerHTML='<div class="why">Bot said: '+esc(String(j.err||'error'))+'</div>';$('nhead').innerHTML='';return}
     var now=Date.now(),soon=null;
     var cal=(j.cal||[]).map(function(e){e.d=new Date(e.when);return e}).sort(function(a,b){return a.d-b.d});
     $('nat').textContent=j.at?'updated '+j.at:'';
