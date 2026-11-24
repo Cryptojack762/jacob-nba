@@ -122,6 +122,18 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
   <div class="card inst" id="inst"><p>Install Atlas on your home screen.</p><button id="instb">Install</button></div>
 
   <section class="view on" id="v-home">
+    <div id="nbanner"></div>
+    <div id="gate"><div class="sk"></div></div>
+    <div class="k">Market now</div>
+    <div class="card"><div class="read" id="read"><div class="sk" style="height:80px;margin:0"></div></div></div>
+    <div class="k"><span>Economic news · this week (US)</span><span id="nat"></span></div>
+    <div class="card" id="ncal"><div class="why">Loading…</div></div>
+    <div class="k">Crypto headlines</div>
+    <div class="card" id="nhead"><div class="why">Loading…</div></div>
+      <div class="k">Your tickers · best setups right now</div>
+    <div class="card" id="best"><div class="sk" style="margin:0"></div></div>
+    <div class="k"><span>Setups board · closest to a tested trigger</span><span id="sbat"></span></div>
+    <div class="card" id="sboard"><div class="why">Scanning 20 coins…</div></div>
     <div class="k">Ask Claude</div>
     <div class="card">
       <div style="display:flex;gap:8px"><input class="inp" id="qtk" style="margin:0" placeholder="Ticker, e.g. SOL" autocomplete="off" autocapitalize="characters"></div>
@@ -137,20 +149,9 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
       <div class="seg" id="aqtf"><button class="mb" data-aqt="15m">Scalp 15m</button><button class="mb sel" data-aqt="1H">Day 1H</button><button class="mb" data-aqt="4H">Swing 4H</button></div>
       <button class="buy" id="aqgo" style="width:100%;margin-top:8px">🔒 Lock it in</button>
       <div id="aqlist"></div>
-      <div class="why" style="margin-top:8px">The bot checks every 15 min. When your chart turns ENTER it buys on WEEX with the stop set, sells 75% at 1.5R (stop moves to entry) and the rest at 2R. Risk is 10% of the amount (half while the Bitcoin gate is down). Coins you lock in use your own money (max 3 open). Separately the bot hunts on its own with its $15 pot: $1.50 trades, up to 10 open, stops for the day after −$3, and for good after −$5 or 5 losses in a row.</div>
+      <details style="margin-top:8px"><summary class="why" style="cursor:pointer">How auto entry works</summary><div class="why" style="margin-top:6px">The bot checks every 15 min. When your chart turns ENTER it buys on WEEX with the stop set, sells 75% at 1.5R (stop moves to entry) and the rest at 2R. Risk is 10% of the amount (half while the Bitcoin gate is down). Coins you lock in use your own money (max 3 open). Separately the bot hunts on its own with its $15 pot: $1.50 trades, up to 10 open, stops for the day after −$3, and for good after −$5 or 5 losses in a row.</div></details>
     </div>
-    <div id="nbanner"></div>
-    <div id="gate"><div class="sk"></div></div>
-    <div class="k">Today's read</div>
-    <div class="card"><div class="read" id="read"><div class="sk" style="height:80px;margin:0"></div></div></div>
-    <div class="k">Best setups right now</div>
-    <div class="card" id="best"><div class="sk" style="margin:0"></div></div>
-    <div class="k"><span>Setups board · closest to a tested trigger</span><span id="sbat"></span></div>
-    <div class="card" id="sboard"><div class="why">Scanning 20 coins…</div></div>
-    <div class="k"><span>This week's reports · US</span><span id="nat"></span></div>
-    <div class="card" id="ncal"><div class="why">Loading…</div></div>
-    <div class="k">Crypto headlines</div>
-    <div class="card" id="nhead"><div class="why">Loading…</div></div>
+    <button class="more" id="runbot" style="margin:10px 0">Refresh YouTube + market consensus (never trades)</button><div id="runbotout" style="font-size:13px;margin:0 0 10px"></div>
   </section>
 
   <section class="view" id="v-weex">
@@ -196,7 +197,6 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
   </section>
   <section class="view" id="v-bf">
     <div class="seg2"><button data-go="bf" class="on">BloFin · long trades</button><button data-go="weex" class="">WEEX · day trades</button></div>
-    <button class="more" data-go="weex" style="margin:0 0 14px">💬 Ask Atlas for a trade plan</button>
     <div class="card">
       <div class="k" style="margin-top:0">BloFin · long trades</div>
       <div class="why">Your hand-placed long trades. Live BloFin prices, no API key. Refreshes every minute.</div>
@@ -771,5 +771,6 @@ function bbscan(){
 bbscan();setInterval(function(){if(!document.hidden)bbscan()},600000);
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 </script>
+<script>$('runbot').onclick=function(){if(!WAPI||!WPIN){toast('Connect the bot first');return}var o=$('runbotout');o.textContent='Refreshing... about 1-2 minutes';fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+'&confrun=1',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){if(!j.ok){o.textContent='Refresh failed: '+(j.err||'unknown');return}o.textContent='Updated '+j.lastRun+' | BTC '+j.btc.call+' '+j.btc.score+' | ETH '+j.eth.call+' '+j.eth.score+' | SOL '+j.sol.call+' '+j.sol.score}).catch(function(e){o.textContent='Could not reach the bot'})};</script>
 </body>
 </html>
