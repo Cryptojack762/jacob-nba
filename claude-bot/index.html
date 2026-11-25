@@ -151,6 +151,7 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
       <div id="aqlist"></div>
       <details style="margin-top:8px"><summary class="why" style="cursor:pointer">How auto entry works</summary><div class="why" style="margin-top:6px">The bot checks every 15 min. When your chart turns ENTER it buys on WEEX with the stop set, sells 75% at 1.5R (stop moves to entry) and the rest at 2R. Risk is 10% of the amount (half while the Bitcoin gate is down). Coins you lock in use your own money (max 3 open). Separately the bot hunts on its own with its $15 pot: $1.50 trades, up to 10 open, stops for the day after −$3, and for good after −$5 or 5 losses in a row.</div></details>
     </div>
+    <div class="card" id="confcard"><div style="font-weight:700;font-size:16px">Market + YouTube report</div><div id="confbody" class="why">Loading…</div></div>
     <button class="more" id="runbot" style="margin:10px 0">Refresh YouTube + market consensus (never trades)</button><div id="runbotout" style="font-size:13px;margin:0 0 10px"></div>
   </section>
 
@@ -772,6 +773,21 @@ function bbscan(){
 bbscan();setInterval(function(){if(!document.hidden)bbscan()},600000);
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 </script>
-<script>$('runbot').onclick=function(){if(!WAPI||!WPIN){toast('Connect the bot first');return}var o=$('runbotout');o.textContent='Refreshing... about 1-2 minutes';fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+'&confrun=1',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){if(!j.ok){o.textContent='Refresh failed: '+(j.err||'unknown');return}o.textContent='Updated '+j.lastRun+' | BTC '+j.btc.call+' '+j.btc.score+' | ETH '+j.eth.call+' '+j.eth.score+' | SOL '+j.sol.call+' '+j.sol.score}).catch(function(e){o.textContent='Could not reach the bot'})};</script>
+<script>$('runbot').onclick=function(){if(!WAPI||!WPIN){toast('Connect the bot first');return}var o=$('runbotout');o.textContent='Refreshing... about 1-2 minutes';fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+'&confrun=1',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){if(!j.ok){o.textContent='Refresh failed: '+(j.err||'unknown');return}o.textContent='Updated '+j.lastRun+' | BTC '+j.btc.call+' '+j.btc.score+' | ETH '+j.eth.call+' '+j.eth.score+' | SOL '+j.sol.call+' '+j.sol.score;cfRender(j)}).catch(function(e){o.textContent='Could not reach the bot'})};</script>
+<script>
+function cfRender(j){var b=$('confbody');if(!j||j.ok===false){b.textContent='Report not available: '+((j&&j.err)||'error');return}
+function row(n,c){return '<div style="display:flex;justify-content:space-between;gap:8px;margin-top:6px"><b>'+n+'</b><span>'+esc(c.call)+' · '+esc(c.score)+' · size '+esc(c.size)+'</span></div>'}
+var h='<div class="why">Updated '+esc(j.lastRun)+(j.notes?' · '+esc(j.notes):'')+'</div>'+row('BTC',j.btc)+row('ETH',j.eth)+row('SOL',j.sol)+
+'<div class="why" style="margin-top:8px">'+esc(j.alert||'')+'</div><div class="why">Prices: '+esc(j.prices||'')+'</div><div class="why">'+esc(j.mood||'')+'</div><div class="why">Next: '+esc(j.events||'')+'</div>'+
+'<div style="margin-top:8px"><b>Key levels</b></div><div class="why">'+esc(j.levels||'')+'</div>';
+var v=j.videos||[],full=v.filter(function(x){return x.full}),rest=v.filter(function(x){return !x.full});
+h+='<div style="margin-top:10px"><b>Video summaries ('+full.length+')</b></div>';
+full.forEach(function(x){h+='<details style="margin-top:6px"><summary style="cursor:pointer">'+esc(x.d)+' · '+esc(x.ch)+' · <b>'+esc(x.call)+'</b><div class="why">'+esc(x.t)+'</div></summary><div class="why" style="margin-top:4px">'+esc(x.s)+'</div>'+(x.lv&&x.lv!=='-'?'<div class="why">Levels: '+esc(x.lv)+'</div>':'')+'</details>'});
+if(rest.length){h+='<details style="margin-top:10px"><summary class="why" style="cursor:pointer">'+rest.length+' videos only read from title (no summary yet)</summary>';rest.forEach(function(x){h+='<div class="why" style="margin-top:4px">'+esc(x.d)+' · '+esc(x.ch)+' · '+esc(x.t)+'</div>'});h+='</details>'}
+b.innerHTML=h}
+function cfload(){if(!WAPI||!WPIN){$('confbody').textContent='Connect the bot (Trade tab) to load the report.';return}
+fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+'&conf=1',{cache:'no-store'}).then(function(r){return r.json()}).then(cfRender).catch(function(e){$('confbody').textContent='Report not reachable: '+(e&&e.message||e)})}
+cfload();
+</script>
 </body>
 </html>
