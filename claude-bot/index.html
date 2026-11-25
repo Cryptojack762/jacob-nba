@@ -364,7 +364,7 @@ function trigRow(t){
   if(chb)tk='<div style="display:flex;gap:8px;align-items:center;margin-top:6px">'+chb+'</div>';
   if(s==='ENTER'&&!t.exp&&t.src!=='FAV')tk='<div style="display:flex;gap:8px;align-items:center;margin-top:6px"><button class="mb" style="min-height:0;padding:6px 12px" data-mk="'+esc(String(t.c).toUpperCase())+'">🎫 Make ticket</button>'+chb+'<span class="chip '+(w===false?'s-AVOID':'s-ENTER')+'">'+(w===false?'BloFin only':w?'WEEX ✔':'WEEX ?')+'</span></div>';
   return '<div class="row"><div class="sym">'+esc(String(t.c).slice(0,5))+'</div><div class="mid"><div class="l1"><b>'+esc(t.c)+'</b><span>'+(t.now!==''&&t.now!=null?'$'+esc(num(t.now)):'')+'</span></div>'+
-    '<div class="why">'+esc(t.why)+'</div>'+(t.exp?'':'<div class="ema2" data-ema="'+esc(String(t.c).toUpperCase().replace(/[^A-Z0-9]/g,''))+'"><span class="why">EMA21 vs EMA200 · loading…</span></div>')+(t.plan?'<div class="plan">'+esc(t.plan)+'</div>':'')+bar+tk+'</div>'+right+'</div>';
+    '<div class="why">'+esc(t.why)+'</div>'+(t.exp?'':'<div class="ema2" data-ema="'+esc(String(t.c).toUpperCase().replace(/[^A-Z0-9]/g,''))+'"><span class="why">EMA21 above EMA200 · loading…</span></div>')+(t.plan?'<div class="plan">'+esc(t.plan)+'</div>':'')+bar+tk+'</div>'+right+'</div>';
 }
 function render(){
   if(!D)return;
@@ -851,9 +851,9 @@ function emaScan(sym){var f=EMAC[sym];if(f&&Date.now()-f.at<300000)return Promis
  return Promise.all(EMATF.map(function(t){return emaK(sym,t[1],t[2]).then(function(k){if(k.length<205)return {t:t[0],s:'na'};var c=k.map(function(x){return x[1]}),e21=emaLast(c,21),e200=emaLast(c,200),gap=(e21-e200)/e200*100;return {t:t[0],s:gap>=0?'up':gap>-0.5?'near':'down'}})})).then(function(R){
   var ch=R.map(function(x){var cl=x.s==='up'?'s-ENTER':x.s==='near'?'s-ALMOST':x.s==='down'?'s-AVOID':'s-WAIT',sy=x.s==='up'?'✔':x.s==='near'?'≈':x.s==='down'?'✘':'–';return '<span class="chip '+cl+'" style="margin:0;display:inline-block;line-height:1.3;padding:5px 10px;font-size:13px">'+x.t+' '+sy+'</span>'}).join('');
   var up=R.filter(function(x){return x.s==='up'}).map(function(x){return x.t}).join(', ');
-  var h='<div style="margin:14px 0 14px;padding:12px;border:1px solid var(--line);border-radius:12px"><div style="font-size:13px;line-height:1.4"><b>EMA21 vs EMA200</b></div><div class="why" style="margin:4px 0 10px;line-height:1.4">21 is above the 200 on: '+(up||'none')+'</div><div style="display:flex;flex-wrap:wrap;gap:8px">'+ch+'</div></div>';EMAC[sym]={at:Date.now(),h:h};return h})}
+  var h='<div style="margin:14px 0 14px;padding:12px;border:1px solid var(--line);border-radius:12px"><div style="font-size:13px;line-height:1.4"><b>EMA21 above EMA200</b></div><div class="why" style="margin:4px 0 10px;line-height:1.4">21 is above the 200 on: '+(up||'none')+'</div><div style="display:flex;flex-wrap:wrap;gap:8px">'+ch+'</div></div>';EMAC[sym]={at:Date.now(),h:h};return h})}
 var EMAQ=[],EMAB=0;
-function emaPump(){while(EMAB<2&&EMAQ.length){var j=EMAQ.shift();EMAB++;(function(j){emaScan(j.s).then(function(h){j.els.forEach(function(e){e.innerHTML=h})}).catch(function(){j.els.forEach(function(e){e.textContent='EMA21 vs EMA200 · not available'})}).then(function(){EMAB--;emaPump()})})(j)}}
+function emaPump(){while(EMAB<2&&EMAQ.length){var j=EMAQ.shift();EMAB++;(function(j){emaScan(j.s).then(function(h){j.els.forEach(function(e){e.innerHTML=h})}).catch(function(){j.els.forEach(function(e){e.textContent='EMA21 above EMA200 · not available'})}).then(function(){EMAB--;emaPump()})})(j)}}
 function emaFill(){var by={};document.querySelectorAll('.ema2[data-ema]').forEach(function(e){if(e.dataset.done)return;e.dataset.done='1';(by[e.dataset.ema]=by[e.dataset.ema]||[]).push(e)});
  Object.keys(by).forEach(function(s){var f=EMAC[s];if(f&&Date.now()-f.at<300000){by[s].forEach(function(e){e.innerHTML=f.h})}else EMAQ.push({s:s,els:by[s]})});emaPump()}
 (function(){var r0=render;render=function(){var x=r0.apply(this,arguments);try{emaFill()}catch(e){}return x};try{emaFill()}catch(e){}})();
