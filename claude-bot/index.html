@@ -128,6 +128,8 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
     <div class="card"><div class="read" id="read"><div class="sk" style="height:80px;margin:0"></div></div></div>
     <div class="k"><span>Economic news · this week (US)</span><span id="nat"></span></div>
     <div class="card" id="ncal"><div class="why">Loading…</div></div>
+    <div class="k"><span>Market movers · tariffs, Fed, trade</span><span id="mmat"></span></div>
+    <div class="card" id="mmcard"><div class="why">Loading…</div></div>
     <div class="k">Crypto headlines</div>
     <div class="card" id="nhead"><div class="why">Loading…</div></div>
     <div class="k">Ask Claude</div>
@@ -814,6 +816,17 @@ document.addEventListener('click',function(ev){var m=ev.target.closest&&ev.targe
  r.onresult=function(e){var t='';for(var i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;inp.value=t};
  r.onend=function(){m.textContent='🎤'};r.onerror=function(){m.textContent='🎤';toast('Mic blocked: allow microphone for this site')};
  try{r.start()}catch(x){m.textContent='🎤'}});
+</script>
+<script>
+function mmTag(t){var b=/rate cut|trade deal|deal reached|rally|surge|soar|jump|dovish|ceasefire|record high|approve|rebound|eases|cools?\b/i.test(t),r=/tariff|sanction|recession|crash|plunge|sell-?off|slump|tumble|hike|hawkish|shutdown|collapse|war\b|panic|escalat/i.test(t);
+ return b&&!r?'<i class="chip s-ENTER">BULLISH</i>':r&&!b?'<i class="chip s-AVOID">BEARISH</i>':''}
+function mmload(){var el=$('mmcard');if(!WAPI||!WPIN){el.innerHTML='<div class="why">Connect the bot (Trade tab) to load market movers.</div>';return}
+ fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+'&macro=1',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+  if(j.ok===false||!j.items){el.innerHTML='<div class="why">Bot said: '+esc(String(j.err||'error'))+'</div>';return}
+  $('mmat').textContent=j.at?'updated '+j.at:'';
+  el.innerHTML=j.items.slice(0,6).map(function(h){var w=new Date(h.when);return '<div class="hl"><span>'+mmTag(h.t)+' <a href="'+esc(h.link)+'" target="_blank" style="color:inherit">'+esc(h.t)+'</a><br><span class="why">'+esc(h.src)+' · '+esc(isNaN(w)?'':w.toLocaleString([], {weekday:'short',hour:'numeric',minute:'2-digit'}))+'</span></span></div>'}).join('')||'<div class="why">Nothing market-moving in the last day.</div>'
+ }).catch(function(e){el.innerHTML='<div class="why">Market movers not reachable: '+esc(String(e&&e.message||e))+'</div>'})}
+mmload();setInterval(function(){if(!document.hidden)mmload()},900000);
 </script>
 </body>
 </html>
