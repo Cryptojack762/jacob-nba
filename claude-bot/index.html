@@ -130,16 +130,12 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
     <div class="card" id="ncal"><div class="why">Loading…</div></div>
     <div class="k">Crypto headlines</div>
     <div class="card" id="nhead"><div class="why">Loading…</div></div>
-      <div class="k">Your tickers · best setups right now</div>
-    <div class="card" id="best"><div class="sk" style="margin:0"></div></div>
-    <div class="k"><span>Setups board · closest to a tested trigger</span><span id="sbat"></span></div>
-    <div class="card" id="sboard"><div class="why">Scanning 20 coins…</div></div>
     <div class="k">Ask Claude</div>
     <div class="card">
       <div style="display:flex;gap:8px"><input class="inp" id="qtk" style="margin:0" placeholder="Ticker, e.g. SOL" autocomplete="off" autocapitalize="characters"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px"><button class="mb" data-q="day">Day trade</button><button class="mb" data-q="swing">Swing</button><button class="mb" data-q="full">Full read</button></div>
       <button class="buy" id="tkbtn" style="width:100%;margin-top:8px">🎫 Trade ticket for this ticker</button><div id="tkout"></div>
-      <div style="display:flex;gap:8px;margin-top:8px"><input class="inp" id="qfree" style="margin:0" placeholder="Or ask anything…" autocomplete="off"><button class="mb" id="qgo" style="min-width:70px">Ask</button></div>
+      <div style="display:flex;gap:8px;margin-top:8px"><input class="inp" id="qfree" style="margin:0" placeholder="Or ask anything…" autocomplete="off"><button class="mb mic" data-mic="qfree" style="min-width:46px" aria-label="Talk">🎤</button><button class="mb" id="qgo" style="min-width:70px">Ask</button></div>
       <button class="more" id="askc" style="margin-top:8px">Market read (BTC + best setups)</button>
       <div class="why" id="askout" style="white-space:pre-wrap;margin-top:8px"></div></div>
     <div class="k"><span>Auto entry · bot buys when it turns ENTER</span><span id="aqpot"></span></div>
@@ -159,7 +155,7 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
     <div class="seg2"><button data-go="bf" class="">BloFin · long trades</button><button data-go="weex" class="on">WEEX · day trades</button></div>
     <div class="k" style="margin-top:0">Ask Atlas</div>
     <div class="card" id="achat">
-      <div style="display:flex;gap:8px"><input class="inp" id="aq" style="margin:0" placeholder="e.g. day trade XRP on the 15m" autocomplete="off"><button class="mb" id="asend" style="min-width:76px">Ask</button></div>
+      <div style="display:flex;gap:8px"><input class="inp" id="aq" style="margin:0" placeholder="e.g. day trade XRP on the 15m" autocomplete="off"><button class="mb mic" data-mic="aq" style="min-width:46px" aria-label="Talk">🎤</button><button class="mb" id="asend" style="min-width:76px">Ask</button></div>
       <div class="why" id="aout" style="white-space:pre-wrap;margin-top:10px">Ask for a day trade or swing trade on any coin. Atlas reads the live chart, checks our tested rules and gives entry, stop and targets. Each question costs about a cent of API credit.</div>
       <div id="aplan"></div>
     </div>
@@ -195,6 +191,11 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
       <div class="card" id="wsig"></div>
       <button class="more" id="wreset" style="margin-bottom:12px">Change bot link / PIN</button>
     </div>
+  
+      <div class="k">Your tickers · best setups right now</div>
+    <div class="card" id="best"><div class="sk" style="margin:0"></div></div>
+    <div class="k"><span>Setups board · closest to a tested trigger</span><span id="sbat"></span></div>
+    <div class="card" id="sboard"><div class="why">Scanning 20 coins…</div></div>
   </section>
   <section class="view" id="v-bf">
     <div class="seg2"><button data-go="bf" class="on">BloFin · long trades</button><button data-go="weex" class="">WEEX · day trades</button></div>
@@ -638,7 +639,7 @@ function nload(){if(!WAPI||!WPIN){$('ncal').innerHTML='<div class="why">Connect 
     $('nat').textContent=j.at?'updated '+j.at:'';
     $('ncal').innerHTML=cal.length?cal.map(function(e){var past=e.d<now,hi=e.imp==='High';if(!past&&hi&&e.d-now<864e5&&!soon)soon=e;
       var when=e.d.toLocaleString([], {weekday:'short',hour:'numeric',minute:'2-digit'});
-      return '<div class="hl" style="opacity:'+(past&&!e.act?'.55':'1')+'"><i class="chip s-'+(hi?'AVOID':'WAIT')+'">'+(hi?'HIGH':'MED')+'</i><span><b>'+esc(e.t)+'</b> · '+esc(when)+' CT<br>'+(e.act?'<b>Actual '+esc(e.act)+'</b> · ':'')+'Forecast '+esc(e.fc||'-')+' · Prior '+esc(e.prev||'-')+(nexp(e.t)?'<br><span class="why">'+esc(nexp(e.t))+'</span>':'')+'</span></div>'}).join(''):'<div class="why">No US reports found'+((j.err||[]).length?': '+esc(j.err.join('; ')):'')+'</div>';
+      return '<div class="hl" style="opacity:'+(past&&!e.act?'.55':'1')+'"><i class="chip s-'+(hi?'AVOID':'WAIT')+'">'+(hi?'HIGH':'MED')+'</i><span><b>'+esc(e.t)+'</b> · '+esc(when)+' CT<br>'+(e.act?'<b>Actual '+esc(e.act)+'</b> · ':'')+'Forecast '+esc(e.fc||'-')+' · Prior '+esc(e.prev||'-')+(evVerdict(e)?'<br>'+evVerdict(e):'')+(nexp(e.t)?'<br><span class="why">'+esc(nexp(e.t))+'</span>':'')+'</span></div>'}).join(''):'<div class="why">No US reports found'+((j.err||[]).length?': '+esc(j.err.join('; ')):'')+'</div>';
     $('nbanner').innerHTML=soon?'<div class="card" style="border-color:#5b1d20;background:var(--dnb)"><b>⚠ '+esc(soon.t)+'</b> in '+Math.max(1,Math.round((soon.d-now)/36e5))+'h ('+esc(soon.d.toLocaleString([], {weekday:'short',hour:'numeric',minute:'2-digit'}))+' CT). Expect big moves; size down or wait until after.</div>':'';
     $('nhead').innerHTML=(j.head||[]).map(function(h){return '<div class="hl"><i>📰</i><span><a href="'+esc(h.link)+'" target="_blank" style="color:inherit">'+esc(h.t)+'</a><br><span class="why">'+esc(h.src)+' · '+esc(new Date(h.when).toLocaleString([], {weekday:'short',hour:'numeric',minute:'2-digit'}))+'</span></span></div>'}).join('')||'<div class="why">No headlines right now.</div>';
   }).catch(function(e){$('ncal').innerHTML='<div class="why">News not reachable: '+esc(String(e&&e.message||e))+'</div>';$('nhead').innerHTML=''})}
@@ -777,7 +778,7 @@ if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 <script>
 function cfRender(j){var b=$('confbody');if(!j||j.ok===false){b.textContent='Report not available: '+((j&&j.err)||'error');return}
 function row(n,c){return '<div style="display:flex;justify-content:space-between;gap:8px;margin-top:6px"><b>'+n+'</b><span>'+esc(c.call)+' · '+esc(c.score)+' · size '+esc(c.size)+'</span></div>'}
-var h='<div class="why">Updated '+esc(j.lastRun)+(j.notes?' · '+esc(j.notes):'')+'</div>'+row('BTC',j.btc)+row('ETH',j.eth)+row('SOL',j.sol)+
+var h=cfVerdict(j)+'<div class="why">Updated '+esc(j.lastRun)+(j.notes?' · '+esc(j.notes):'')+'</div>'+row('BTC',j.btc)+row('ETH',j.eth)+row('SOL',j.sol)+
 '<div class="why" style="margin-top:8px">'+esc(j.alert||'')+'</div><div class="why">Prices: '+esc(j.prices||'')+'</div><div class="why">'+esc(j.mood||'')+'</div><div class="why">Next: '+esc(j.events||'')+'</div>'+
 '<div style="margin-top:8px"><b>Key levels</b></div><div class="why">'+esc(j.levels||'')+'</div>';
 var v=j.videos||[],full=v.filter(function(x){return x.full}),rest=v.filter(function(x){return !x.full});
@@ -788,6 +789,30 @@ b.innerHTML=h}
 function cfload(){if(!WAPI||!WPIN){$('confbody').textContent='Connect the bot (Trade tab) to load the report.';return}
 fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+'&conf=1',{cache:'no-store'}).then(function(r){return r.json()}).then(cfRender).catch(function(e){$('confbody').textContent='Report not reachable: '+(e&&e.message||e)})}
 cfload();
+</script>
+<script>
+function nnum(s){var m=String(s==null?'':s).replace(/,/g,'').match(/-?\d+(\.\d+)?/);if(!m)return null;var v=+m[0];if(/K/i.test(s))v*=1e3;if(/M/i.test(s))v*=1e6;if(/B/i.test(s))v*=1e9;return v}
+function evVerdict(e){var t=e.t||'',kind=null;
+ if(/Jobless|Claims|Unemployment/i.test(t))kind=-1;
+ else if(/CPI|PPI|PCE|Inflation|Nonfarm|Payroll|Employment|JOLTS|ADP|GDP|Retail Sales|ISM|PMI|Rate Decision|Interest Rate|FOMC/i.test(t))kind=1;
+ if(kind===null)return '';
+ if(!e.act)return '<span class="why">Verdict: waiting for the number</span>';
+ var a=nnum(e.act),f=nnum(e.fc);if(a==null||f==null)return '';
+ if(a===f)return '<b>IN LINE</b> · neutral for crypto';
+ var hawk=(a>f)===(kind===1),dir=a>f?'above':'below';
+ return hawk?'<b style="color:#ff6b6b">BEARISH for crypto · hawkish</b> <span class="why">(came in '+dir+' forecast)</span>':'<b style="color:#4ade80">BULLISH for crypto · dovish</b> <span class="why">(came in '+dir+' forecast)</span>'}
+function cfVerdict(j){var v=(j.videos||[]).filter(function(x){return x.full}),b=0,r=0,w=0;
+ v.forEach(function(x){var c=String(x.call).toUpperCase();if(/BEAR/.test(c))r++;else if(/BULL|BOTTOM/.test(c))b++;else if(/WAIT/.test(c))w++});
+ var lean=b>r+1?'leans bullish':r>b+1?'leans bearish':'is split';
+ var lv=String(j.levels||'').split('|')[0].slice(0,110);
+ return '<div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;margin:8px 0"><b>VERDICT: BTC '+esc(j.btc.call)+' ('+esc(j.btc.score)+'/100) · bot size '+esc(j.btc.size)+'</b><div class="why" style="margin-top:4px">Creators '+lean+': '+b+' bullish, '+r+' bearish, '+w+' wait (of '+v.length+' full reads). '+esc(j.alert||'')+'</div><div class="why">Levels: '+esc(lv)+'</div></div>'}
+var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+document.addEventListener('click',function(ev){var m=ev.target.closest&&ev.target.closest('.mic');if(!m)return;
+ if(!SR){toast('Mic not supported in this browser');return}
+ var inp=document.getElementById(m.dataset.mic),r=new SR();r.lang='en-US';r.interimResults=true;r.continuous=false;m.textContent='🔴';
+ r.onresult=function(e){var t='';for(var i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;inp.value=t};
+ r.onend=function(){m.textContent='🎤'};r.onerror=function(){m.textContent='🎤';toast('Mic blocked: allow microphone for this site')};
+ try{r.start()}catch(x){m.textContent='🎤'}});
 </script>
 </body>
 </html>
