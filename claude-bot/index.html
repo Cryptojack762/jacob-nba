@@ -138,15 +138,6 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
       <div style="display:flex;gap:8px;margin-top:8px"><input class="inp" id="qfree" style="margin:0" placeholder="Or ask anything…" autocomplete="off"><button class="mb mic" data-mic="qfree" style="min-width:46px" aria-label="Talk">🎤</button><button class="mb" id="qgo" style="min-width:70px">Ask</button></div>
       <button class="more" id="askc" style="margin-top:8px">Market read (BTC + best setups)</button>
       <div class="why" id="askout" style="white-space:pre-wrap;margin-top:8px"></div></div>
-    <div class="k"><span>Auto entry · bot buys when it turns ENTER</span><span id="aqpot"></span></div>
-    <div class="card">
-      <input class="inp" id="aqc" style="margin:0" placeholder="Ticker, e.g. SOL" autocomplete="off" autocapitalize="characters">
-      <div class="amt" id="aqamt"><button class="mb sel" data-aqa="5">$5</button><button class="mb" data-aqa="10">$10</button><button class="mb" data-aqa="15">$15</button><input class="inp" id="aqusd" style="margin:0" inputmode="decimal" placeholder="$ other"></div>
-      <div class="seg" id="aqtf"><button class="mb" data-aqt="15m">Scalp 15m</button><button class="mb sel" data-aqt="1H">Day 1H</button><button class="mb" data-aqt="4H">Swing 4H</button></div>
-      <button class="buy" id="aqgo" style="width:100%;margin-top:8px">🔒 Lock it in</button>
-      <div id="aqlist"></div>
-      <details style="margin-top:8px"><summary class="why" style="cursor:pointer">How auto entry works</summary><div class="why" style="margin-top:6px">The bot checks every 15 min. When your chart turns ENTER it buys on WEEX with the stop set, sells 75% at 1.5R (stop moves to entry) and the rest at 2R. Risk is 10% of the amount (half while the Bitcoin gate is down). Coins you lock in use your own money (max 3 open). Separately the bot hunts on its own with its $15 pot: $1.50 trades, up to 10 open, stops for the day after −$3, and for good after −$5 or 5 losses in a row.</div></details>
-    </div>
     <div class="card" id="confcard"><div style="font-weight:700;font-size:16px">Market + YouTube report</div><div id="confbody" class="why">Loading…</div></div>
     <button class="more" id="runbot" style="margin:10px 0">Refresh YouTube + market consensus (never trades)</button><div id="runbotout" style="font-size:13px;margin:0 0 10px"></div>
   </section>
@@ -243,6 +234,16 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
     </div>
   </section>
   <section class="view" id="v-trades">
+    <div class="k"><span>Auto entry · bot buys when it turns ENTER</span><span id="aqpot"></span></div>
+    <div class="card">
+      <input class="inp" id="aqc" style="margin:0" placeholder="Ticker, e.g. SOL" autocomplete="off" autocapitalize="characters">
+      <div class="amt" id="aqamt"><button class="mb sel" data-aqa="5">$5</button><button class="mb" data-aqa="10">$10</button><button class="mb" data-aqa="15">$15</button><input class="inp" id="aqusd" style="margin:0" inputmode="decimal" placeholder="$ other"></div>
+      <div class="seg" id="aqtf"><button class="mb" data-aqt="15m">Scalp 15m</button><button class="mb sel" data-aqt="1H">Day 1H</button><button class="mb" data-aqt="4H">Swing 4H</button></div>
+      <button class="buy" id="aqgo" style="width:100%;margin-top:8px">🔒 Lock it in</button>
+      <div id="aqlist"></div>
+      <details style="margin-top:8px"><summary class="why" style="cursor:pointer">How auto entry works</summary><div class="why" style="margin-top:6px">The bot checks every 15 min. When your chart turns ENTER it buys on WEEX with the stop set, sells 75% at 1.5R (stop moves to entry) and the rest at 2R. Risk is 10% of the amount (half while the Bitcoin gate is down). Coins you lock in use your own money (max 3 open). Separately the bot hunts on its own with its $15 pot: $1.50 trades, up to 10 open, stops for the day after −$3, and for good after −$5 or 5 losses in a row.</div></details>
+    </div>
+
     <div class="card" id="tconn" style="display:none"><div class="why">Connect the bot first: Trade tab → WEEX · day trades → enter the bot link and PIN.</div><button class="more" data-go="weex" style="margin-top:10px">Go connect</button></div>
     <div class="card" id="bank"><div class="why">Bankroll loading…</div></div>
     <div class="k">Score by trade type</div>
