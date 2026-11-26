@@ -215,6 +215,8 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
   </section>
 
   <section class="view" id="v-picks">
+    <div class="k"><span>⭐ Favorites</span><span class="why" style="margin:0">tap ☆ on any card to add</span></div>
+    <div class="card" id="favs"></div>
     <div class="k">Top picks · Dustin's screener</div>
     <div class="card" id="picks"></div>
     <div class="foot" id="scan"></div>
@@ -349,6 +351,12 @@ function trigExtra(){var out=[],have={};(D&&D.trig||[]).forEach(function(t){have
     (BX.watch&&BX.watch.list||[]).filter(function(w){return w.status==='EXPIRED'}).slice(-3).forEach(function(w){out.push({c:w.coin,now:'',st:'AVOID',exp:true,why:'⌛ Watch list EXPIRED '+(w.at||'')+' · '+(w.note||''),plan:'',src:'WATCH'})});
     (BX.watch&&BX.watch.favs||[]).forEach(function(f){out.push({c:f.coin,now:f.price,st:f.state||'WAIT',why:'⭐ Favorite · '+(f.note||''),plan:'',src:'FAV'})})}
   return out}
+function favGet(){try{var a=JSON.parse(localStorage.getItem('favs'));if(Array.isArray(a))return a}catch(e){}return ['BTC','ETH','SOL','DOGE','ARB']}
+function favSet(a){try{localStorage.setItem('favs',JSON.stringify(a))}catch(e){}}
+function favStar(c){c=String(c).toUpperCase().replace(/[^A-Z0-9]/g,'');var on=favGet().indexOf(c)>=0;return '<button class="mb" style="min-height:0;padding:6px 12px" data-fav="'+esc(c)+'" aria-label="Favorite">'+(on?'⭐':'☆')+'</button>'}
+function favRow(c){c=String(c).toUpperCase();var t=null;(D&&D.trig||[]).concat(trigExtra()).forEach(function(x){if(!t&&String(x.c).toUpperCase().replace(/[^A-Z0-9]/g,'')===c)t=x});
+  if(!t)t={c:c,now:'',st:'WAIT',why:'No live trigger · watching only',plan:''};
+  var o=Object.assign({},t,{fav:true});if(o.src==='FAV')o.src='';return trigRow(o)}
 function trigRow(t){
   var s=st(t.st), a=atr(t.why), r=(t.score===''||t.score==null)?NaN:Math.max(0,Math.min(100,Number(t.score)));
   var C={ENTER:'var(--up)',ALMOST:'var(--al)',WAIT:'var(--wt)',AVOID:'var(--dn)'}[s];
@@ -361,8 +369,9 @@ function trigRow(t){
   if(t.exp){bar='';right='<span class="chip s-EXPIRED">EXPIRED</span>'}
   var w=onW(t.c),tk='';
   var chb=t.exp?'':'<a class="mb" target="_blank" rel="noopener" style="min-height:0;padding:6px 12px;text-decoration:none;color:inherit" href="https://www.weex.com/futures/'+esc(String(t.c).toUpperCase().replace(/[^A-Z0-9]/g,''))+'-USDT">📈 Chart</a>';
-  if(chb)tk='<div style="display:flex;gap:8px;align-items:center;margin-top:6px">'+chb+'</div>';
-  if(s==='ENTER'&&!t.exp&&t.src!=='FAV')tk='<div style="display:flex;gap:8px;align-items:center;margin-top:6px"><button class="mb" style="min-height:0;padding:6px 12px" data-mk="'+esc(String(t.c).toUpperCase())+'">🎫 Make ticket</button>'+chb+'<span class="chip '+(w===false?'s-AVOID':'s-ENTER')+'">'+(w===false?'BloFin only':w?'WEEX ✔':'WEEX ?')+'</span></div>';
+  if(chb)tk='<div style="display:flex;gap:8px;align-items:center;margin-top:6px">'+chb+favStar(t.c)+'</div>';
+  if(t.fav&&!t.exp)tk='<div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap"><button class="mb" style="min-height:0;padding:6px 12px" data-mk="'+esc(String(t.c).toUpperCase())+'">🎫 Make ticket</button>'+chb+favStar(t.c)+(s==='ENTER'?'':'<span class="chip s-WAIT">'+(s==='ALMOST'?'ALMOST':'WAIT')+' · ticket is flagged</span>')+'</div>';
+  if(s==='ENTER'&&!t.exp&&t.src!=='FAV')tk='<div style="display:flex;gap:8px;align-items:center;margin-top:6px"><button class="mb" style="min-height:0;padding:6px 12px" data-mk="'+esc(String(t.c).toUpperCase())+'">🎫 Make ticket</button>'+chb+favStar(t.c)+'<span class="chip '+(w===false?'s-AVOID':'s-ENTER')+'">'+(w===false?'BloFin only':w?'WEEX ✔':'WEEX ?')+'</span></div>';
   return '<div class="row"><div class="sym">'+esc(String(t.c).slice(0,5))+'</div><div class="mid"><div class="l1"><b>'+esc(t.c)+'</b><span>'+(t.now!==''&&t.now!=null?'$'+esc(num(t.now)):'')+'</span></div>'+
     '<div class="why">'+esc(t.why)+'</div>'+(t.exp?'':'<div class="ema2" data-ema="'+esc(String(t.c).toUpperCase().replace(/[^A-Z0-9]/g,''))+'"><span class="why">EMA21 above EMA200 · loading…</span></div>')+(t.plan?'<div class="plan">'+esc(t.plan)+'</div>':'')+bar+tk+'</div>'+right+'</div>';
 }
@@ -390,6 +399,7 @@ function render(){
       (hasR?'<div class="bar"><i style="left:0;width:'+Math.max(rr,2)+'%;background:'+(rr>=100?'#22c55e':'linear-gradient(90deg,#ff2d00,#ff8a00 40%,#ffd84d 75%,#22c55e);background-size:'+(10000/Math.max(rr,2))+'% 100%')+'"></i></div>':'')+
       '</div><div class="sc">'+(hasR?'<b style="color:'+(rr>=100?'#22c55e':'inherit')+'">'+Math.round(rr)+'</b><span style="color:'+C+'">'+esc(S)+'</span>':'<b>'+esc(p.s)+'</b><span>'+(S?esc(S):'SCORE')+'</span>')+'</div></div>';
   }).join('')||'<div class="why">No picks yet.</div>';
+  $('favs').innerHTML=favGet().map(favRow).join('')||'<div class="why">No favorites yet. Tap ☆ on any card.</div>';
   $('scan').textContent=D.scan||'';
   var h=String(D.health||'').split(/\s*[|·]\s*/).filter(Boolean);
   $('health').innerHTML=h.map(function(x){return '<div class="hl"><i>'+(/ok|✅/i.test(x)?'✅':/fail|error|❌|stale/i.test(x)?'⚠️':'•')+'</i><span>'+esc(x.replace(/^✅\s*/,''))+'</span></div>'}).join('')||'<div class="why">No health data.</div>';
@@ -609,7 +619,7 @@ document.addEventListener('click',function(e){var b=e.target.closest('[data-tf]'
 setTimeout(cardsload,300);setInterval(function(){if(!document.hidden)cardsload()},600000);
 var CARDS=[];function cardsrender(){var G=CARDS.filter(function(c){return c.ok}).sort(function(a,b){return (b.trend-a.trend)||((a.px-a.lvl.p)/a.px-(b.px-b.lvl.p)/b.px)}).slice(0,3);
   $('tcards').innerHTML=G.length?G.map(cardhtml).join(''):'<div class="card"><div class="why">No coin has support 2-6% below price right now. Type a ticker below for its own card.</div></div>';$('tcat').textContent=new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});try{localStorage.setItem('cards_html',$('tcards').innerHTML);localStorage.setItem('cards_at',$('tcat').textContent)}catch(e){}}
-document.addEventListener('click',function(e){var m=e.target.closest('[data-mk]');if(!m)return;e.preventDefault();go('home');$('qtk').value=m.dataset.mk;$('tkbtn').click();setTimeout(function(){$('tkout').scrollIntoView({behavior:'smooth',block:'start'})},300)});
+document.addEventListener('click',function(e){var fv=e.target.closest('[data-fav]');if(fv){e.preventDefault();var c=fv.dataset.fav,a=favGet(),i=a.indexOf(c);if(i>=0)a.splice(i,1);else a.push(c);favSet(a);render();try{emaFill()}catch(x){}toast(i>=0?c+' removed from favorites':c+' added to favorites');return}var m=e.target.closest('[data-mk]');if(!m)return;e.preventDefault();go('home');$('qtk').value=m.dataset.mk;$('tkbtn').click();setTimeout(function(){$('tkout').scrollIntoView({behavior:'smooth',block:'start'})},300)});
 document.addEventListener('click',function(e){var a=e.target.closest('[data-amt]');if(a){AMT=+a.dataset.amt;try{localStorage.setItem('card_amt',AMT)}catch(x){}cardsrender();if($('tkout')._C)$('tkout').innerHTML=cardhtml($('tkout')._C)||$('tkout').innerHTML;return}
   var b=e.target.closest('[data-buy]');if(!b)return;var p=JSON.parse(b.dataset.buy);if(!WAPI||!WPIN){toast('Connect the bot first');return}
   if(!confirm('BUY $'+AMT+' of '+p.c+' at '+p.lev+'x on WEEX now? Stop $'+Number(p.stop).toPrecision(5)))return;b.disabled=true;b.textContent='Sending to WEEX…';
