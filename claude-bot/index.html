@@ -236,7 +236,7 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
     <div class="cmsgs" id="cmsgs"></div>
     <div class="cbar">
       <div class="chips" id="cchips"></div>
-      <div style="display:flex;gap:8px"><input class="inp" id="cin" style="margin:0" placeholder="Ask Atlas… (e.g. day trade SOL)" autocomplete="off"><button class="mb" id="csend" style="min-width:70px">Send</button></div>
+      <div style="display:flex;gap:8px"><input class="inp" id="cin" style="margin:0" placeholder="Ask Atlas… (e.g. day trade SOL)" autocomplete="off"><button class="mb" id="cmic" aria-label="Talk" style="min-width:48px">🎤</button><button class="mb" id="cspk" aria-label="Read replies aloud" style="min-width:48px">🔇</button><button class="mb" id="csend" style="min-width:70px">Send</button></div>
     </div>
   </section>
   <section class="view" id="v-trades">
@@ -674,7 +674,7 @@ function crender(){if(!CH)cnew();var h=CH.m.map(function(x){return x.r==='u'?'<d
   var C=[['Day trade '+(lastc||'…'),lastc?'Day trade check for '+lastc:'Day trade check for '],['Swing '+(lastc||'…'),lastc?'Swing check for '+lastc:'Swing check for '],['Full read '+(lastc||'…'),lastc?'Full read for '+lastc:'Full read for '],['Stress-test my setup','Stress-test my setup: coin , entry , stop , target '],['TP/SL for my open trade','What should I do with my open trade? Give TP and SL levels.'],['Bounce or breakout close?','Which coins are closest to a washout bounce or TPI breakout right now?'],['Market read','Market read: is BTC risk-on or risk-off right now, and is any tested setup firing or close? Short answer.']];
   $('cchips').innerHTML=C.map(function(c,i){return '<button data-chip="'+i+'">'+esc(c[0])+'</button>'}).join('');$('cchips')._c=C;
   window.scrollTo(0,document.body.scrollHeight)}
-function csend(text){text=String(text||'').trim();if(!text)return;if(!CH)cnew();if(!WAPI||!WPIN){CH.m.push({r:'a',t:'Connect the bot first: Trade tab → WEEX · day trades → bot link + PIN.'});crender();return}
+function csend(text){text=String(text||'').trim();if(!text)return;SPK=1;if(!CH)cnew();if(/chart|everything|what.?s on|all (my )?coins|my favou?rites|my cards/i.test(text)&&text.length<90){chartTalk(text);return}if(!WAPI||!WPIN){CH.m.push({r:'a',t:'Connect the bot first: Trade tab → WEEX · day trades → bot link + PIN.'});crender();return}
   var hist=[];for(var i=0;i<CH.m.length-1;i++){if(CH.m[i].r==='u'&&CH.m[i+1]&&CH.m[i+1].r==='a')hist.push({u:CH.m[i].t.slice(0,200),a:CH.m[i+1].t.slice(0,300)})}hist=hist.slice(-4);
   CH.m.push({r:'u',t:text});if(!CH.t)CH.t=text.slice(0,40);CH.m.push({r:'a',t:'Thinking… (about 20 seconds)',w:1});crender();$('csend').disabled=true;
   fetch(WAPI+(WAPI.indexOf('?')>-1?'&':'?')+'json=1&pin='+encodeURIComponent(WPIN)+'&chat='+encodeURIComponent(text.slice(0,590))+'&h='+encodeURIComponent(JSON.stringify(hist)),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
@@ -873,6 +873,27 @@ function pctPaint(){document.querySelectorAll('[data-pct]').forEach(function(e){
 function pctLoad(){var seen={};document.querySelectorAll('[data-pct]').forEach(function(e){seen[e.dataset.pct]=1});
   Object.keys(seen).forEach(function(c){fetch('https://api-contract.weex.com/capi/v3/market/klines?symbol='+c+'USDT&interval=1h&limit=26',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){var k=(Array.isArray(j)?j:[]).map(function(x){return [+x[0],+x[4]]}).sort(function(a,b){return a[0]-b[0]});if(k.length>=25)return k;throw 0}).catch(function(){return bfget('candles?instId='+c+'-USDT&bar=1H&limit=26').then(function(d){return (d||[]).map(function(x){return [+x[0],+x[4]]}).sort(function(a,b){return a[0]-b[0]})})}).then(function(k){if(k.length<25)return;var last=k[k.length-1][1],base=k[k.length-25][1];if(base>0){PCT[c]={p:(last/base-1)*100,last:last};pctPaint()}}).catch(function(){})})}
 (function(){var r0=render;render=function(){var x=r0.apply(this,arguments);try{pctPaint();pctLoad()}catch(e){}return x};setInterval(function(){if(!document.hidden)try{pctLoad()}catch(e){}},30000)})();
+
+var SPK=0,VOICE=false;try{VOICE=localStorage.getItem('voice')==='1'}catch(e){}
+function speak(t){if(!VOICE||!window.speechSynthesis)return;try{speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(String(t).replace(/[*_`#>|]/g,'').replace(/\s+/g,' ').slice(0,900));u.rate=1.05;speechSynthesis.speak(u)}catch(e){}}
+function spkPaint(){$('cspk').textContent=VOICE?'🔊':'🔇'}spkPaint();
+$('cspk').onclick=function(){VOICE=!VOICE;try{localStorage.setItem('voice',VOICE?'1':'0')}catch(e){}if(!VOICE&&window.speechSynthesis)speechSynthesis.cancel();spkPaint();toast(VOICE?'Replies will be read aloud':'Voice replies off')};
+function chartTalk(text){if(!CH)cnew();var L=[];
+  favGet().forEach(function(c){var t=null;(D&&D.trig||[]).concat(trigExtra()).forEach(function(x){if(!t&&String(x.c).toUpperCase().replace(/[^A-Z0-9]/g,'')===c)t=x});
+    var q=PCT[c],e=document.querySelector('.ema2[data-ema="'+c+'"]'),em=e?e.innerText.replace(/\s+/g,' ').replace(/EMA21 above EMA200 · ?/,'').trim():'';
+    L.push('**'+c+'**'+(q?' $'+num(q.last)+' ('+(q.p>=0?'+':'')+q.p.toFixed(2)+'% 24h)':(t&&t.now?' $'+num(t.now):''))+' · '+(t?st(t.st):'WAIT')+(t&&t.why?' · '+String(t.why).slice(0,110):' · no live trigger')+(em&&!/loading/.test(em)?'\nEMA21 vs 200: '+em:'')+(t&&t.plan?'\nPlan: '+String(t.plan).slice(0,120):''))});
+  var g=D&&D.gate?String(D.gate).split('|')[0].slice(0,120):'';
+  var msg=(g?g+'\n\n':'')+L.join('\n\n');
+  CH.m.push({r:'u',t:text});if(!CH.t)CH.t=text.slice(0,40);CH.m.push({r:'a',t:msg||'Nothing loaded yet. Pull to refresh.'});csave();crender();}
+(function(){var R=window.SpeechRecognition||window.webkitSpeechRecognition,rec=null,on=false;
+  $('cmic').onclick=function(){if(!R){toast('Voice input is not supported in this browser');return}
+    if(on&&rec){rec.stop();return}
+    rec=new R();rec.lang='en-US';rec.interimResults=true;rec.continuous=false;var fin='';on=true;$('cmic').textContent='⏺';
+    rec.onresult=function(ev){var t='';for(var i=0;i<ev.results.length;i++)t+=ev.results[i][0].transcript;fin=t;$('cin').value=t};
+    rec.onerror=function(ev){toast('Mic: '+(ev.error||'error'))};
+    rec.onend=function(){on=false;$('cmic').textContent='🎤';var t=$('cin').value.trim();if(t){$('cin').value='';csend(t)}};
+    try{rec.start()}catch(e){on=false;$('cmic').textContent='🎤'}}})();
+(function(){var o=csave;if(typeof o!=='function')return;var last=0;var r0=crender;crender=function(){var x=r0.apply(this,arguments);try{var m=CH&&CH.m[CH.m.length-1];if(SPK&&m&&m.r==='a'&&!m.w&&m.t&&m.t!==last){last=m.t;SPK=0;speak(m.t)}}catch(e){}return x}})();
 </script>
 </body>
 </html>
