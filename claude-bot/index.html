@@ -372,7 +372,7 @@ function trigRow(t){
   if(chb)tk='<div style="display:flex;gap:8px;align-items:center;margin-top:6px">'+chb+favStar(t.c)+'</div>';
   if(t.fav&&!t.exp)tk='<div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap"><button class="mb" style="min-height:0;padding:6px 12px" data-mk="'+esc(String(t.c).toUpperCase())+'">🎫 Make ticket</button>'+chb+favStar(t.c)+(s==='ENTER'?'':'<span class="chip s-WAIT">'+(s==='ALMOST'?'ALMOST':'WAIT')+' · ticket is flagged</span>')+'</div>';
   if(s==='ENTER'&&!t.exp&&t.src!=='FAV')tk='<div style="display:flex;gap:8px;align-items:center;margin-top:6px"><button class="mb" style="min-height:0;padding:6px 12px" data-mk="'+esc(String(t.c).toUpperCase())+'">🎫 Make ticket</button>'+chb+favStar(t.c)+'<span class="chip '+(w===false?'s-AVOID':'s-ENTER')+'">'+(w===false?'BloFin only':w?'WEEX ✔':'WEEX ?')+'</span></div>';
-  return '<div class="row"><div class="sym">'+esc(String(t.c).slice(0,5))+'</div><div class="mid"><div class="l1"><b>'+esc(t.c)+'</b><span>'+(t.now!==''&&t.now!=null?'$'+esc(num(t.now)):'')+'</span></div>'+
+  return '<div class="row"><div class="sym">'+esc(String(t.c).slice(0,5))+'</div><div class="mid"><div class="l1"><b>'+esc(t.c)+'</b><span class="px" data-px="'+esc(String(t.c).toUpperCase().replace(/[^A-Z0-9]/g,''))+'">'+(t.now!==''&&t.now!=null?'$'+esc(num(t.now)):'')+'</span><span class="pct" data-pct="'+esc(String(t.c).toUpperCase().replace(/[^A-Z0-9]/g,''))+'" style="margin-left:auto;font-weight:700"></span></div>'+
     '<div class="why">'+esc(t.why)+'</div>'+(t.exp?'':'<div class="ema2" data-ema="'+esc(String(t.c).toUpperCase().replace(/[^A-Z0-9]/g,''))+'"><span class="why">EMA21 above EMA200 · loading…</span></div>')+(t.plan?'<div class="plan">'+esc(t.plan)+'</div>':'')+bar+tk+'</div>'+right+'</div>';
 }
 function render(){
@@ -867,6 +867,12 @@ function emaPump(){while(EMAB<2&&EMAQ.length){var j=EMAQ.shift();EMAB++;(functio
 function emaFill(){var by={};document.querySelectorAll('.ema2[data-ema]').forEach(function(e){if(e.dataset.done)return;e.dataset.done='1';(by[e.dataset.ema]=by[e.dataset.ema]||[]).push(e)});
  Object.keys(by).forEach(function(s){var f=EMAC[s];if(f&&Date.now()-f.at<300000){by[s].forEach(function(e){e.innerHTML=f.h})}else EMAQ.push({s:s,els:by[s]})});emaPump()}
 (function(){var r0=render;render=function(){var x=r0.apply(this,arguments);try{emaFill()}catch(e){}return x};try{emaFill()}catch(e){}})();
+
+var PCT={};
+function pctPaint(){document.querySelectorAll('[data-pct]').forEach(function(e){var q=PCT[e.dataset.pct];if(!q)return;e.textContent=(q.p>=0?'▲ +':'▼ ')+Math.abs(q.p).toFixed(2)+'%';e.style.color=q.p>=0?'var(--up)':'var(--dn)'});document.querySelectorAll('.px[data-px]').forEach(function(e){var q=PCT[e.dataset.px];if(q&&!e.textContent)e.textContent='$'+num(q.last)})}
+function pctLoad(){var seen={};document.querySelectorAll('[data-pct]').forEach(function(e){seen[e.dataset.pct]=1});
+  Object.keys(seen).forEach(function(c){fetch('https://api-contract.weex.com/capi/v3/market/klines?symbol='+c+'USDT&interval=1h&limit=26',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){var k=(Array.isArray(j)?j:[]).map(function(x){return [+x[0],+x[4]]}).sort(function(a,b){return a[0]-b[0]});if(k.length>=25)return k;throw 0}).catch(function(){return bfget('candles?instId='+c+'-USDT&bar=1H&limit=26').then(function(d){return (d||[]).map(function(x){return [+x[0],+x[4]]}).sort(function(a,b){return a[0]-b[0]})})}).then(function(k){if(k.length<25)return;var last=k[k.length-1][1],base=k[k.length-25][1];if(base>0){PCT[c]={p:(last/base-1)*100,last:last};pctPaint()}}).catch(function(){})})}
+(function(){var r0=render;render=function(){var x=r0.apply(this,arguments);try{pctPaint();pctLoad()}catch(e){}return x};setInterval(function(){if(!document.hidden)try{pctLoad()}catch(e){}},30000)})();
 </script>
 </body>
 </html>
