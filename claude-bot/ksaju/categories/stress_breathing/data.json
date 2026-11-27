@@ -1,0 +1,40 @@
+{
+ "slug": "stress_breathing",
+ "name": "Stress & Breathing",
+ "kind": "wellness",
+ "sheet_tab": "LIB_Stress_Breathing",
+ "entries": [
+  {
+   "id": "stress_breathing-01",
+   "title": "Slow breathing",
+   "content": "Slow, deep breathing can calm the body's stress response and slow your heart rate. A few minutes is enough to try.",
+   "source": "Meditation benefits review 2023 - PMC; Systematic Review of Meditation RCTs - PMC",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "stress_breathing-02",
+   "title": "Mindfulness and stress markers",
+   "content": "Some trials found mindfulness programs lowered stress-related markers in the blood. The research is still growing.",
+   "source": "Meditation and Its Mental and Physical Health Benefits in 2023 - PMC",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "stress_breathing-03",
+   "title": "Meditation and mood",
+   "content": "Reviews show daily meditation can ease feelings of stress and anxiety for many people. If low mood lasts, talk to a professional; in a crisis call or text 988.",
+   "source": "Meditation and Mindfulness: Effectiveness and Safety - NCCIH; Meditation review 2023 - PMC",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "stress_breathing-04",
+   "title": "Stress and blood pressure",
+   "content": "Studies link stress-reduction practices with small drops in blood pressure. Keep following your doctor's plan.",
+   "source": "Meditation and Its Mental and Physical Health Benefits in 2023 - PMC",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  }
+ ]
+}

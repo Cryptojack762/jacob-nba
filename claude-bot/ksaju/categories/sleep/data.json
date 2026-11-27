@@ -1,0 +1,32 @@
+{
+ "slug": "sleep",
+ "name": "Sleep",
+ "kind": "wellness",
+ "sheet_tab": "LIB_Sleep",
+ "entries": [
+  {
+   "id": "sleep-01",
+   "title": "How sleep works",
+   "content": "Sleep cycles through stages called NREM and REM through the night. NHLBI notes many adults don't get enough sleep.",
+   "source": "Sleep Health - NHLBI (NIH)",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "sleep-02",
+   "title": "Several short nights add up",
+   "content": "Research shows several nights of short sleep can affect attention, memory and mood. A regular sleep schedule helps.",
+   "source": "The consequences of sleep deprivation on cognitive performance - PMC",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "sleep-03",
+   "title": "Sleep and the brain's cleanup",
+   "content": "Studies describe a 'glymphatic' system that clears waste from the brain during sleep. Researchers are still learning how this relates to long-term brain health.",
+   "source": "The consequences of sleep deprivation on cognitive performance - PMC",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  }
+ ]
+}

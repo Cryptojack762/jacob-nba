@@ -1,0 +1,128 @@
+{
+ "slug": "twelve_branches",
+ "name": "Twelve Earthly Branches",
+ "kind": "tradition",
+ "sheet_tab": "LIB_Twelve_Branches",
+ "entries": [
+  {
+   "id": "twelve_branches-01",
+   "title": "The twelve branches",
+   "content": "The twelve earthly branches split the day into twelve two-hour blocks and the year into twelve months. Branches are read as the 'earth' or practical layer of a chart.",
+   "source": "Korea Times Gunghap 3; Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "twelve_branches-02",
+   "title": "Combinations and clashes",
+   "content": "Branches can 'combine' or 'clash'. Readers use these to talk about change, tension and harmony.",
+   "source": "Korea Times Gunghap 3; Luck Pillars (dayun)",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "twelve_branches-03",
+   "title": "Hidden stems",
+   "content": "Each branch is said to hold 'hidden stems', secondary elements under the surface. They add detail to how a chart is read.",
+   "source": "Korea Times Gunghap 3; BaZi hour pillar guide",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "twelve_branches-04",
+   "title": "Ja - Rat (23:00-00:59)",
+   "content": "Water branch of midwinter (around December).",
+   "source": "BaziInsight hour pillar guide; Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "twelve_branches-05",
+   "title": "Chuk - Ox (01:00-02:59)",
+   "content": "Earth branch of late winter (around January).",
+   "source": "BaziInsight hour pillar guide; Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "twelve_branches-06",
+   "title": "In - Tiger (03:00-04:59)",
+   "content": "Wood branch of early spring (around February).",
+   "source": "BaziInsight hour pillar guide; Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "twelve_branches-07",
+   "title": "Myo - Rabbit (05:00-06:59)",
+   "content": "Wood branch of mid-spring (around March).",
+   "source": "Korea Times Gunghap 3; Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "twelve_branches-08",
+   "title": "Jin - Dragon (07:00-08:59)",
+   "content": "Earth branch of late spring (around April).",
+   "source": "Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "twelve_branches-09",
+   "title": "Sa - Snake (09:00-10:59)",
+   "content": "Fire branch of early summer (around May).",
+   "source": "Korea Times Gunghap 3; Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "twelve_branches-10",
+   "title": "O - Horse (11:00-12:59)",
+   "content": "Fire branch of midsummer (around June).",
+   "source": "Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "twelve_branches-11",
+   "title": "Mi - Goat (13:00-14:59)",
+   "content": "Earth branch of late summer (around July).",
+   "source": "Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "twelve_branches-12",
+   "title": "Sin - Monkey (15:00-16:59)",
+   "content": "Metal branch of early autumn (around August).",
+   "source": "BaziInsight hour pillar guide; Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "twelve_branches-13",
+   "title": "Yu - Rooster (17:00-18:59)",
+   "content": "Metal branch of mid-autumn (around September).",
+   "source": "BaziInsight hour pillar guide; Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "twelve_branches-14",
+   "title": "Sul - Dog (19:00-20:59)",
+   "content": "Earth branch of late autumn (around October).",
+   "source": "BaziInsight hour pillar guide; Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  },
+  {
+   "id": "twelve_branches-15",
+   "title": "Hae - Pig (21:00-22:59)",
+   "content": "Water branch of early winter (around November).",
+   "source": "BaziInsight hour pillar guide; Four Pillars of Destiny - Wikipedia",
+   "label": "Tradition - for reflection",
+   "verified": "Y"
+  }
+ ]
+}

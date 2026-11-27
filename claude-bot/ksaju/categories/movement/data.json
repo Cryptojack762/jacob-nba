@@ -1,0 +1,40 @@
+{
+ "slug": "movement",
+ "name": "Movement",
+ "kind": "wellness",
+ "sheet_tab": "LIB_Movement",
+ "entries": [
+  {
+   "id": "movement-01",
+   "title": "Movement and the mind",
+   "content": "Regular physical activity is linked with better mood, focus and brain health as we age. Some activity is better than none.",
+   "source": "Yoga for Health: What the Science Says - NCCIH; Meditation benefits review - PMC",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "movement-02",
+   "title": "Balance practice",
+   "content": "Balance and posture exercises, like gentle yoga, can improve stability. NCCIH notes this may lower fall risk in older adults.",
+   "source": "Yoga for Health: What the Science Says - NCCIH (NIH)",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "movement-03",
+   "title": "Light movement and energy",
+   "content": "Reviews find light-to-moderate movement can help people feel less tired and sleep better. Start small and build up.",
+   "source": "Systematic Review for Medical Applications of Meditation - PMC",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  },
+  {
+   "id": "movement-04",
+   "title": "Mindful movement",
+   "content": "Moving slowly with attention, as in yoga or tai chi, can lower feelings of stress. It also builds body awareness.",
+   "source": "Yoga: Effectiveness and Safety - NCCIH (NIH)",
+   "label": "Evidence summary - education only",
+   "verified": "Y"
+  }
+ ]
+}
