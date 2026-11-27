@@ -217,6 +217,8 @@ body{background:radial-gradient(1000px 480px at 50% -200px,#3d1606 0%,var(--bg) 
   <section class="view" id="v-picks">
     <div class="k"><span>⭐ Favorites</span><span class="why" style="margin:0">tap ☆ on any card to add</span></div>
     <div class="card" id="favs"></div>
+    <div class="k"><span>🪜 Bottoms · ladder</span><button class="mb" id="ldadd" style="min-height:0;padding:4px 10px">+ Coin</button></div>
+    <div id="ladders"></div>
     <div class="k">Top picks · Dustin's screener</div>
     <div class="card" id="picks"></div>
     <div class="foot" id="scan"></div>
@@ -894,6 +896,28 @@ function chartTalk(text){if(!CH)cnew();var L=[];
     rec.onend=function(){on=false;$('cmic').textContent='🎤';var t=$('cin').value.trim();if(t){$('cin').value='';csend(t)}};
     try{rec.start()}catch(e){on=false;$('cmic').textContent='🎤'}}})();
 (function(){var o=csave;if(typeof o!=='function')return;var last=0;var r0=crender;crender=function(){var x=r0.apply(this,arguments);try{var m=CH&&CH.m[CH.m.length-1];if(SPK&&m&&m.r==='a'&&!m.w&&m.t&&m.t!==last){last=m.t;SPK=0;speak(m.t)}}catch(e){}return x}})();
+
+// ---------- Bottoms ladder ----------
+var LMMR=0.005;function fx(v){v=+v||0;return v>=100?v.toFixed(2):v>=1?v.toFixed(3):String(+v.toPrecision(4))}
+function ldGet(){try{var a=JSON.parse(localStorage.getItem('ladders'));if(Array.isArray(a))return a}catch(e){}return [{c:'DOGE',e:0,m:10,l:20,b:0.5,n:5,tp:0},{c:'SOL',e:0,m:10,l:20,b:0.5,n:5,tp:0}]}
+function ldSet(a){try{localStorage.setItem('ladders',JSON.stringify(a))}catch(e){}}
+function liqOf(e,l){return e*(1-1/l+LMMR)}
+function ldCard(L,i){var q=PCT[L.c],px=q?q.last:0,e=+L.e||px,l=Math.max(1,+L.l||20),m=+L.m||0,b=(+L.b||0)/100,n=Math.min(12,Math.max(1,+L.n||5)),tp=+L.tp||(e?e*2:0);
+  var rows=[],cost=0,qty=0,pr=e;
+  for(var k=0;k<n&&pr>0;k++){var lq=liqOf(pr,l);cost+=m;qty+=m*l/pr;rows.push({k:k+1,pr:pr,lq:lq,dn:px?(pr/px-1)*100:0});pr=lq*(1+b)}
+  var avg=qty?cost*l/qty:0,pnl=tp&&qty?qty*(tp-avg):0;
+  var f=function(id,v,lab,st){return '<label style="display:flex;flex-direction:column;font-size:11px;color:var(--mut);flex:1;min-width:60px">'+lab+'<input class="inp" data-ld="'+i+'" data-k="'+id+'" value="'+esc(v)+'" inputmode="decimal" style="margin:2px 0 0;padding:6px;font-size:14px'+(st||'')+'"></label>'};
+  return '<div class="card"><div class="l1" style="display:flex"><b>'+esc(L.c)+'</b><span>'+(px?'$'+fx(px):'loading…')+'</span><button class="mb" data-ldrm="'+i+'" style="margin-left:auto;min-height:0;padding:4px 10px">✕</button></div>'+
+   '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0">'+f('e',L.e||'',"Entry $ (blank = now)")+f('m',L.m,'$ per rung')+f('l',L.l,'Leverage x')+f('b',L.b,'Rung % above liq')+f('n',L.n,'Rungs')+f('tp',L.tp||'','Take profit $')+'</div>'+
+   rows.map(function(r){return '<div class="hl"><i>'+r.k+'</i><span>Buy $'+fx(r.pr)+(px?' ('+r.dn.toFixed(1)+'%)':'')+' · $'+m+' at '+l+'x · liq $'+fx(r.lq)+'</span></div>'}).join('')+
+   '<div class="why" style="margin-top:6px">All rungs: $'+cost+' in · avg $'+fx(avg)+' · last liq $'+fx(rows.length?rows[rows.length-1].lq:0)+(tp?' · at TP $'+fx(tp)+': '+(pnl>=0?'+':'')+'$'+pnl.toFixed(2):'')+'</div>'+
+   '<div class="why">No stop. Liq is an estimate (isolated, 0.5% maint.); check WEEX.</div></div>'}
+function ldRender(){var a=ldGet();a.forEach(function(L){var c=L.c;if(!PCT[c])pctOne(c)});$('ladders').innerHTML=a.map(ldCard).join('')||'<div class="why">No ladders. Tap + Coin.</div>'}
+function pctOne(c){if(pctOne[c])return;pctOne[c]=1;fetch('https://api-contract.weex.com/capi/v3/market/klines?symbol='+c+'USDT&interval=1h&limit=26',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){var k=(Array.isArray(j)?j:[]).map(function(x){return [+x[0],+x[4]]}).sort(function(a,b){return a[0]-b[0]});if(k.length>=25){PCT[c]={p:(k[k.length-1][1]/k[k.length-25][1]-1)*100,last:k[k.length-1][1]};ldRender()}}).catch(function(){})}
+document.addEventListener('change',function(e){var t=e.target;if(!t.dataset||t.dataset.ld==null)return;var a=ldGet(),L=a[+t.dataset.ld];if(!L)return;var v=parseFloat(t.value);L[t.dataset.k]=isNaN(v)?0:v;ldSet(a);ldRender()});
+document.addEventListener('click',function(e){var r=e.target.closest('[data-ldrm]');if(!r)return;var a=ldGet();a.splice(+r.dataset.ldrm,1);ldSet(a.length?a:[]);if(!a.length)try{localStorage.setItem('ladders','[]')}catch(x){}ldRender()});
+$('ldadd').onclick=function(){var c=(prompt('Coin for the ladder (e.g. DOGE)')||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(!c)return;var a=ldGet();a.push({c:c,e:0,m:10,l:20,b:0.5,n:5,tp:0});ldSet(a);ldRender()};
+(function(){var r0=render;render=function(){var x=r0.apply(this,arguments);try{ldRender()}catch(e){}return x};try{ldRender()}catch(e){}})();
 </script>
 </body>
 </html>
