@@ -6,11 +6,14 @@
   function addButtons() {
     document.querySelectorAll('[data-ldcard]').forEach(function (card) {
       if (card.querySelector('[data-ldsend]')) return;
-      var b = document.createElement('button');
-      b.setAttribute('data-ldsend', card.getAttribute('data-ldcard'));
-      b.textContent = 'Send ladder to WEEX';
-      b.style.cssText = BTN;
-      card.appendChild(b);
+      [['WEEX', 'Send ladder to WEEX (one leverage)', '#1f7a4d'], ['BLOFIN', 'Send ladder to BloFin (leverage per rung)', '#8a5a00']].forEach(function (x) {
+        var b = document.createElement('button');
+        b.setAttribute('data-ldsend', card.getAttribute('data-ldcard'));
+        b.setAttribute('data-ex', x[0]);
+        b.textContent = x[1];
+        b.style.cssText = BTN.replace('#1f7a4d', x[2]);
+        card.appendChild(b);
+      });
     });
   }
   // Builds the request from the card exactly as the card shows it. WEEX has one leverage per coin,
@@ -25,22 +28,28 @@
     var rungs = rows.map(function (r) { return { price: +(+r.pr).toPrecision(8), margin: Math.round(r.m * r.l / lev * 100) / 100 }; });
     var total = rungs.reduce(function (s, r) { return s + r.margin; }, 0);
     var lines = rows.map(function (r, k) { return 'Rung ' + (k + 1) + ': buy $' + fx(r.pr) + ' · $' + (+r.m.toFixed(2)) + ' at ' + r.l + 'x'; }).join('\n');
-    return { c: c, lev: lev, mixed: mixed, rungs: rungs, total: total, lines: lines, px: px };
+    // BloFin keeps each rung as its own position: send the typed margin and leverage per rung, unchanged.
+    var rungsOwn = rows.map(function (r) { return { price: +(+r.pr).toPrecision(8), margin: Math.round(r.m * 100) / 100, lev: Math.round(r.l) }; });
+    var totalOwn = rungsOwn.reduce(function (s, r) { return s + r.margin; }, 0);
+    return { c: c, lev: lev, mixed: mixed, rungs: rungs, total: total, rungsOwn: rungsOwn, totalOwn: totalOwn, lines: lines, px: px };
   };
   document.addEventListener('click', function (e) {
     var b = e.target.closest('[data-ldsend]'); if (!b) return;
     if (!window.WAPI || !window.WPIN) { toast('Connect the bot first'); return; }
-    var P = ldSendPlan(+b.getAttribute('data-ldsend'));
+    var P = ldSendPlan(+b.getAttribute('data-ldsend')), ex = b.getAttribute('data-ex') || 'WEEX', bf = ex == 'BLOFIN';
     if (P.err) { toast(P.err); return; }
-    var msg = 'SEND LADDER to WEEX: ' + P.c + ' LONG, ' + P.lev + 'x isolated\n' + P.lines +
-      '\nTotal margin about $' + P.total.toFixed(2) +
-      '\nLimit orders, NO stop loss (liquidation is the stop).' +
-      (P.mixed ? '\nWEEX uses one leverage per coin (' + P.lev + 'x): each rung keeps its size, margin is restated.' : '') +
-      '\n\nSend now?';
+    var msg = bf
+      ? 'SEND LADDER to BloFin: ' + P.c + ' LONG, isolated, each rung its OWN position and leverage\n' + P.lines + '\nTotal margin $' + P.totalOwn.toFixed(2) +
+        '\nLimit orders, NO stop loss (liquidation is the stop).\n\nSend now?'
+      : 'SEND LADDER to WEEX: ' + P.c + ' LONG, ' + P.lev + 'x isolated\n' + P.lines +
+        '\nTotal margin about $' + P.total.toFixed(2) +
+        '\nLimit orders, NO stop loss (liquidation is the stop).' +
+        (P.mixed ? '\nWEEX uses one leverage per coin (' + P.lev + 'x): each rung keeps its size, margin is restated.' : '') +
+        '\n\nSend now?';
     if (!confirm(msg)) return;
-    b.disabled = true; b.textContent = 'Sending ladder to WEEX…';
-    var url = WAPI + (WAPI.indexOf('?') > -1 ? '&' : '?') + 'json=1&pin=' + encodeURIComponent(WPIN) + '&set=ladder&coin=' +
-      encodeURIComponent(P.c) + '&side=LONG&lev=' + P.lev + '&rungs=' + encodeURIComponent(JSON.stringify(P.rungs));
+    b.disabled = true; b.textContent = 'Sending ladder to ' + (bf ? 'BloFin' : 'WEEX') + '…';
+    var url = WAPI + (WAPI.indexOf('?') > -1 ? '&' : '?') + 'json=1&pin=' + encodeURIComponent(WPIN) + '&set=ladder&ex=' + ex + '&coin=' +
+      encodeURIComponent(P.c) + '&side=LONG&lev=' + P.lev + '&rungs=' + encodeURIComponent(JSON.stringify(bf ? P.rungsOwn : P.rungs));
     fetch(url, { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (k) {
       b.disabled = false;
       b.textContent = k.ok ? '✔ ' + (k.msg || 'Sent') : '✘ ' + (k.err || k.msg || 'Failed');
